@@ -110,6 +110,7 @@ const Cases = () => {
                 typeFilter={typeFilter}
                 assignedFilter={assignedFilter}
                 showOnlyMyCases={casesTab === 'my'}
+                onAdd={() => setShowAddDialog(true)}
               />
             </div>
           </PullToRefresh>

@@ -82,7 +82,7 @@ export const DashboardMobileFAB = () => {
       {/* FAB Button */}
       <button
         onClick={() => setShowSheet(true)}
-        className="fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-slate-800 shadow-lg hover:shadow-xl active:scale-95 transition-all duration-200 flex items-center justify-center sm:hidden"
+        className="fixed bottom-[84px] left-1/2 -translate-x-1/2 z-50 w-14 h-14 rounded-full bg-slate-800/95 backdrop-blur-md shadow-2xl hover:shadow-blue-500/20 active:scale-90 transition-all duration-300 flex items-center justify-center sm:hidden border border-white/20"
       >
         <Plus className="w-6 h-6 text-white" />
       </button>

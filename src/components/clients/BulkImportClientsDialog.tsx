@@ -6,6 +6,11 @@ import { Upload, Download, AlertCircle, CheckCircle, Trash2, FileSpreadsheet, X 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface BulkImportClientsDialogProps {
   open: boolean;
@@ -18,12 +23,14 @@ export const BulkImportClientsDialog = ({
   onOpenChange, 
   onSuccess 
 }: BulkImportClientsDialogProps) => {
-  const [file, setFile] = useState<File | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
+  const handleClose = isInsideDialog ? closeDialog : () => {
+    resetDialog();
+    onOpenChange?.(false);
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -255,32 +262,17 @@ export const BulkImportClientsDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) resetDialog();
-      onOpenChange(open);
-    }}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-emerald-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">Bulk Import Clients</h2>
-                  <p className="text-sm text-muted-foreground">Import from Excel file</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
+            <MobileDialogHeader
+              title="Bulk Import Clients"
+              subtitle="Import from Excel file"
+              onClose={handleClose}
+              icon={<Upload className="w-5 h-5 text-emerald-500" />}
+              showBorder
+            />
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
@@ -427,9 +419,9 @@ export const BulkImportClientsDialog = ({
           {/* Footer */}
           <div className="px-6 py-4 bg-white border-t border-slate-100">
             <div className="flex gap-3">
-              <Button 
+               <Button 
                 variant="outline" 
-                onClick={() => onOpenChange(false)}
+                onClick={handleClose}
                 className="flex-1 rounded-full"
               >
                 Cancel

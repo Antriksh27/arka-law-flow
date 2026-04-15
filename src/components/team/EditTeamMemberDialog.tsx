@@ -6,14 +6,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeInput, isValidEmail } from '@/lib/security';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Mail, Phone, FileText, Shield } from 'lucide-react';
+import { User, Mail, Phone, FileText, Shield, Loader2 } from 'lucide-react';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditTeamMemberDialogProps {
   open: boolean;
@@ -36,6 +39,9 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const isMobile = useIsMobile();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
 
   const form = useForm<TeamMemberFormData>({
     defaultValues: {
@@ -96,7 +102,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
         title: "Success",
         description: "Team member has been successfully updated.",
       });
-      onOpenChange(false);
+      handleClose();
     },
     onError: (error: Error) => {
       console.error('Error updating team member:', error);
@@ -107,17 +113,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
       });
     },
   });
-
   const onSubmit = (data: TeamMemberFormData) => {
-    const canEditMembers = userRole === 'admin';
-    if (!canEditMembers) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can edit team members.",
-        variant: "destructive",
-      });
-      return;
-    }
     updateTeamMemberMutation.mutate(data);
   };
 
@@ -318,7 +314,7 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
         {/* Actions - Desktop only */}
         {!isMobile && (
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isUpdating}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isUpdating}>
               Cancel
             </Button>
             <Button type="submit" disabled={isUpdating}>
@@ -330,60 +326,42 @@ const EditTeamMemberDialog = ({ open, onOpenChange, member }: EditTeamMemberDial
     </Form>
   );
 
-  // Mobile: iOS-style bottom sheet
-  if (isMobile) {
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent 
-          side="bottom" 
-          className="h-[95vh] rounded-t-3xl bg-slate-50 overflow-hidden p-0"
-          hideCloseButton
-        >
-          {/* iOS-style Header */}
-          <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 sticky top-0 z-10">
-            <button 
-              onClick={() => onOpenChange(false)}
-              className="text-primary font-medium text-base active:opacity-70"
-              type="button"
-            >
-              Cancel
-            </button>
-            <span className="font-semibold text-slate-900">Edit Member</span>
-            <button 
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isUpdating}
-              className="text-primary font-semibold text-base active:opacity-70 disabled:opacity-50"
-              type="button"
-            >
-              {isUpdating ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-          
-          {/* iOS Drag Handle */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full" />
-
-          <div className="p-4 overflow-y-auto h-[calc(95vh-56px)] pb-8">
-            {formContent}
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  // Desktop: Dialog
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-4">
-          <DialogTitle>Edit Team Member</DialogTitle>
-          <DialogDescription>
-            Update team member information and permissions.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-6 pb-6">
+  const formView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Edit Team Member"
+        subtitle="Update member details and permissions."
+        onClose={handleClose}
+        showBorder
+      />
+      
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
           {formContent}
         </div>
+      </ScrollArea>
+
+      <div className="p-4 bg-white border-t flex gap-3">
+        <Button 
+          type="submit" 
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isUpdating}
+          className="flex-1 rounded-full h-11"
+        >
+          {isUpdating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Update Member'}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return formView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-[600px] p-0 gap-0 overflow-hidden bg-white max-h-[95vh] sm:max-h-[90vh]">
+        {formView}
       </DialogContent>
     </Dialog>
   );

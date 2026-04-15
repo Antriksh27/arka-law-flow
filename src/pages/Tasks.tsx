@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { PremiumEmptyState } from '@/components/ui/PremiumEmptyState';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -497,10 +498,14 @@ const Tasks = () => {
       {isMobile ? (
         <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 space-y-3 pb-24">
           {tasksByStatus[activeTabMobile].length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <CheckSquare className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p className="text-sm">No {activeTabMobile.replace('_', ' ')} tasks</p>
-            </div>
+            <PremiumEmptyState
+              icon={CheckSquare}
+              title={`No ${activeTabMobile.replace('_', ' ')} tasks`}
+              description="Keep your cases organized by tracking every step. Add a task to get started."
+              actionLabel="Create First Task"
+              onAction={() => setShowCreateDialog(true)}
+              className="py-12"
+            />
           ) : (
             tasksByStatus[activeTabMobile].map((task) => (
               <MobileTaskCard
@@ -542,15 +547,13 @@ const Tasks = () => {
           ))}
           </div>
         ) : (
-        <div className="text-center py-12 text-gray-500">
-          <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-lg font-medium">No tasks found</p>
-          <p className="text-gray-400 mb-6">Get started by creating your first task</p>
-          <Button onClick={() => setShowCreateDialog(true)} className="bg-slate-800 hover:bg-slate-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Create First Task
-          </Button>
-          </div>
+        <PremiumEmptyState
+          icon={CheckSquare}
+          title="No tasks found"
+          description="Get started by creating your first task to manage your workflow effectively."
+          actionLabel="Create First Task"
+          onAction={() => setShowCreateDialog(true)}
+        />
         )
       )}
 

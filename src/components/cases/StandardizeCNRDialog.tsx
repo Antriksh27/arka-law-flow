@@ -5,6 +5,11 @@ import { AlertCircle, CheckCircle, Loader2, ArrowRight, X, Hash, Info } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StandardizeCNRDialogProps {
   open: boolean;
@@ -24,12 +29,14 @@ export const StandardizeCNRDialog = ({
   onOpenChange, 
   onSuccess 
 }: StandardizeCNRDialogProps) => {
-  const [loading, setLoading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [preview, setPreview] = useState<CNRPreview[]>([]);
-  const [results, setResults] = useState<{ updated: number; errors: string[] } | null>(null);
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
+  const handleClose = isInsideDialog ? closeDialog : () => {
+    resetDialog();
+    onOpenChange?.(false);
+  };
 
   const normalizeCNR = (cnr: string): string => {
     return cnr.replace(/[-\s]/g, '').toUpperCase();
@@ -178,32 +185,17 @@ export const StandardizeCNRDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) resetDialog();
-      onOpenChange(open);
-    }}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 bg-muted overflow-hidden">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 bg-muted overflow-hidden max-h-[90vh]">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <Hash className="w-5 h-5 text-violet-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-800">Standardize CNR Numbers</h2>
-                  <p className="text-sm text-muted-foreground">Clean and format all CNR numbers</p>
-                </div>
-              </div>
-              <button
-                onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
+            <MobileDialogHeader
+              title="Standardize CNR Numbers"
+              subtitle="Clean and format all CNR numbers"
+              onClose={handleClose}
+              icon={<Hash className="w-5 h-5 text-violet-500" />}
+              showBorder
+            />
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">

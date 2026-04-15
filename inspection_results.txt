@@ -1,0 +1,32 @@
+--- GHC DATA INSPECTION ---
+Case ID: 388c16a4-e9c2-429f-a4e1-ce1f4f67b40e
+Case Number: X-OBJ /26562/2018
+Court Type: high court
+--- ROOT FETCHED DATA ---
+success @ root: true
+message @ root: undefined
+status @ root: undefined
+Root keys: ["data","success"]
+Top Level Keys in rd: ["acts","case_info","documents","ia_details","objections","case_status","sub_matters","linked_cases","category_info","order_details","subordinate_court","history_of_case_hearing","petitioner_and_advocate","respondent_and_advocate"]
+Found Orders (8):
+Order #1 (Raw): {
+  "judge": "Order on",
+  "hearing_date": "Order Date",
+  "cause_list_type": "Order Number",
+  "business_on_date": "Judge",
+  "purpose_of_hearing": "Order Details"
+}
+Order #2 (Raw): {
+  "judge": "CA/1/2018",
+  "hearing_date": "18-09-2018",
+  "cause_list_type": "1",
+  "business_on_date": "HONOURABLE MR. JUSTICE J.B.PARDIWALA"
+}
+Found Hearings (57):
+Hearing #1 (Raw): {
+  "judge": "HONOURABLE MR. JUSTICE DEVAN M. DESAI",
+  "hearing_date": "27-04-2026",
+  "cause_list_type": "DAILY",
+  "business_on_date": "16-02-2026",
+  "purpose_of_hearing": "182-FOR FINAL HEARING"
+}

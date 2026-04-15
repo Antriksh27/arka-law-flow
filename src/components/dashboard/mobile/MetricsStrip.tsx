@@ -84,20 +84,20 @@ export const MetricsStrip: React.FC<MetricsStripProps> = ({
   return (
     <section className="mb-6">
       <h2 className="text-base font-semibold text-foreground mb-3">At a Glance</h2>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory">
+      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
             <button
               key={index}
               onClick={() => handleMetricTap(metric.route)}
-              className="flex-shrink-0 flex-1 min-w-[110px] bg-white rounded-2xl p-4 shadow-sm snap-start text-left active:scale-[0.97] transition-transform"
+              className="flex-shrink-0 w-[160px] bg-white rounded-3xl p-5 shadow-sm border border-border/50 snap-center text-left active:scale-[0.97] transition-all duration-200"
             >
-              <div className={`w-10 h-10 rounded-xl ${metric.iconBg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-5 h-5 ${metric.iconColor}`} />
+              <div className={`w-12 h-12 rounded-2xl ${metric.iconBg} flex items-center justify-center mb-4 shadow-sm`}>
+                <Icon className={`w-6 h-6 ${metric.iconColor}`} />
               </div>
-              <div className="text-2xl font-bold text-foreground">{String(metric.value).padStart(2, '0')}</div>
-              <div className="text-xs text-muted-foreground mt-1">{metric.label}</div>
+              <div className="text-3xl font-bold text-foreground tracking-tight">{String(metric.value).padStart(2, '0')}</div>
+              <div className="text-sm font-medium text-muted-foreground mt-1 leading-tight">{metric.label}</div>
             </button>
           );
         })}

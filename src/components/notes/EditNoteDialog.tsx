@@ -12,7 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { X, Plus, Type, FileText, Link2, Eye, Palette, Tag } from 'lucide-react';
 import { ContactSelector } from '@/components/contacts/ContactSelector';
-import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useDialog, DialogContentContext } from '@/hooks/use-dialog';
+import { useContext } from 'react';
 import { bg, border, text } from '@/lib/colors';
 
 interface EditNoteDialogProps {
@@ -48,9 +50,11 @@ const visibilityOptions = [
 
 export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
   note,
-  open,
   onClose
 }) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onClose?.();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newTag, setNewTag] = useState('');
@@ -143,7 +147,7 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['client-notes'] });
       queryClient.invalidateQueries({ queryKey: ['case-notes'] });
       toast({ title: "Note updated successfully" });
-      onClose();
+      handleClose();
     },
     onError: error => {
       console.error('Note update error:', error);
@@ -170,278 +174,276 @@ export const EditNoteDialog: React.FC<EditNoteDialogProps> = ({
     updateNoteMutation.mutate(data);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className={`flex flex-col h-full ${bg.page}`}>
-          {/* Header */}
-          <div className={`px-6 py-5 ${bg.card} border-b ${border.light}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className={`text-xl font-semibold ${text.primary}`}>Edit Note</h2>
-                <p className={`text-sm ${text.light} mt-0.5`}>Update your note details</p>
+  const formView = (
+    <div className={`flex flex-col h-full ${bg.page}`}>
+      <MobileDialogHeader
+        title="Edit Note"
+        subtitle={note?.title ? `Update: ${note.title}` : "Update your note details"}
+        onClose={handleClose}
+      />
+
+      {/* Content */}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+        <div className="px-6 py-6 space-y-4">
+          {/* Title Card */}
+          <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <Type className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <Label className={`text-sm font-semibold ${text.primary}`}>Title</Label>
+                  <p className={`text-xs ${text.light}`}>Give your note a title</p>
+                </div>
               </div>
-              <button
-                onClick={onClose}
-                className={`md:hidden w-8 h-8 rounded-full ${bg.muted} flex items-center justify-center hover:bg-muted transition-colors`}
-              >
-                <X className={`w-4 h-4 ${text.light}`} />
-              </button>
+              <Input
+                {...register('title', { required: 'Title is required' })}
+                placeholder="Enter note title..."
+                className={`${bg.input} ${border.default} rounded-xl h-11`}
+              />
+              {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
             </div>
           </div>
 
-          {/* Content */}
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
-            <div className="px-6 py-6 space-y-4">
-              {/* Title Card */}
-              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <Type className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <Label className={`text-sm font-semibold ${text.primary}`}>Title</Label>
-                      <p className={`text-xs ${text.light}`}>Give your note a title</p>
-                    </div>
-                  </div>
-                  <Input
-                    {...register('title', { required: 'Title is required' })}
-                    placeholder="Enter note title..."
-                    className={`${bg.input} ${border.default} rounded-xl h-11`}
-                  />
-                  {errors.title && <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>}
+          {/* Content Card */}
+          <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-sky-500" />
+                </div>
+                <div>
+                  <Label className={`text-sm font-semibold ${text.primary}`}>Content</Label>
+                  <p className={`text-xs ${text.light}`}>Write your note content</p>
                 </div>
               </div>
+              <Textarea
+                {...register('content')}
+                placeholder="Write your note here..."
+                className={`${bg.input} ${border.default} rounded-xl min-h-[120px]`}
+              />
+            </div>
+          </div>
 
-              {/* Content Card */}
-              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <div>
-                      <Label className={`text-sm font-semibold ${text.primary}`}>Content</Label>
-                      <p className={`text-xs ${text.light}`}>Write your note content</p>
-                    </div>
+          {/* Color & Visibility Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 space-y-4">
+              {/* Color Selection */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                    <Palette className="w-5 h-5 text-rose-500" />
                   </div>
-                  <Textarea
-                    {...register('content')}
-                    placeholder="Write your note here..."
-                    className={`${bg.input} ${border.default} rounded-xl min-h-[120px]`}
-                  />
-                </div>
-              </div>
-
-              {/* Color & Visibility Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 space-y-4">
-                  {/* Color Selection */}
                   <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                        <Palette className="w-5 h-5 text-rose-500" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold text-slate-900">Color</Label>
-                        <p className="text-xs text-slate-500">Choose a color for your note</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      {colorOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setValue('color', option.value as any)}
-                          className={`w-10 h-10 rounded-xl ${option.bg} border-2 transition-all ${
-                            watchedColor === option.value
-                              ? `ring-2 ${option.ring} ring-offset-2 border-transparent`
-                              : 'border-slate-200 hover:border-slate-300'
-                          }`}
-                          title={option.label}
-                        />
-                      ))}
-                    </div>
+                    <Label className="text-sm font-semibold text-slate-900">Color</Label>
+                    <p className="text-xs text-slate-500">Choose a color for your note</p>
                   </div>
-
-                  {/* Visibility */}
-                  <div className="pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                        <Eye className="w-5 h-5 text-violet-500" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold text-slate-900">Visibility</Label>
-                        <p className="text-xs text-slate-500">Who can see this note?</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {visibilityOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setValue('visibility', option.value as any)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                            watchedVisibility === option.value
-                              ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
-                              : `${option.bg} ${option.text} hover:opacity-80`
-                          }`}
-                        >
-                          <span>{option.icon}</span>
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                </div>
+                <div className="flex gap-3">
+                  {colorOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setValue('color', option.value as any)}
+                      className={`w-10 h-10 rounded-xl ${option.bg} border-2 transition-all ${
+                        watchedColor === option.value
+                          ? `ring-2 ${option.ring} ring-offset-2 border-transparent`
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                      title={option.label}
+                    />
+                  ))}
                 </div>
               </div>
 
-              {/* Link To Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <Link2 className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-slate-900">Link To</Label>
-                      <p className="text-xs text-slate-500">Connect to a case, client, or contact</p>
-                    </div>
+              {/* Visibility */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-violet-500" />
                   </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-900">Visibility</Label>
+                    <p className="text-xs text-slate-500">Who can see this note?</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {visibilityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setValue('visibility', option.value as any)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                        watchedVisibility === option.value
+                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          : `${option.bg} ${option.text} hover:opacity-80`
+                      }`}
+                    >
+                      <span>{option.icon}</span>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Link To Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Link2 className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900">Link To</Label>
+                  <p className="text-xs text-slate-500">Connect to a case, client, or contact</p>
+                </div>
+              </div>
+              <Select 
+                onValueChange={(value) => setValue('link_type', value as any)}
+                value={linkType}
+              >
+                <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                  <SelectValue placeholder="Select link type..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-xl">
+                  <SelectItem value="none">No Link</SelectItem>
+                  <SelectItem value="case">Link to Case</SelectItem>
+                  <SelectItem value="client">Link to Client</SelectItem>
+                  <SelectItem value="contact">Link to Contact</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {linkType === 'case' && (
+                <div className="mt-3">
+                  <CaseSelector
+                    value={watch('case_id') || ''}
+                    onValueChange={(value) => setValue('case_id', value)}
+                    placeholder="Search and select a case..."
+                  />
+                </div>
+              )}
+
+              {linkType === 'client' && (
+                <div className="mt-3">
                   <Select 
-                    onValueChange={(value) => setValue('link_type', value as any)}
-                    value={linkType}
+                    onValueChange={(value) => setValue('client_id', value)} 
+                    value={watch('client_id')}
                   >
                     <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                      <SelectValue placeholder="Select link type..." />
+                      <SelectValue placeholder="Select a client..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-slate-200 shadow-lg rounded-xl">
-                      <SelectItem value="none">No Link</SelectItem>
-                      <SelectItem value="case">Link to Case</SelectItem>
-                      <SelectItem value="client">Link to Client</SelectItem>
-                      <SelectItem value="contact">Link to Contact</SelectItem>
+                    <SelectContent className="bg-white border border-slate-200 shadow-lg max-h-60 rounded-xl">
+                      {clients.map(client => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.full_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
 
-                  {linkType === 'case' && (
-                    <div className="mt-3">
-                      <CaseSelector
-                        value={watch('case_id') || ''}
-                        onValueChange={(value) => setValue('case_id', value)}
-                        placeholder="Search and select a case..."
-                      />
-                    </div>
-                  )}
+              {linkType === 'contact' && (
+                <div className="mt-3">
+                  <ContactSelector
+                    value={watch('contact_id') || ''}
+                    onValueChange={(value) => setValue('contact_id', value)}
+                    placeholder="Search and select a contact..."
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
-                  {linkType === 'client' && (
-                    <div className="mt-3">
-                      <Select 
-                        onValueChange={(value) => setValue('client_id', value)} 
-                        value={watch('client_id')}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                          <SelectValue placeholder="Select a client..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 shadow-lg max-h-60 rounded-xl">
-                          {clients.map(client => (
-                            <SelectItem key={client.id} value={client.id}>
-                              {client.full_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {linkType === 'contact' && (
-                    <div className="mt-3">
-                      <ContactSelector
-                        value={watch('contact_id') || ''}
-                        onValueChange={(value) => setValue('contact_id', value)}
-                        placeholder="Search and select a contact..."
-                      />
-                    </div>
-                  )}
+          {/* Tags Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <Tag className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-slate-900">Tags</Label>
+                  <p className="text-xs text-slate-500">Add tags to organize your notes</p>
                 </div>
               </div>
-
-              {/* Tags Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Tag className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-slate-900">Tags</Label>
-                      <p className="text-xs text-slate-500">Add tags to organize your notes</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={e => setNewTag(e.target.value)}
-                      placeholder="Add a tag..."
-                      onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
-                    />
-                    <Button 
-                      type="button" 
-                      onClick={addTag} 
+              <div className="flex gap-2">
+                <Input
+                  value={newTag}
+                  onChange={e => setNewTag(e.target.value)}
+                  placeholder="Add a tag..."
+                  onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                  className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                />
+                <Button 
+                  type="button" 
+                  onClick={addTag} 
+                  variant="outline" 
+                  size="icon"
+                  className="h-11 w-11 rounded-xl border-slate-200"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {watchedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {watchedTags.map((tag, index) => (
+                    <Badge 
+                      key={index} 
                       variant="outline" 
-                      size="icon"
-                      className="h-11 w-11 rounded-xl border-slate-200"
+                      className="bg-sky-50 text-sky-700 border-sky-200 rounded-full pl-3 pr-2 py-1"
                     >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  {watchedTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {watchedTags.map((tag, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="outline" 
-                          className="bg-sky-50 text-sky-700 border-sky-200 rounded-full pl-3 pr-2 py-1"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="ml-1 hover:bg-sky-100 rounded-full p-0.5"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 hover:bg-sky-100 rounded-full p-0.5"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 bg-white border-t border-slate-100 sticky bottom-0">
-              <div className="flex gap-3 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="rounded-full px-6 border-slate-200 hover:bg-slate-50"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="rounded-full px-6 bg-slate-800 hover:bg-slate-700 text-white"
-                >
-                  {isSubmitting ? 'Updating...' : 'Update Note'}
-                </Button>
-              </div>
-            </div>
-          </form>
+          </div>
         </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 bg-white border-t border-slate-100 sticky bottom-0 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+          <div className="flex gap-3 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              className="rounded-full px-6 border-slate-200 hover:bg-slate-50"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-full px-6 bg-slate-800 hover:bg-slate-700 text-white"
+            >
+              {isSubmitting ? 'Updating...' : 'Update Note'}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return formView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        {formView}
       </DialogContent>
     </Dialog>
   );

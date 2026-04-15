@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format, addDays, isSameDay, getDay } from "date-fns";
@@ -257,7 +258,7 @@ function MultiUserCalendar({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-3">
+                <div className="flex xl:flex-col overflow-x-auto xl:overflow-x-visible gap-3 pb-2 xl:pb-0">
                   {lawyers.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -268,7 +269,7 @@ function MultiUserCalendar({
                       <div
                         key={lawyer.id}
                         className={cn(
-                          "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:scale-[1.02]",
+                          "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 flex-shrink-0 w-[240px] xl:w-full",
                           selectedLawyer === lawyer.id 
                             ? "bg-primary/10 border-primary shadow-md" 
                             : "bg-white/80 border-border hover:bg-accent hover:border-accent-foreground/20"
@@ -341,8 +342,8 @@ function MultiUserCalendar({
                 </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-                  <div className="min-w-[900px]">
+                <div className="overflow-x-auto max-h-[70vh] -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="min-w-[800px] xl:min-w-0">
                     {lawyers.length === 0 ? (
                       <div className="text-center py-16 text-muted-foreground">
                         <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -352,8 +353,8 @@ function MultiUserCalendar({
                     ) : (
                       <>
                         {/* Header */}
-                        <div className="grid gap-3 mb-6 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75" style={{ gridTemplateColumns: `120px repeat(${displayedLawyers.length}, 1fr)` }}>
-                          <div className="font-semibold text-muted-foreground text-center py-3 sticky left-0 z-20 bg-background/95 rounded-lg">Time</div>
+                        <div className="grid gap-3 mb-6 sticky top-0 z-20 bg-background/95 backdrop-blur items-center" style={{ gridTemplateColumns: `80px repeat(${displayedLawyers.length}, 1fr)` }}>
+                          <div className="font-semibold text-muted-foreground text-center py-3 sticky left-0 z-30 bg-background rounded-lg border">Time</div>
                           {displayedLawyers.map((lawyer) => (
                             <div key={lawyer.id} className="text-center p-3 bg-white/80 rounded-xl border">
                               <div className={cn(
@@ -372,13 +373,12 @@ function MultiUserCalendar({
 
                         {/* Time Slots */}
                         <div className="space-y-2">
-                          {timeSlots.map((time) => (
-                            <div 
-                              key={time} 
-                              className="grid gap-3 items-center" 
-                              style={{ gridTemplateColumns: `120px repeat(${displayedLawyers.length}, 1fr)` }}
-                            >
-                              <div className="text-center py-3 text-sm font-medium text-muted-foreground bg-white/60 rounded-lg border">
+                              <div 
+                                key={time} 
+                                className="grid gap-3 items-center" 
+                                style={{ gridTemplateColumns: `80px repeat(${displayedLawyers.length}, 1fr)` }}
+                              >
+                                <div className="text-center py-3 text-sm font-medium text-muted-foreground bg-white/60 rounded-lg border sticky left-0 z-10">
                                 {time}
                               </div>
                               {displayedLawyers.map((lawyer) => {
@@ -548,7 +548,7 @@ const ReceptionCalendar = () => {
   const [initialBooking, setInitialBooking] = useState<{ lawyerUserId?: string; date?: string; time?: string }>({});
 
   // Get lawyers with colors
-  const { data: lawyers = [] } = useQuery({
+  const { data: lawyers = [], isLoading: isLoadingLawyers } = useQuery({
     queryKey: ['reception-lawyers', firmId],
     queryFn: async () => {
       const { data } = await supabase
@@ -590,7 +590,7 @@ const ReceptionCalendar = () => {
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
 
   // Fetch appointments for selected date
-  const { data: rawAppointments = [] } = useQuery({
+  const { data: rawAppointments = [], isLoading: isLoadingAppointments } = useQuery({
     queryKey: ['reception-appointments', firmId, selectedDateStr],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -604,6 +604,8 @@ const ReceptionCalendar = () => {
     },
     enabled: !!firmId && !!selectedDate
   });
+
+  const isLoading = isLoadingLawyers || isLoadingAppointments;
 
   const lawyerIdByUserId = new Map(lawyers.map(l => [l.userId, l.id]));
   const calendarAppointments: Appointment[] = rawAppointments
@@ -645,15 +647,31 @@ const ReceptionCalendar = () => {
 
   return (
     <>
-      <MultiUserCalendar
-        lawyers={lawyers}
-        appointments={calendarAppointments}
-        selectedDate={selectedDate}
-        onSelectedDateChange={setSelectedDate}
-        onAppointmentCreate={handleAppointmentCreate}
-        onAppointmentEdit={handleAppointmentEdit}
-        onAppointmentDelete={handleAppointmentDelete}
-      />
+      {isLoading ? (
+        <div className="max-w-7xl mx-auto p-6 space-y-8 h-full bg-background animate-pulse">
+           <Skeleton className="h-10 w-64 mb-2" />
+           <Skeleton className="h-6 w-96 mb-8" />
+           <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+             <div className="xl:col-span-1 space-y-6">
+                <Skeleton className="h-80 w-full rounded-2xl" />
+                <Skeleton className="h-96 w-full rounded-2xl" />
+             </div>
+             <div className="xl:col-span-4">
+                <Skeleton className="h-[70vh] w-full rounded-2xl" />
+             </div>
+           </div>
+        </div>
+      ) : (
+        <MultiUserCalendar
+          lawyers={lawyers}
+          appointments={calendarAppointments}
+          selectedDate={selectedDate}
+          onSelectedDateChange={setSelectedDate}
+          onAppointmentCreate={handleAppointmentCreate}
+          onAppointmentEdit={handleAppointmentEdit}
+          onAppointmentDelete={handleAppointmentDelete}
+        />
+      )}
 
       {/* Dialogs */}
       <React.Suspense fallback={null}>

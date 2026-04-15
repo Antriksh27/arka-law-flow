@@ -12,8 +12,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Plus, X, User, Building2, Phone, MapPin, UserCheck, FileText, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ConvertToClientDialogProps {
   open: boolean;
@@ -22,10 +25,10 @@ interface ConvertToClientDialogProps {
 }
 
 export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertToClientDialogProps) => {
-  const { user, firmId } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
   const isMobile = useIsMobile();
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
@@ -196,7 +199,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['reception-contacts'] });
-      onOpenChange(false);
+      handleClose();
     },
     onError: (error: any) => {
       toast({ title: "Conversion Failed", description: error.message || "Failed to convert contact to client", variant: "destructive" });
@@ -220,26 +223,17 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
   const clientType = form.watch('type');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <UserPlus className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Convert to Client</h2>
-                <p className="text-xs text-slate-500">Review and complete the information</p>
-              </div>
-            </div>
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full">
-                <X className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
+            <MobileDialogHeader
+              title="Convert to Client"
+              subtitle="Review and complete the information"
+              onClose={handleClose}
+              icon={<UserPlus className="w-5 h-5 text-emerald-500" />}
+              showBorder
+            />
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -641,15 +635,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
           {/* Footer */}
           <div className="p-4 bg-white border-t border-slate-200">
             <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={convertMutation.isPending}
-                className="flex-1 rounded-full h-11"
-              >
-                Cancel
-              </Button>
+
               <Button
                 type="submit"
                 form="convert-contact-form"

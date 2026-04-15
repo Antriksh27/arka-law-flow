@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { PremiumEmptyState } from '@/components/ui/PremiumEmptyState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,7 @@ interface CasesGridProps {
   typeFilter: string;
   assignedFilter: string;
   showOnlyMyCases?: boolean;
+  onAdd?: () => void;
 }
 
 export const CasesGrid: React.FC<CasesGridProps> = ({
@@ -37,7 +39,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   statusFilter,
   typeFilter,
   assignedFilter,
-  showOnlyMyCases = false
+  showOnlyMyCases = false,
+  onAdd
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -260,18 +263,21 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   }
 
   if (!cases || cases.length === 0) {
+    const isFiltered = searchQuery || statusFilter !== 'all' || typeFilter !== 'all';
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-2xl border border-border">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Briefcase className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-1">No cases found</h3>
-        <p className="text-sm text-muted-foreground text-center max-w-sm">
-          {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' 
-            ? 'Try adjusting your search or filters to find cases.'
-            : 'Create your first case to get started with case management.'}
-        </p>
-      </div>
+      <PremiumEmptyState
+        icon={Briefcase}
+        title={isFiltered ? "No cases found" : "No cases yet"}
+        description={isFiltered 
+          ? "Try adjusting your search or filters to find what you're looking for." 
+          : "Get started by creating your first case to manage filings and hearings efficiently."}
+        actionLabel={isFiltered ? "Clear All Filters" : "Create First Case"}
+        onAction={isFiltered ? () => {
+          // Note: Clearing filters requires parent state access, 
+          // but for now we'll just trigger the onAdd or a refresh hint
+          if (onAdd) onAdd();
+        } : onAdd}
+      />
     );
   }
 

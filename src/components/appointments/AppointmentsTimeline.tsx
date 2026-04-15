@@ -44,7 +44,7 @@ export const AppointmentsTimeline: React.FC<AppointmentsTimelineProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { openDialog } = useDialog();
+  const { openDialog, closeDialog } = useDialog();
 
   const { data: appointments, isLoading, error } = useQuery<Appointment[], Error>({
     queryKey: ['appointments-timeline', user?.id, filters.showPastAppointments, filters.searchQuery],

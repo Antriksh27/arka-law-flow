@@ -44,6 +44,7 @@ const quickFilters: QuickFilter[] = [
 ];
 
 export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ open, onOpenChange }) => {
+  const handleClose = () => onOpenChange?.(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,7 +86,8 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ open, onOp
   const handleSearch = (query: string) => {
     if (!query.trim()) return;
     saveRecentSearch(query);
-    onOpenChange(false);
+    saveRecentSearch(query);
+    handleClose();
     navigate(`/search?q=${encodeURIComponent(query.trim())}`);
   };
 
@@ -95,7 +97,7 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ open, onOp
   };
 
   const handleFilterClick = (filter: QuickFilter) => {
-    onOpenChange(false);
+    handleClose();
     navigate(filter.route);
   };
 
@@ -106,7 +108,7 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ open, onOp
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent hideCloseButton side="bottom" className="h-[85vh] rounded-t-3xl bg-slate-50 p-0 border-0">
         {/* Header with Search */}
         <div className="bg-white px-4 py-4 border-b border-slate-100">

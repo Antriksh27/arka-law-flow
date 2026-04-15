@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect, lazy, Suspense } from 'react';
@@ -79,6 +82,37 @@ console.log('App build:', BUILD_INFO);
 // Inner component that uses React Query hooks
 function AppRoutes() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Handle Android back button/swipe
+    let backButtonListener: { remove: () => void } | null = null;
+
+    const setupBackButton = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const listener = await CapacitorApp.addListener('backButton', (data: { canGoBack: boolean }) => {
+          // If we are at the root or there's no history to go back to, exit the app
+          const isRoot = location.pathname === '/' || location.pathname === '/auth';
+          
+          if (!isRoot) {
+            navigate(-1);
+          } else {
+            CapacitorApp.exitApp();
+          }
+        });
+        backButtonListener = listener;
+      }
+    };
+
+    setupBackButton();
+
+    return () => {
+      if (backButtonListener) {
+        backButtonListener.remove();
+      }
+    };
+  }, [navigate, location.pathname]);
 
   // Initialize real-time notifications (inside QueryClientProvider)
   useRealtimeNotifications();

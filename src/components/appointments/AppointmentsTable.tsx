@@ -37,7 +37,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   const [loading, setLoading] = useState(true);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
-  const { openDialog } = useDialog();
+  const { openDialog, closeDialog } = useDialog();
   const { user } = useAuth();
   useEffect(() => {
     fetchAppointments();
@@ -181,7 +181,13 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     }
   };
   const handleEdit = (appointment: Appointment) => {
-    openDialog(<EditAppointmentDialog appointment={appointment} onSuccess={fetchAppointments} />);
+    openDialog(
+      <EditAppointmentDialog 
+        appointment={appointment} 
+        open={true}
+        onOpenChange={(isOpen) => !isOpen && closeDialog()}
+      />
+    );
   };
   const handleCancel = async (appointmentId: string) => {
     try {

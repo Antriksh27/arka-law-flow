@@ -44,7 +44,7 @@ const WorkspaceDashboard = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { openDialog } = useDialog();
+  const { openDialog, closeDialog } = useDialog();
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -98,7 +98,7 @@ const WorkspaceDashboard = () => {
       {/* Mobile View */}
       {isMobile && (
         <PullToRefresh onRefresh={handleRefresh}>
-          <div className={`h-screen ${bg.page} overflow-hidden flex flex-col`}>
+          <div className={`flex flex-col min-h-full ${bg.page}`}>
             {/* Custom Header with greeting and icons */}
             <MobileDashboardHeader userName={userName} />
 
@@ -126,7 +126,7 @@ const WorkspaceDashboard = () => {
               {/* Quick Actions */}
               <QuickActionsBar 
                 onNewCase={() => setShowCaseDialog(true)} 
-                onSchedule={() => openDialog(<CreateAppointmentDialog />)} 
+                onSchedule={() => openDialog(<CreateAppointmentDialog onClose={closeDialog} />)} 
                 onAddTask={() => setShowTaskDialog(true)} 
                 onUpload={() => setShowUploadDialog(true)} 
                 onAddNote={() => setShowNoteDialog(true)}
@@ -241,8 +241,7 @@ const WorkspaceDashboard = () => {
         </PullToRefresh>
       )}
 
-      {/* Mobile FAB */}
-      {isMobile && <DashboardMobileFAB />}
+      {/* Mobile FAB is now handled globally in DashboardLayout.tsx */}
     </>
   );
 };

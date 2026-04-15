@@ -11,11 +11,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { LegalkartDocumentsTable } from './legalkart/LegalkartDocumentsTable';
-import { LegalkartObjectionsTable } from './legalkart/LegalkartObjectionsTable';
-import { LegalkartOrdersTable } from './legalkart/LegalkartOrdersTable';
-import { LegalkartHistoryTable } from './legalkart/LegalkartHistoryTable';
+import { ECourtsDocumentsTable } from './ecourts_api/ECourtsDocumentsTable';
+import { ECourtsObjectionsTable } from './ecourts_api/ECourtsObjectionsTable';
+import { ECourtsOrdersTable } from './ecourts_api/ECourtsOrdersTable';
+import { ECourtsHistoryTable } from './ecourts_api/ECourtsHistoryTable';
 import { TimeUtils } from '@/lib/timeUtils';
+import { useEcourtsIntegration } from '@/hooks/useEcourtsIntegration';
 
 interface CaseDetailsProps {
   caseId: string;
@@ -23,6 +24,7 @@ interface CaseDetailsProps {
 
 export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   const [refreshing, setRefreshing] = useState(false);
+  const { refreshCase, searchCase } = useEcourtsIntegration();
 
   // Query case data - Legalkart data is already mapped to cases table columns
   const { data: caseData, isLoading, refetch } = useQuery({
@@ -40,12 +42,26 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
   });
 
   const handleRefresh = async () => {
+    if (!cnr_number) {
+      toast.error('CNR number missing for refresh');
+      return;
+    }
+    
     setRefreshing(true);
+    const loadingToastId = toast.loading('Initializing eCourts refresh...');
+    
     try {
-      await refetch();
-      toast.success('Case details refreshed');
-    } catch (error) {
-      toast.error('Failed to refresh case details');
+      // Strictly Step 1: Trigger Refresh (POST)
+      const refreshResult = await refreshCase.mutateAsync(cnr_number);
+      console.log('Refresh triggered:', refreshResult);
+      
+      toast.success('Case refresh request queued', { 
+        id: loadingToastId,
+        description: 'The scraper has been triggered. Please refresh the page in a few moments.'
+      });
+    } catch (error: any) {
+      console.error('Refresh/Fetch error:', error);
+      toast.error(error.message || 'Failed to sync with eCourts', { id: loadingToastId });
     } finally {
       setRefreshing(false);
     }
@@ -511,7 +527,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
           {last_fetched_at && (
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-4">
               <Clock className="w-4 h-4" />
-              <span>Last synced from Legalkart: {new Date(last_fetched_at).toLocaleString('en-IN', { 
+              <span>Last synced from eCourts: {new Date(last_fetched_at).toLocaleString('en-IN', { 
                 day: 'numeric', 
                 month: 'short', 
                 year: 'numeric',
@@ -642,7 +658,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LegalkartDocumentsTable caseId={caseId} />
+              <ECourtsDocumentsTable caseId={caseId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -656,7 +672,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LegalkartObjectionsTable caseId={caseId} />
+              <ECourtsObjectionsTable caseId={caseId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -670,7 +686,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LegalkartOrdersTable caseId={caseId} />
+              <ECourtsOrdersTable caseId={caseId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -684,7 +700,7 @@ export const CaseDetails: React.FC<CaseDetailsProps> = ({ caseId }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <LegalkartHistoryTable caseId={caseId} />
+              <ECourtsHistoryTable caseId={caseId} />
             </CardContent>
           </Card>
         </TabsContent>

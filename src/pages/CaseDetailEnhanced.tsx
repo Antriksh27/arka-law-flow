@@ -48,7 +48,7 @@ import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { IADetailsTable } from '@/components/cases/enhanced/IADetailsTable';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
-import { useLegalkartCaseDetails } from '@/hooks/useLegalkartCaseDetails';
+import { useEcourtsCaseDetails } from '@/hooks/useEcourtsCaseDetails';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
 import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
 import { CaseChatTab } from '@/components/cases/detail/tabs/CaseChatTab';
@@ -180,7 +180,7 @@ export default function CaseDetailEnhanced() {
     isLoading: legalkartLoading,
     refreshCaseData,
     isRefreshing
-  } = useLegalkartCaseDetails(id!);
+  } = useEcourtsCaseDetails(id!);
 
   // Handler for Fetch Details button
   const handleFetchDetails = async () => {
@@ -213,7 +213,7 @@ export default function CaseDetailEnhanced() {
 
   const displayStatus = getDisplayStatus();
 
-  // Refresh handled by useLegalkartCaseDetails.refreshCaseData
+  // Refresh handled by useEcourtsCaseDetails.refreshCaseData
   const tabs = [{
     value: 'details',
     label: 'Details',

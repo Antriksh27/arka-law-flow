@@ -5,6 +5,9 @@ import ReceptionistSidebar from './ReceptionistSidebar';
 import { ReceptionistMobileSidebar } from './ReceptionistMobileSidebar';
 import Header from './Header';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { DashboardMobileFAB } from '@/components/dashboard/DashboardMobileFAB';
+import { cn } from '@/lib/utils';
 
 interface ReceptionistLayoutProps {
   children: React.ReactNode;
@@ -52,9 +55,13 @@ const ReceptionistLayout = ({ children }: ReceptionistLayoutProps) => {
       <div className="flex flex-1">
         {/* Desktop Sidebar - hidden on mobile */}
         {!isMobile && <ReceptionistSidebar />}
-        <main className="flex-1 overflow-auto">
+        <main className={cn("flex-1 overflow-auto", isMobile && "pb-20")}>
           {children}
         </main>
+
+        {/* Mobile only elements */}
+        {isMobile && <MobileBottomNav />}
+        {isMobile && <DashboardMobileFAB />}
       </div>
     </div>
   );

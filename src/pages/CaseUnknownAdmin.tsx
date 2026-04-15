@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FetchCaseDetailsDialog } from '@/components/cases/FetchCaseDetailsDialog';
-import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
+import { resolveEcourtsSearchType } from '@/lib/ecourtsSearchType';
 
 interface UnknownCase {
   id: string;
@@ -243,7 +243,7 @@ const CaseUnknownAdmin = () => {
                 .single();
 
               if (caseData?.cnr_number) {
-                const searchType = resolveLegalkartSearchType({
+                const searchType = resolveEcourtsSearchType({
                   cnr: caseData.cnr_number,
                   courtType: caseData.court_type,
                   fallback: 'district_court',

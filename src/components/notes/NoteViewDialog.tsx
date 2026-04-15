@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useContext } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { TimeUtils } from '@/lib/timeUtils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 
 interface NoteViewDialogProps {
   note: any;
@@ -39,6 +40,9 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
   onClose,
   onEdit,
 }) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onClose?.();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -82,7 +86,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast({ title: 'Note deleted' });
-      onClose();
+      handleClose();
     },
     onError: () => {
       toast({
@@ -131,7 +135,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden border-0">
           <div className={`flex flex-col h-full max-h-[90vh] ${getColorClasses(note.color)}`}>
             {/* Header Action Bar */}
@@ -173,7 +177,7 @@ export const NoteViewDialog: React.FC<NoteViewDialogProps> = ({
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 rounded-full hover:bg-slate-100"
-                onClick={onClose}
+                onClick={handleClose}
               >
                 <X className="w-5 h-5 text-slate-600" />
               </Button>

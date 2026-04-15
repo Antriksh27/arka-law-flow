@@ -202,6 +202,65 @@ async function upsertSupremeCourtData(supabase: any, caseId: string, firmId: str
   console.log('✅ Supreme Court data upserted');
 }
 
+/**
+ * Unified helper to process API response, map to CRM, and upsert all related data
+ */
+async function handleCaseUpsert(supabase: any, caseId: string, firmId: string, apiData: any) {
+  if (!caseId || !apiData?.data) {
+    console.warn('⚠️ handleCaseUpsert skipped: missing caseId or data');
+    return;
+  }
+
+  const mapped = mapEcourtsCaseToCRM(apiData);
+  const validCaseFields = [
+    'case_title', 'case_number', 'case_type', 'status', 'priority', 'stage',
+    'cnr_number', 'filing_number', 'registration_number',
+    'filing_date', 'registration_date', 'first_hearing_date', 'next_hearing_date',
+    'disposal_date', 'decision_date',
+    'petitioner', 'respondent', 'petitioner_advocate', 'respondent_advocate',
+    'court', 'court_name', 'court_type', 'district', 'state', 'bench_type',
+    'coram', 'category', 'under_act', 'under_section', 'vs', 'advocate_name',
+    'description',
+  ];
+
+  const caseUpdate: any = {
+    last_fetched_at: new Date().toISOString(),
+    fetched_data: apiData,
+    fetch_status: 'success',
+    fetch_message: `Updated from eCourtsIndia on ${new Date().toISOString()}`,
+    is_auto_fetched: true,
+  };
+
+  for (const field of validCaseFields) {
+    const v = (mapped as any)[field];
+    if (v !== undefined && v !== null) caseUpdate[field] = v;
+  }
+
+  // Update main case record
+  const { error: updateError } = await supabase.from('cases').update(caseUpdate).eq('id', caseId);
+  if (updateError) {
+    console.error('❌ Error updating main case record:', updateError);
+    throw updateError;
+  }
+
+  // Check if Supreme Court to use specialized upsert
+  const normalizedCnr = (mapped.cnr_number || '').toUpperCase();
+  const isSupremeCourt = normalizedCnr.startsWith('SCIN') ||
+    apiData?.data?.courtCaseData?.courtName?.toLowerCase()?.includes('supreme');
+
+  try {
+    if (isSupremeCourt) {
+      await upsertSupremeCourtData(supabase, caseId, firmId, apiData);
+    } else {
+      await upsertCaseRelationalData(supabase, caseId, apiData);
+    }
+    console.log(`✅ Successfully handleCaseUpsert for CNR: ${normalizedCnr}`);
+  } catch (e) {
+    console.error('❌ Failed to upsert relational data:', e);
+    throw e;
+  }
+}
+
 // ===== MAIN HANDLER =====
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -215,7 +274,8 @@ serve(async (req) => {
 
     const requestBody = await req.json();
     const { action } = requestBody;
-    console.log(`📨 eCourtsIndia API - Action: ${action}`);
+    console.log(`[DEBUG] Received Action: "${action}"`);
+    console.log(`[DEBUG] Request Body:`, JSON.stringify(requestBody));
 
     // Auth: detect internal vs user call
     const authHeader = req.headers.get('Authorization') || '';
@@ -326,64 +386,31 @@ serve(async (req) => {
 
       console.log('✅ eCourtsIndia API returned valid data for:', normalizedCnr);
 
-      // Update search record
-      if (searchRecord) {
-        await supabase.from('legalkart_case_searches')
-          .update({ response_data: apiData, status: 'success' }).eq('id', searchRecord.id);
-      }
+      // Upsert case data if we have a caseId
+      if (apiData?.data) {
+        // Resolve case ID if not provided
+        let effectiveCaseId = caseId || null;
+        if (!effectiveCaseId) {
+          const { data: foundCase } = await supabase.from('cases').select('id')
+            .eq('firm_id', firmId).eq('cnr_number', normalizedCnr).maybeSingle();
+          effectiveCaseId = foundCase?.id || null;
+        }
 
-      // Resolve case ID
-      let effectiveCaseId = caseId || null;
-      if (!effectiveCaseId) {
-        const { data: foundCase } = await supabase.from('cases').select('id')
-          .eq('firm_id', firmId).eq('cnr_number', normalizedCnr).maybeSingle();
-        if (foundCase?.id) {
-          effectiveCaseId = foundCase.id;
+        if (effectiveCaseId) {
+          // Update search record if exists
           if (searchRecord) {
             await supabase.from('legalkart_case_searches')
-              .update({ case_id: effectiveCaseId }).eq('id', searchRecord.id);
+              .update({ response_data: apiData, status: 'success', case_id: effectiveCaseId }).eq('id', searchRecord.id);
           }
-        }
-      }
-
-      // Upsert case data if we have a caseId
-      if (effectiveCaseId && apiData?.data) {
-        const mapped = mapEcourtsCaseToCRM(apiData);
-        const validCaseFields = [
-          'case_title', 'case_number', 'case_type', 'status', 'priority', 'stage',
-          'cnr_number', 'filing_number', 'registration_number',
-          'filing_date', 'registration_date', 'first_hearing_date', 'next_hearing_date',
-          'disposal_date', 'decision_date',
-          'petitioner', 'respondent', 'petitioner_advocate', 'respondent_advocate',
-          'court', 'court_name', 'court_type', 'district', 'state', 'bench_type',
-          'coram', 'category', 'under_act', 'under_section', 'vs', 'advocate_name',
-          'description',
-        ];
-        const caseUpdate: any = {
-          last_fetched_at: new Date().toISOString(),
-          fetched_data: apiData,
-          fetch_status: 'success',
-          fetch_message: `Fetched from eCourtsIndia on ${new Date().toISOString()}`,
-          is_auto_fetched: true,
-        };
-        for (const field of validCaseFields) {
-          const v = (mapped as any)[field];
-          if (v !== undefined && v !== null) caseUpdate[field] = v;
-        }
-        await supabase.from('cases').update(caseUpdate).eq('id', effectiveCaseId);
-
-        // Check if Supreme Court
-        const isSupremeCourt = normalizedCnr.startsWith('SCIN') ||
-          apiData?.data?.courtCaseData?.courtName?.toLowerCase()?.includes('supreme');
-
-        try {
-          if (isSupremeCourt) {
-            await upsertSupremeCourtData(supabase, effectiveCaseId, firmId, apiData);
-          } else {
-            await upsertCaseRelationalData(supabase, effectiveCaseId, apiData);
+          
+          try {
+            await handleCaseUpsert(supabase, effectiveCaseId, firmId, apiData);
+          } catch (e) {
+            console.error('Failed processing data:', e);
           }
-        } catch (e) {
-          console.error('Failed to upsert relational data:', e);
+        } else if (searchRecord) {
+          await supabase.from('legalkart_case_searches')
+            .update({ response_data: apiData, status: 'success' }).eq('id', searchRecord.id);
         }
       }
 
@@ -397,32 +424,12 @@ serve(async (req) => {
         return jsonResponse({ success: false, error: 'caseId and rawData required' });
       }
 
-      const mapped = mapEcourtsCaseToCRM(rawData);
-      const allowedKeys = [
-        'case_title','filing_date','registration_date','first_hearing_date','next_hearing_date',
-        'decision_date','disposal_date','petitioner','respondent','petitioner_advocate','respondent_advocate',
-        'court','court_name','court_type','district','state','bench_type','coram','stage','category',
-        'case_type','status','priority','under_act','under_section','vs','advocate_name','description',
-      ];
-      const updatePayload: any = {
-        is_auto_fetched: true, fetch_status: 'success',
-        fetch_message: `JSON upsert on ${new Date().toISOString()}`,
-        last_fetched_at: new Date().toISOString(), fetched_data: rawData,
-      };
-      for (const key of allowedKeys) {
-        const v = (mapped as any)[key];
-        if (v !== undefined && v !== null) updatePayload[key] = v;
+      try {
+        await handleCaseUpsert(supabase, caseId, firmId, rawData);
+        return jsonResponse({ success: true, message: 'Case data upserted from JSON' });
+      } catch (e: any) {
+        return jsonResponse({ success: false, error: e.message });
       }
-      await supabase.from('cases').update(updatePayload).eq('id', caseId);
-
-      const isSupremeCourt = (mapped.cnr_number ?? '').startsWith('SCIN');
-      if (isSupremeCourt) {
-        await upsertSupremeCourtData(supabase, caseId, firmId, rawData);
-      } else {
-        await upsertCaseRelationalData(supabase, caseId, rawData);
-      }
-
-      return jsonResponse({ success: true, message: 'Case data upserted' });
     }
 
     // ===== ACTION: case_search =====
@@ -469,13 +476,21 @@ serve(async (req) => {
         return jsonResponse({ success: false, error: 'Invalid CNR' });
       }
 
+      const normalizedCnr = parsedCnr.data;
+      const url = `${ECOURTS_BASE}/api/partner/case/${normalizedCnr}/refresh`;
+      console.log(`🔄 Triggering Scraper Refresh for ${normalizedCnr} at ${url}...`);
       const response = await fetchWithTimeout(
-        `${ECOURTS_BASE}/api/partner/case/${parsedCnr.data}/refresh`,
+        url,
         { method: 'POST', headers: authHeaders() },
-        15000
+        25000
       );
       const data = await response.json();
-      return jsonResponse({ success: response.ok, data: data?.data ?? data });
+      return jsonResponse({ 
+        success: response.ok, 
+        url_hit: url,
+        method: 'POST',
+        data: data?.data ?? data 
+      });
     }
 
     // ===== ACTION: bulk_refresh =====

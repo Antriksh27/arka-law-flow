@@ -21,7 +21,7 @@ import { HearingsTable } from '@/components/cases/enhanced/HearingsTable';
 import { ObjectionsTable } from '@/components/cases/enhanced/ObjectionsTable';
 import { LawyersTab } from '@/components/cases/detail/tabs/LawyersTab';
 import { SCCaseDetailView } from '@/components/cases/supreme-court/SCCaseDetailView';
-import { resolveLegalkartSearchType } from '@/lib/legalkartSearchType';
+import { resolveEcourtsSearchType } from '@/lib/ecourtsSearchType';
 
 const CaseDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -253,7 +253,7 @@ const CaseDetail = () => {
 
       if (!teamMember) throw new Error('Firm not found');
 
-      const searchType = resolveLegalkartSearchType({
+      const searchType = resolveEcourtsSearchType({
         cnr: caseInfo.cnr_number,
         courtType: caseInfo.court_type,
         fallback: 'district_court',

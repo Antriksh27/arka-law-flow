@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useLegalkartIntegration } from '@/hooks/useLegalkartIntegration';
+import { useEcourtsIntegration } from '@/hooks/useEcourtsIntegration';
 import { Loader2, X, Hash, Scale, FileText, User, Calendar, Building, Gavel } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,7 +32,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
   const [searchType, setSearchType] = useState<'high_court' | 'district_court' | 'supreme_court'>('district_court');
   const [fetchedData, setFetchedData] = useState<any>(null);
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FetchFormData>();
-  const { searchCase } = useLegalkartIntegration();
+  const { searchCase } = useEcourtsIntegration();
 
   // Supreme Court case detection
   const isSupremeCourtCase = (data: any): boolean => {

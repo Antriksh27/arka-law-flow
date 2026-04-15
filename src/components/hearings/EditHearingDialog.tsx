@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, X } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
-import { useDialog } from '@/hooks/use-dialog';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { HearingFormData, HearingType, HearingStatus } from './types';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditHearingDialogProps {
   hearingId: string;
@@ -22,6 +23,7 @@ interface EditHearingDialogProps {
 
 export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId }) => {
   const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -114,7 +116,6 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
-      queryClient.invalidateQueries({ queryKey: ['case-hearings'] });
       queryClient.invalidateQueries({ queryKey: ['hearing', hearingId] });
       toast({
         title: "Success",
@@ -149,53 +150,68 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleClose = () => closeDialog();
+
   if (isLoading) {
     return (
-      <Dialog open onOpenChange={closeDialog}>
-        <DialogContent className="bg-background border max-w-md">
-          <div className="flex items-center justify-center p-8">
-            <div className="text-foreground">Loading hearing data...</div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <div className="flex items-center justify-center p-8 bg-slate-50 min-h-[300px]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+          <p className="text-sm text-slate-500 font-medium">Loading hearing details...</p>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <Dialog open onOpenChange={closeDialog}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden bg-background">
-        <div className="flex flex-col h-full bg-muted">
-          {/* Header */}
-          <div className="px-6 py-5 bg-background border-b">
-            <div className="flex items-center justify-between">
-              <DialogHeader className="p-0">
-                <DialogTitle className="text-foreground">Edit Hearing</DialogTitle>
-              </DialogHeader>
-              <button
-                onClick={closeDialog}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
+  const fullFormView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      {!isInsideDialog && (
+        <MobileDialogHeader
+          title="Edit Hearing"
+          subtitle="Update court hearing information"
+          onClose={handleClose}
+          icon={<CalendarIcon className="w-5 h-5 text-sky-500" />}
+          showBorder
+        />
+      )}
+
+      {isInsideDialog && (
+        <div className="px-4 py-3 border-b flex items-center gap-3 bg-white">
+          <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+            <CalendarIcon className="w-4 h-4 text-sky-500" />
           </div>
-          
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold">Edit Hearing</h2>
+            <p className="text-xs text-muted-foreground">Update hearing information</p>
+          </div>
+        </div>
+      )}
+
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 pb-32">
+          <form id="edit-hearing-form" onSubmit={handleSubmit} className="space-y-4">
             {/* Case & Type Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-violet-500" />
+                </div>
+                <span className="font-medium text-slate-700">Case & Type</span>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="case" className="text-foreground">Case *</Label>
+                  <Label htmlFor="case" className="text-sm text-slate-600">Case *</Label>
                   <Select
                     value={formData.case_id}
                     onValueChange={(value) => handleInputChange('case_id', value)}
                   >
-                    <SelectTrigger className="bg-muted border-input text-foreground">
+                    <SelectTrigger className="rounded-xl h-11 bg-slate-50 border-0">
                       <SelectValue placeholder="Select a case" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border z-50">
+                    <SelectContent>
                       {cases?.map((case_item) => (
-                        <SelectItem key={case_item.id} value={case_item.id} className="text-foreground">
+                        <SelectItem key={case_item.id} value={case_item.id}>
                           {case_item.case_title}
                         </SelectItem>
                       ))}
@@ -204,23 +220,23 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hearing_type" className="text-foreground">Hearing Type</Label>
+                  <Label htmlFor="hearing_type" className="text-sm text-slate-600">Hearing Type</Label>
                   <Select
                     value={formData.hearing_type}
                     onValueChange={(value: HearingType) => handleInputChange('hearing_type', value)}
                   >
-                    <SelectTrigger className="bg-muted border-input text-foreground">
+                    <SelectTrigger className="rounded-xl h-11 bg-slate-50 border-0">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-background border z-50">
-                      <SelectItem value="preliminary" className="text-foreground">Preliminary</SelectItem>
-                      <SelectItem value="evidence" className="text-foreground">Evidence</SelectItem>
-                      <SelectItem value="arguments" className="text-foreground">Arguments</SelectItem>
-                      <SelectItem value="judgment" className="text-foreground">Judgment</SelectItem>
-                      <SelectItem value="bail" className="text-foreground">Bail</SelectItem>
-                      <SelectItem value="order" className="text-foreground">Order</SelectItem>
-                      <SelectItem value="cross_examination" className="text-foreground">Cross Examination</SelectItem>
-                      <SelectItem value="other" className="text-foreground">Other</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="preliminary">Preliminary</SelectItem>
+                      <SelectItem value="evidence">Evidence</SelectItem>
+                      <SelectItem value="arguments">Arguments</SelectItem>
+                      <SelectItem value="judgment">Judgment</SelectItem>
+                      <SelectItem value="bail">Bail</SelectItem>
+                      <SelectItem value="order">Order</SelectItem>
+                      <SelectItem value="cross_examination">Cross Examination</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -228,18 +244,25 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
             </div>
 
             {/* Date & Time Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-orange-500" />
+                </div>
+                <span className="font-medium text-slate-700">Schedule</span>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Hearing Date *</Label>
+                  <Label className="text-sm text-slate-600">Hearing Date *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left bg-muted border-input text-foreground hover:bg-accent">
+                      <Button variant="outline" className="w-full justify-start text-left rounded-xl h-11 bg-slate-50 border-0">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {formData.hearing_date ? TimeUtils.formatDisplay(formData.hearing_date, 'PPP') : 'Select date'}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background border z-50">
+                    <PopoverContent className="w-auto p-0 z-[100]" align="start">
                       <Calendar
                         mode="single"
                         selected={typeof formData.hearing_date === 'string' 
@@ -247,127 +270,148 @@ export const EditHearingDialog: React.FC<EditHearingDialogProps> = ({ hearingId 
                           : formData.hearing_date}
                         onSelect={(date) => handleInputChange('hearing_date', date || new Date())}
                         initialFocus
-                        className="bg-background"
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hearing_time" className="text-foreground">Time (Optional)</Label>
+                  <Label htmlFor="hearing_time" className="text-sm text-slate-600">Time (Optional)</Label>
                   <Input
                     id="hearing_time"
                     type="time"
                     value={formData.hearing_time || ''}
                     onChange={(e) => handleInputChange('hearing_time', e.target.value)}
-                    className="bg-muted border-input text-foreground"
-                    placeholder="HH:MM"
+                    className="rounded-xl h-11 bg-slate-50 border-0"
                   />
-                  <p className="text-xs text-muted-foreground">Leave empty if time is not specified</p>
                 </div>
               </div>
             </div>
 
             {/* Court Info Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-emerald-500" />
+                </div>
+                <span className="font-medium text-slate-700">Court Details</span>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="court_name" className="text-foreground">Court Name *</Label>
+                <Label htmlFor="court_name" className="text-sm text-slate-600">Court Name *</Label>
                 <Input
                   id="court_name"
                   value={formData.court_name}
                   onChange={(e) => handleInputChange('court_name', e.target.value)}
                   placeholder="Enter court name"
-                  className="bg-muted border-input text-foreground"
+                  className="rounded-xl h-11 bg-slate-50 border-0"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="bench" className="text-foreground">Bench</Label>
+                  <Label htmlFor="bench" className="text-sm text-slate-600">Bench</Label>
                   <Input
                     id="bench"
                     value={formData.bench || ''}
                     onChange={(e) => handleInputChange('bench', e.target.value)}
                     placeholder="Enter bench details"
-                    className="bg-muted border-input text-foreground"
+                    className="rounded-xl h-11 bg-slate-50 border-0"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="coram" className="text-foreground">Coram</Label>
+                  <Label htmlFor="coram" className="text-sm text-slate-600">Coram</Label>
                   <Input
                     id="coram"
                     value={formData.coram || ''}
                     onChange={(e) => handleInputChange('coram', e.target.value)}
                     placeholder="Enter coram details"
-                    className="bg-muted border-input text-foreground"
+                    className="rounded-xl h-11 bg-slate-50 border-0"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Status & Outcome Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="status" className="text-foreground">Status</Label>
+                <Label htmlFor="status" className="text-sm text-slate-600">Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value: HearingStatus) => handleInputChange('status', value)}
                 >
-                  <SelectTrigger className="bg-muted border-input text-foreground">
+                  <SelectTrigger className="rounded-xl h-11 bg-slate-50 border-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border z-50">
-                    <SelectItem value="scheduled" className="text-foreground">Scheduled</SelectItem>
-                    <SelectItem value="adjourned" className="text-foreground">Adjourned</SelectItem>
-                    <SelectItem value="completed" className="text-foreground">Completed</SelectItem>
-                    <SelectItem value="cancelled" className="text-foreground">Cancelled</SelectItem>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="adjourned">Adjourned</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Notes Card */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-slate-500" />
+                </div>
+                <span className="font-medium text-slate-700">Additional Info</span>
+              </div>
 
               <div className="space-y-2">
-                <Label htmlFor="outcome" className="text-foreground">Outcome</Label>
+                <Label htmlFor="outcome" className="text-sm text-slate-600">Outcome</Label>
                 <Textarea
                   id="outcome"
                   value={formData.outcome || ''}
                   onChange={(e) => handleInputChange('outcome', e.target.value)}
                   placeholder="Enter hearing outcome"
                   rows={2}
-                  className="bg-muted border-input text-foreground resize-none"
+                  className="rounded-xl bg-slate-50 border-0 resize-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-foreground">Notes</Label>
+                <Label htmlFor="notes" className="text-sm text-slate-600">Notes</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes || ''}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   placeholder="Enter additional notes"
                   rows={2}
-                  className="bg-muted border-input text-foreground resize-none"
+                  className="rounded-xl bg-slate-50 border-0 resize-none"
                 />
               </div>
             </div>
           </form>
-
-          {/* Footer */}
-          <div className="px-6 py-4 bg-background border-t">
-            <div className="flex flex-col sm:flex-row justify-end gap-3">
-              <Button type="button" variant="outline" onClick={closeDialog} className="rounded-full">
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSubmit}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full"
-                disabled={updateHearingMutation.isPending}
-              >
-                {updateHearingMutation.isPending ? 'Updating...' : 'Update Hearing'}
-              </Button>
-            </div>
-          </div>
         </div>
+      </ScrollArea>
+
+      {/* Standardized Footer */}
+      <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
+        <div className="flex gap-3">
+          <Button 
+            type="submit"
+            form="edit-hearing-form"
+            className="flex-1 rounded-full h-12 bg-slate-900 text-white hover:bg-slate-800 shadow-lg font-semibold"
+            disabled={updateHearingMutation.isPending}
+          >
+            {updateHearingMutation.isPending ? 'Updating...' : 'Update Hearing'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullFormView;
+  }
+
+  return (
+    <Dialog open onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        {fullFormView}
       </DialogContent>
     </Dialog>
   );

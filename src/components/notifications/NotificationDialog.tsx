@@ -6,9 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Check, Clock, Calendar, FileText, User, Settings, CheckCheck } from 'lucide-react';
 import TimeUtils from '@/lib/timeUtils';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Notification {
@@ -33,7 +34,9 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : onClose;
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
@@ -85,7 +88,7 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
     const type = notification.notification_type;
     const refId = notification.reference_id;
     
-    onClose();
+    handleClose();
     
     if (!refId) return;
     
@@ -155,42 +158,35 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
     }
   };
 
-  const content = (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 sticky top-0 z-10">
-        <button 
-          onClick={onClose}
-          className="text-primary font-medium text-base active:opacity-70"
-        >
-          Close
-        </button>
-        <span className="font-semibold text-slate-900">Notifications</span>
-        <button 
-          onClick={() => {
-            onClose();
-            navigate('/notifications');
-          }}
-          className="p-2 -mr-2 active:opacity-70"
-        >
-          <Settings className="w-5 h-5 text-slate-500" />
-        </button>
-      </div>
-
-      {/* iOS Drag Handle - Mobile only */}
-      {isMobile && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full z-20" />
-      )}
+  const fullFormView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Notifications"
+        onClose={handleClose}
+        icon={<Bell className="w-5 h-5 text-primary" />}
+        showBorder
+        action={
+          <button 
+            onClick={() => {
+              handleClose();
+              navigate('/notifications');
+            }}
+            className="p-2 -mr-2 active:opacity-70"
+          >
+            <Settings className="w-5 h-5 text-slate-500" />
+          </button>
+        }
+      />
 
       {/* Mark All Read Bar */}
       {unreadCount > 0 && (
         <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
-          <span className="text-sm text-slate-500">
+          <span className="text-sm font-bold text-slate-500">
             {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
           </span>
           <button 
             onClick={markAllAsRead}
-            className="flex items-center gap-1.5 text-sm font-medium text-primary active:opacity-70"
+            className="flex items-center gap-1.5 text-sm font-bold text-primary active:opacity-70"
           >
             <CheckCheck className="w-4 h-4" />
             Mark all read
@@ -199,56 +195,56 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
       )}
 
       {/* Notifications List */}
-      <ScrollArea className="flex-1 bg-slate-50">
+      <ScrollArea className="flex-1">
         <div className="p-4 space-y-3">
           {isLoading ? (
             <div className="py-12 text-center">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-slate-500">Loading notifications...</p>
+              <p className="text-sm text-slate-500 font-medium">Loading notifications...</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-10 h-10 text-slate-300" />
+              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+                <Bell className="w-10 h-10 text-slate-400" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">No notifications</h3>
-              <p className="text-sm text-slate-500">You'll see updates here when you have new activity</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">No notifications</h3>
+              <p className="text-sm text-slate-500 font-medium">You'll see updates here when you have new activity</p>
             </div>
           ) : (
             notifications.map((notification) => (
               <div
                 key={notification.id}
                 onClick={() => handleNotificationClick(notification)}
-                className={`bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all cursor-pointer ${
-                  !notification.read ? 'ring-2 ring-primary/20' : ''
+                className={`bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all cursor-pointer border border-border/50 ${
+                  !notification.read ? 'ring-2 ring-primary/10 bg-primary/5' : ''
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-full ${getIconBgColor(notification.notification_type)} flex items-center justify-center flex-shrink-0`}>
+                <div className="flex items-start gap-4">
+                  <div className={`w-11 h-11 rounded-2xl ${getIconBgColor(notification.notification_type)} flex items-center justify-center flex-shrink-0 border border-border/30`}>
                     {getNotificationIcon(notification.notification_type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-sm text-slate-900 truncate ${!notification.read ? 'font-semibold' : 'font-medium'}`}>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className={`text-[14px] text-slate-900 truncate ${!notification.read ? 'font-bold' : 'font-semibold'}`}>
                             {notification.title}
                           </p>
                           {!notification.read && (
                             <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                           )}
                         </div>
-                        <p className="text-sm text-slate-600 mt-0.5 line-clamp-2">
+                        <p className="text-sm text-slate-600 line-clamp-2 font-medium leading-relaxed">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-slate-400 mt-2">
+                        <p className="text-[11px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
                           {TimeUtils.formatNotificationTime(notification.created_at)}
                         </p>
                       </div>
                       {!notification.read && (
                         <button
                           onClick={(e) => markAsRead(notification.id, e)}
-                          className="p-2 -mr-2 rounded-full hover:bg-slate-100 active:scale-95 transition-transform"
+                          className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center hover:bg-white active:scale-90 transition-transform shadow-sm border border-slate-100"
                         >
                           <Check className="w-4 h-4 text-primary" />
                         </button>
@@ -261,32 +257,19 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
           )}
         </div>
       </ScrollArea>
+      
+      {/* Footer for Desktop if needed, but here we just need a back/close interaction which header provides */}
     </div>
   );
 
-  // Mobile: iOS-style bottom sheet
-  if (isMobile) {
-    return (
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent 
-          side="bottom" 
-          className="h-[85vh] rounded-t-3xl bg-slate-50 overflow-hidden p-0"
-          hideCloseButton
-        >
-          {content}
-        </SheetContent>
-      </Sheet>
-    );
+  if (isInsideDialog) {
+    return fullFormView;
   }
 
-  // Desktop: Dialog
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        hideCloseButton 
-        className="sm:max-w-[420px] p-0 gap-0 overflow-hidden max-h-[80vh]"
-      >
-        {content}
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-[420px] p-0 gap-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh] rounded-3xl">
+        {fullFormView}
       </DialogContent>
     </Dialog>
   );

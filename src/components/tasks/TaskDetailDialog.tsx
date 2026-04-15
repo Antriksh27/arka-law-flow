@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, User, Tag, Clock, FileText, Edit, Trash2, Bell, Briefcase, Users, X } from 'lucide-react';
+import { Calendar, User, Tag, Clock, FileText, Edit, Trash2, Bell, Briefcase, Users } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { TaskComments } from './TaskComments';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskTimeline } from './TaskTimeline';
+import { DialogContentContext } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 interface TaskDetailDialogProps {
   open: boolean;
   onClose: () => void;
@@ -17,6 +21,7 @@ interface TaskDetailDialogProps {
   onEdit: (taskId: string) => void;
   onDelete: (taskId: string) => void;
 }
+
 export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   open,
   onClose,
@@ -24,6 +29,8 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   onEdit,
   onDelete
 }) => {
+  const isInsideDialog = useContext(DialogContentContext);
+
   const {
     data: taskData,
     isLoading
@@ -66,6 +73,7 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
     },
     enabled: open && !!taskId
   });
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
@@ -73,232 +81,246 @@ export const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       case 'high':
         return 'bg-rose-50 text-rose-700 border-rose-200';
       case 'medium':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
+        return 'bg-amber-100 text-amber-700 border-amber-200';
       case 'low':
         return 'bg-slate-100 text-slate-700 border-slate-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'todo':
         return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'in_progress':
-        return 'bg-sky-50 text-sky-700 border-sky-200';
+        return 'bg-sky-100 text-sky-700 border-sky-200';
       case 'completed':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
+
   const isOverdue = (dueDate: string | null) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date() && taskData?.status !== 'completed';
   };
-  if (isLoading) {
-    return <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent hideCloseButton className="sm:max-w-3xl p-0 gap-0 overflow-hidden bg-muted">
-          <div className="flex items-center justify-center py-16 bg-slate-50">
-            <div className="animate-pulse text-slate-500">Loading task details...</div>
+
+  const fullView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      {!isInsideDialog && (
+        <MobileDialogHeader
+          title="Task Details"
+          subtitle={taskData?.title || 'Loading task...'}
+          onClose={onClose}
+          icon={<FileText className="w-5 h-5 text-sky-500" />}
+          showBorder
+        />
+      )}
+
+      {isInsideDialog && (
+        <div className="px-4 py-3 border-b flex items-center gap-3 bg-white">
+          <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+            <FileText className="w-4 h-4 text-sky-500" />
           </div>
-        </DialogContent>
-      </Dialog>;
-  }
-  if (!taskData) {
-    return <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent hideCloseButton className="sm:max-w-3xl p-0 gap-0 overflow-hidden bg-muted">
-          <div className="flex items-center justify-center py-16">
-            <div className="text-slate-500">Task not found</div>
-          </div>
-        </DialogContent>
-      </Dialog>;
-  }
-  return <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-3xl p-0 gap-0 overflow-hidden">
-        <div className="flex flex-col h-full max-h-[90vh] bg-muted">
-          {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 pr-4">
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  {taskData.title}
-                </h2>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={`${getStatusColor(taskData.status)} text-xs rounded-full border`}>
-                    {taskData.status.replace('_', ' ')}
-                  </Badge>
-                  <Badge className={`${getPriorityColor(taskData.priority)} text-xs rounded-full border`}>
-                    {taskData.priority}
-                  </Badge>
-                  {isOverdue(taskData.due_date) && <Badge className="bg-red-100 text-red-700 border-red-200 text-xs rounded-full border">
-                      Overdue
-                    </Badge>}
-                </div>
-              </div>
-              <button onClick={onClose} className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-slate-50">
-            {/* Description */}
-            {taskData.description && <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900">Description</h3>
-                  </div>
-                  <p className="text-slate-700 whitespace-pre-wrap pl-13">{taskData.description}</p>
-                </div>
-              </div>}
-
-            {/* Task Details Grid */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 space-y-4">
-                {/* Assigned To */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <User className="w-5 h-5 text-violet-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Assigned To</p>
-                    <p className="font-medium text-slate-900">
-                      {taskData.assigned_user?.full_name || 'Unassigned'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Created By */}
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Created By</p>
-                    <p className="font-medium text-slate-900">
-                      {taskData.creator?.full_name || 'Unknown'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Due Date */}
-                {taskData.due_date && <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isOverdue(taskData.due_date) ? 'bg-red-50' : 'bg-amber-50'}`}>
-                      <Calendar className={`w-5 h-5 ${isOverdue(taskData.due_date) ? 'text-red-500' : 'text-amber-500'}`} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Due Date</p>
-                      <p className={`font-medium ${isOverdue(taskData.due_date) ? 'text-red-700' : 'text-slate-900'}`}>
-                        {TimeUtils.formatDate(taskData.due_date)}
-                        {isOverdue(taskData.due_date) && ' (Overdue)'}
-                      </p>
-                    </div>
-                  </div>}
-
-                {/* Reminder */}
-                {(taskData as any).reminder_time && <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                      <Bell className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500">Reminder</p>
-                      <p className="font-medium text-slate-900">
-                        {TimeUtils.formatDateTime((taskData as any).reminder_time, 'dd/MM/yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>}
-
-                {/* Created Date */}
-                <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Created</p>
-                    <p className="font-medium text-slate-900">
-                      {TimeUtils.formatDateTime(taskData.created_at, 'dd/MM/yyyy HH:mm')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Linked Case/Client */}
-            {(taskData.case || taskData.client) && <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-rose-500" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900">Linked To</h3>
-                  </div>
-                  <div className="space-y-2">
-                    {taskData.case && <div className="flex items-center gap-2 bg-sky-50 rounded-xl p-3 border border-sky-100">
-                        <FileText className="w-4 h-4 text-sky-600" />
-                        <span className="text-sky-700 font-medium">Case:</span>
-                        <span className="text-sky-600">{taskData.case.case_title}</span>
-                      </div>}
-                    {taskData.client && <div className="flex items-center gap-2 bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                        <User className="w-4 h-4 text-emerald-600" />
-                        <span className="text-emerald-700 font-medium">Client:</span>
-                        <span className="text-emerald-600">{taskData.client.full_name}</span>
-                      </div>}
-                  </div>
-                </div>
-              </div>}
-
-            {/* Tags */}
-            {taskData.tags && taskData.tags.length > 0 && <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Tag className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900">Tags</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {taskData.tags.map((tag: string, index: number) => <Badge key={index} variant="outline" className="bg-slate-50 rounded-full">
-                        {tag}
-                      </Badge>)}
-                  </div>
-                </div>
-              </div>}
-
-            <Separator className="my-4" />
-
-            {/* Attachments */}
-            <TaskAttachments taskId={taskId} attachments={((taskData as any).attachments || []) as string[]} />
-
-            <Separator className="my-4" />
-
-            {/* Comments */}
-            <TaskComments taskId={taskId} comments={((taskData as any).comments || []) as any[]} />
-
-            <Separator className="my-4" />
-
-            {/* Timeline */}
-            <TaskTimeline taskId={taskId} />
-          </div>
-
-          {/* Footer */}
-          <div className="px-6 py-4 bg-white border-t border-slate-100">
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={() => onEdit(taskId)} className="rounded-full px-6 border-slate-200 hover:bg-slate-50">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-              <Button variant="outline" onClick={() => onDelete(taskId)} className="rounded-full px-6 border-red-200 text-red-600 hover:bg-red-50">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
+          <div>
+            <h2 className="text-sm font-semibold">Task Details</h2>
+            <p className="text-xs text-muted-foreground">{taskData?.title || 'Loading task...'}</p>
           </div>
         </div>
+      )}
+
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 pb-32 space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-pulse text-slate-500">Loading task details...</div>
+            </div>
+          ) : !taskData ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-slate-500">Task not found</div>
+            </div>
+          ) : (
+            <>
+              {/* Title and Badges */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">{taskData.title}</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge className={`${getStatusColor(taskData.status)} text-xs rounded-full border px-2.5 py-0.5 font-medium`}>
+                    {taskData.status.replace('_', ' ')}
+                  </Badge>
+                  <Badge className={`${getPriorityColor(taskData.priority)} text-xs rounded-full border px-2.5 py-0.5 font-medium`}>
+                    {taskData.priority}
+                  </Badge>
+                  {isOverdue(taskData.due_date) && (
+                    <Badge className="bg-red-100 text-red-700 border-red-200 text-xs rounded-full border px-2.5 py-0.5 font-medium">
+                      Overdue
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {taskData.description && (
+                <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-sky-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Description</span>
+                  </div>
+                  <p className="text-sm text-slate-600 pl-11">{taskData.description}</p>
+                </div>
+              )}
+
+              {/* Details Grid */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center">
+                      <User className="w-4 h-4 text-violet-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Assigned To</p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {taskData.assigned_user?.full_name || 'Unassigned'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {taskData.due_date && (
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isOverdue(taskData.due_date) ? 'bg-red-50' : 'bg-amber-50'}`}>
+                        <Calendar className={`w-4 h-4 ${isOverdue(taskData.due_date) ? 'text-red-500' : 'text-amber-500'}`} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Due Date</p>
+                        <p className={`text-sm font-medium ${isOverdue(taskData.due_date) ? 'text-red-700' : 'text-slate-800'}`}>
+                          {TimeUtils.formatDate(taskData.due_date)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Created By</p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {taskData.creator?.full_name || 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center">
+                      <Clock className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Created</p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {TimeUtils.formatDateTime(taskData.created_at, 'dd/MM/yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Linked Case/Client */}
+              {(taskData.case || taskData.client) && (
+                <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                      <Briefcase className="w-4 h-4 text-rose-500" />
+                    </div>
+                    <span className="font-medium text-slate-700">Linked Info</span>
+                  </div>
+                  <div className="space-y-3">
+                    {taskData.case && (
+                      <div className="flex items-center gap-3 bg-sky-50/50 rounded-xl p-3 border border-sky-100">
+                        <FileText className="w-4 h-4 text-sky-500" />
+                        <div>
+                          <p className="text-[10px] text-sky-600 uppercase font-bold tracking-tight">Case</p>
+                          <p className="text-sm font-medium text-sky-900 leading-tight">{taskData.case.case_title}</p>
+                        </div>
+                      </div>
+                    )}
+                    {taskData.client && (
+                      <div className="flex items-center gap-3 bg-emerald-50/50 rounded-xl p-3 border border-emerald-100">
+                        <User className="w-4 h-4 text-emerald-500" />
+                        <div>
+                          <p className="text-[10px] text-emerald-600 uppercase font-bold tracking-tight">Client</p>
+                          <p className="text-sm font-medium text-emerald-900 leading-tight">{taskData.client.full_name}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              {taskData.tags && taskData.tags.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
+                      <Tag className="w-4 h-4 text-slate-600" />
+                    </div>
+                    <span className="font-medium text-slate-700">Tags</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {taskData.tags.map((tag: string, index: number) => (
+                      <Badge key={index} variant="outline" className="bg-slate-50 rounded-full px-3 py-0.5 border-slate-200">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <TaskAttachments taskId={taskId} attachments={((taskData as any).attachments || []) as string[]} />
+              <TaskComments taskId={taskId} comments={((taskData as any).comments || []) as any[]} />
+              <TaskTimeline taskId={taskId} />
+            </>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Standardized Footer */}
+      <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => onEdit(taskId)} 
+            className="flex-1 rounded-full h-12 border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold shadow-sm"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Task
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => onDelete(taskId)} 
+            className="flex-1 rounded-full h-12 border-red-100 text-red-600 hover:bg-red-50 font-semibold shadow-sm"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent hideCloseButton className="sm:max-w-3xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+        {fullView}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };

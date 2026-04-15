@@ -5,6 +5,10 @@ import { MobileSidebar } from '@/components/ui/sidebar';
 import { TopNavBar } from './TopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SidebarProvider } from '@/contexts/SidebarContext';
+import { cn } from '@/lib/utils';
+
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { DashboardMobileFAB } from '@/components/dashboard/DashboardMobileFAB';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -46,9 +50,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Desktop only: Render top nav bar */}
           {!isMobile && <TopNavBar />}
 
-          <main className="flex-1 overflow-auto bg-background pb-6">
+          <main className={cn("flex-1 overflow-auto bg-background pb-6", isMobile && "pb-20")}>
             {children}
           </main>
+          
+          {/* Mobile only: Bottom navigation and FAB */}
+          {isMobile && <MobileBottomNav />}
+          {isMobile && <DashboardMobileFAB />}
         </div>
       </div>
     </SidebarProvider>

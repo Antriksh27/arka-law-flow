@@ -53,23 +53,32 @@ export const MobileDashboardHeader: React.FC<MobileDashboardHeaderProps> = ({ us
     
     // Also listen for new messages to update count
     const listenerID = 'mobile_header_message_listener';
-    const messageListener = new CometChat.MessageListener({
-      onTextMessageReceived: () => {
-        console.log('📧 New message received, refreshing count');
-        fetchUnreadMessages();
-      },
-      onMediaMessageReceived: () => {
-        console.log('📧 New media message received, refreshing count');
-        fetchUnreadMessages();
-      },
-    });
     
-    CometChat.addMessageListener(listenerID, messageListener);
+    try {
+      const messageListener = new CometChat.MessageListener({
+        onTextMessageReceived: () => {
+          console.log('📧 New message received, refreshing count');
+          fetchUnreadMessages();
+        },
+        onMediaMessageReceived: () => {
+          console.log('📧 New media message received, refreshing count');
+          fetchUnreadMessages();
+        },
+      });
+      
+      CometChat.addMessageListener(listenerID, messageListener);
+    } catch (error) {
+      console.warn('Could not initialize CometChat message listener:', error);
+    }
 
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
-      CometChat.removeMessageListener(listenerID);
+      try {
+        CometChat.removeMessageListener(listenerID);
+      } catch (e) {
+        // Ignore errors on cleanup
+      }
     };
   }, []);
 

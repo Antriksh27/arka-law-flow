@@ -16,6 +16,8 @@ import { Mic, MicOff, Loader2, CheckSquare, FileText, Calendar, User, Tag, Bell,
 import { AudioRecorder } from '@/utils/audioRecorder';
 import { useDeepgramTranscription } from '@/hooks/useDeepgramTranscription';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useDialog, DialogContentContext } from '@/hooks/use-dialog';
+import { useContext } from 'react';
 import { bg, border } from '@/lib/colors';
 
 interface CreateTaskDialogProps {
@@ -50,6 +52,16 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { firmId } = useAuth();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+
+  const handleClose = () => {
+    if (isInsideDialog) {
+      closeDialog();
+    } else if (onClose) {
+      onClose();
+    }
+  };
   
   const [isDictating, setIsDictating] = useState(false);
   const audioRecorderRef = useRef<AudioRecorder>(new AudioRecorder());
@@ -247,7 +259,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     onSuccess: () => {
       toast({ title: "Task created successfully" });
       reset();
-      onClose();
+      handleClose();
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['case-tasks'] });
@@ -267,309 +279,310 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     createTaskMutation.mutate(data);
   };
 
-  const priorityOptions = [
-    { value: 'low', label: 'Low', bg: 'bg-slate-100', activeBg: 'bg-slate-200', text: 'text-slate-700' },
-    { value: 'medium', label: 'Medium', bg: 'bg-amber-50', activeBg: 'bg-amber-100', text: 'text-amber-700' },
-    { value: 'high', label: 'High', bg: 'bg-rose-50', activeBg: 'bg-rose-100', text: 'text-rose-700' },
-    { value: 'critical', label: 'Critical', bg: 'bg-red-100', activeBg: 'bg-red-200', text: 'text-red-700' },
-  ];
+  const formView = (
+    <div className={`flex flex-col h-full ${bg.page}`}>
+      <MobileDialogHeader
+        title="Create New Task"
+        subtitle="Add a new task to your workflow"
+        onClose={handleClose}
+      />
 
-  const statusOptions = [
-    { value: 'todo', label: 'To Do', bg: 'bg-slate-100', activeBg: 'bg-slate-200', text: 'text-slate-700' },
-    { value: 'in_progress', label: 'In Progress', bg: 'bg-sky-50', activeBg: 'bg-sky-100', text: 'text-sky-700' },
-    { value: 'completed', label: 'Done', bg: 'bg-emerald-50', activeBg: 'bg-emerald-100', text: 'text-emerald-700' },
-  ];
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className={`flex flex-col h-full ${bg.page}`}>
-          <MobileDialogHeader
-            title="Create New Task"
-            subtitle="Add a new task to your workflow"
-            onClose={onClose}
-          />
-
-          {/* Form Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              
-              {/* Title Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className={`p-4 border-b ${border.light}`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <CheckSquare className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div>
-                      <Label htmlFor="title" className="text-sm font-semibold text-foreground">
-                        Task Title <span className="text-destructive">*</span>
-                      </Label>
-                      <p className="text-xs text-muted-foreground">What needs to be done?</p>
-                    </div>
-                  </div>
-                  <Input
-                    id="title"
-                    {...register('title', { required: 'Task title is required' })}
-                    placeholder="Enter task title..."
-                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
-                  />
-                  {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
+      {/* Form Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          
+          {/* Title Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className={`p-4 border-b ${border.light}`}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <CheckSquare className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <Label htmlFor="title" className="text-sm font-semibold text-foreground">
+                    Task Title <span className="text-destructive">*</span>
+                  </Label>
+                  <p className="text-xs text-muted-foreground">What needs to be done?</p>
                 </div>
               </div>
-
-              {/* Description Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-sky-500" />
-                      </div>
-                      <div>
-                        <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
-                        <p className="text-xs text-muted-foreground">Add more details</p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={toggleDictation}
-                      disabled={isTranscribing}
-                      className={`rounded-full ${isDictating 
-                        ? 'bg-rose-50 text-rose-600 border-rose-200' 
-                        : 'bg-slate-50 border-slate-200'}`}
-                    >
-                      {isTranscribing ? (
-                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing</>
-                      ) : isDictating ? (
-                        <><MicOff className="w-4 h-4 mr-2" />Stop</>
-                      ) : (
-                        <><Mic className="w-4 h-4 mr-2" />Dictate</>
-                      )}
-                    </Button>
-                  </div>
-                  <div className="relative">
-                    <Textarea
-                      id="description"
-                      {...register('description')}
-                      placeholder="Enter task description or click Dictate to speak..."
-                      className="bg-slate-50 border-slate-200 rounded-xl min-h-[100px] resize-none"
-                      rows={4}
-                    />
-                    {isDictating && (
-                      <div className="absolute bottom-2 right-2 flex items-center gap-2 text-rose-500 text-sm">
-                        <span className="animate-pulse">●</span> Recording...
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Priority & Status Card */}
-              <div className="bg-white rounded-2xl shadow-sm p-4">
-                <div className="space-y-4">
-                  {/* Priority */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Priority</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {priorityOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setValue('priority', option.value as any)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                            watchedPriority === option.value
-                              ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
-                              : `${option.bg} ${option.text} hover:opacity-80`
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Status</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {statusOptions.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setValue('status', option.value as any)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                            watchedStatus === option.value
-                              ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
-                              : `${option.bg} ${option.text} hover:opacity-80`
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Assignee Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                      <User className="w-5 h-5 text-violet-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Assign To</Label>
-                      <p className="text-xs text-muted-foreground">Who will work on this?</p>
-                    </div>
-                  </div>
-                  <Select onValueChange={(value) => setValue('assigned_to', value)}>
-                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                      <SelectValue placeholder="Select team member..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 rounded-xl">
-                      {teamMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.full_name} ({member.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Link To Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                      <Link className="w-5 h-5 text-rose-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Link To</Label>
-                      <p className="text-xs text-muted-foreground">Connect to case or client</p>
-                    </div>
-                  </div>
-                  <Select 
-                    onValueChange={(value) => setValue('link_type', value as any)} 
-                    defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200 rounded-xl">
-                      <SelectItem value="none">No Link</SelectItem>
-                      <SelectItem value="case">Link to Case</SelectItem>
-                      <SelectItem value="client_contact">Link to Client/Contact</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {linkType === 'case' && (
-                  <div className="p-4 bg-slate-50/50">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Case</Label>
-                    <CaseSelector
-                      value={watch('case_id') || ''}
-                      onValueChange={(value) => setValue('case_id', value)}
-                      placeholder="Search and select a case..."
-                    />
-                  </div>
-                )}
-
-                {linkType === 'client_contact' && (
-                  <div className="p-4 bg-slate-50/50">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Client or Contact</Label>
-                    <ClientSelector
-                      value={watch('client_contact_id') || ''}
-                      onValueChange={(value) => setValue('client_contact_id', value)}
-                      placeholder="Search and select..."
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Due Date & Reminder Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Schedule</Label>
-                      <p className="text-xs text-muted-foreground">Set due date and reminder</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</Label>
-                    <Input
-                      type="date"
-                      {...register('due_date')}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reminder</Label>
-                    <Input
-                      type="datetime-local"
-                      {...register('reminder_time')}
-                      className="bg-slate-50 border-slate-200 rounded-xl h-11"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Tag className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Tags</Label>
-                      <p className="text-xs text-muted-foreground">Separate with commas</p>
-                    </div>
-                  </div>
-                  <Input
-                    {...register('tags')}
-                    placeholder="urgent, follow-up, client-work..."
-                    className="bg-slate-50 border-slate-200 rounded-xl h-11"
-                  />
-                </div>
-              </div>
-
-            </form>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-slate-100 bg-white">
-            <div className="flex justify-end gap-3">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                className="min-w-[100px] rounded-full border-slate-200"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                onClick={handleSubmit(onSubmit)}
-                disabled={isSubmitting}
-                className="min-w-[140px] bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg"
-              >
-                {isSubmitting ? 'Creating...' : 'Create Task'}
-              </Button>
+              <Input
+                id="title"
+                {...register('title', { required: 'Task title is required' })}
+                placeholder="Enter task title..."
+                className="bg-slate-50 border-slate-200 rounded-xl h-11"
+              />
+              {errors.title && <p className="text-sm text-destructive mt-2">{errors.title.message}</p>}
             </div>
           </div>
+
+          {/* Description Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-sky-500" />
+                  </div>
+                  <div>
+                    <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
+                    <p className="text-xs text-muted-foreground">Add more details</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleDictation}
+                  disabled={isTranscribing}
+                  className={`rounded-full ${isDictating 
+                    ? 'bg-rose-50 text-rose-600 border-rose-200' 
+                    : 'bg-slate-50 border-slate-200'}`}
+                >
+                  {isTranscribing ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Transcribing</>
+                  ) : isDictating ? (
+                    <><MicOff className="w-4 h-4 mr-2" />Stop</>
+                  ) : (
+                    <><Mic className="w-4 h-4 mr-2" />Dictate</>
+                  )}
+                </Button>
+              </div>
+              <div className="relative">
+                <Textarea
+                  id="description"
+                  {...register('description')}
+                  placeholder="Enter task description or click Dictate to speak..."
+                  className="bg-slate-50 border-slate-200 rounded-xl min-h-[100px] resize-none"
+                  rows={4}
+                />
+                {isDictating && (
+                  <div className="absolute bottom-2 right-2 flex items-center gap-2 text-rose-500 text-sm">
+                    <span className="animate-pulse">●</span> Recording...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Priority & Status Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <div className="space-y-4">
+              {/* Priority */}
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Priority</Label>
+                <div className="flex flex-wrap gap-2">
+                  {priorityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setValue('priority', option.value as any)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        watchedPriority === option.value
+                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          : `${option.bg} ${option.text} hover:opacity-80`
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Status</Label>
+                <div className="flex flex-wrap gap-2">
+                  {statusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setValue('status', option.value as any)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        watchedStatus === option.value
+                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          : `${option.bg} ${option.text} hover:opacity-80`
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Assignee Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                  <User className="w-5 h-5 text-violet-500" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Assign To</Label>
+                  <p className="text-xs text-muted-foreground">Who will work on this?</p>
+                </div>
+              </div>
+              <Select onValueChange={(value) => setValue('assigned_to', value)}>
+                <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                  <SelectValue placeholder="Select team member..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 rounded-xl">
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Link To Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                  <Link className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Link To</Label>
+                  <p className="text-xs text-muted-foreground">Connect to case or client</p>
+                </div>
+              </div>
+              <Select 
+                onValueChange={(value) => setValue('link_type', value as any)} 
+                defaultValue={caseId ? 'case' : (clientId ? 'client_contact' : 'none')}
+              >
+                <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200 rounded-xl">
+                  <SelectItem value="none">No Link</SelectItem>
+                  <SelectItem value="case">Link to Case</SelectItem>
+                  <SelectItem value="client_contact">Link to Client/Contact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {linkType === 'case' && (
+              <div className="p-4 bg-slate-50/50">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Case</Label>
+                <CaseSelector
+                  value={watch('case_id') || ''}
+                  onValueChange={(value) => setValue('case_id', value)}
+                  placeholder="Search and select a case..."
+                />
+              </div>
+            )}
+
+            {linkType === 'client_contact' && (
+              <div className="p-4 bg-slate-50/50">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">Select Client or Contact</Label>
+                <ClientSelector
+                  value={watch('client_contact_id') || ''}
+                  onValueChange={(value) => setValue('client_contact_id', value)}
+                  placeholder="Search and select..."
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Due Date & Reminder Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Schedule</Label>
+                  <p className="text-xs text-muted-foreground">Set due date and reminder</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Due Date</Label>
+                <Input
+                  type="date"
+                  {...register('due_date')}
+                  className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reminder</Label>
+                <Input
+                  type="datetime-local"
+                  {...register('reminder_time')}
+                  className="bg-slate-50 border-slate-200 rounded-xl h-11"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tags Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                  <Tag className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Tags</Label>
+                  <p className="text-xs text-muted-foreground">Separate with commas</p>
+                </div>
+              </div>
+              <Input
+                {...register('tags')}
+                placeholder="urgent, follow-up, client-work..."
+                className="bg-slate-50 border-slate-200 rounded-xl h-11"
+              />
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="px-6 py-4 border-t border-slate-100 bg-white">
+        <div className="flex gap-3">
+          <Button 
+            type="submit"
+            onClick={handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 shadow-lg font-bold"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Task'}
+          </Button>
         </div>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return formView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        {formView}
       </DialogContent>
     </Dialog>
+
   );
 };
+
+const priorityOptions = [
+  { value: 'low', label: 'Low', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600' },
+  { value: 'medium', label: 'Medium', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600' },
+  { value: 'high', label: 'High', bg: 'bg-amber-100', activeBg: 'bg-amber-600', text: 'text-amber-600' },
+  { value: 'critical', label: 'Critical', bg: 'bg-rose-100', activeBg: 'bg-rose-600', text: 'text-rose-600' }
+];
+
+const statusOptions = [
+  { value: 'todo', label: 'To Do', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600' },
+  { value: 'in_progress', label: 'In Progress', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600' },
+  { value: 'completed', label: 'Completed', bg: 'bg-emerald-100', activeBg: 'bg-emerald-600', text: 'text-emerald-600' }
+];

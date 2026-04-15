@@ -1,0 +1,1 @@
+Search failed: 400 Bad Request - {"success":false,"message":"all fields are required"} | Payload: {"caseMode":"REGISTRATION","case_mode":"REGISTRATION","caseType":"SCA-SPECIAL CIVIL APPLICATION","caseNo":"14684","caseYear":"2018","cnr":"GJHC240530532018"}

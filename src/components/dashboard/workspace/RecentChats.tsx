@@ -7,6 +7,7 @@ import { useCometChat } from '@/hooks/useCometChat';
 import { useEffect, useState } from 'react';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import { formatDistanceToNow } from 'date-fns';
+
 interface Chat {
   id: string;
   name: string;
@@ -15,9 +16,11 @@ interface Chat {
   unread?: boolean;
   avatar?: string;
 }
+
 interface RecentChatsProps {
   isLoading?: boolean;
 }
+
 export const RecentChats = ({
   isLoading
 }: RecentChatsProps) => {
@@ -27,6 +30,7 @@ export const RecentChats = ({
   } = useCometChat();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchRecentChats = async () => {
       if (!isCometChatReady) {
@@ -37,18 +41,20 @@ export const RecentChats = ({
         const limit = 5;
         const conversationsRequest = new CometChat.ConversationsRequestBuilder().setLimit(limit).build();
         const conversationList = await conversationsRequest.fetchNext();
+        
         const formattedChats: Chat[] = conversationList.map((conversation: any) => {
           const conversationWith = conversation.getConversationWith();
           const lastMessage = conversation.getLastMessage();
+          
           return {
             id: conversation.getConversationId(),
-            name: conversationWith.getName(),
-            message: lastMessage?.getText() || 'No messages yet',
+            name: conversationWith?.getName?.() || 'Unknown',
+            message: (lastMessage as any)?.getText?.() || 'Media message',
             time: lastMessage ? formatDistanceToNow(new Date(lastMessage.getSentAt() * 1000), {
               addSuffix: true
             }) : 'Just now',
             unread: conversation.getUnreadMessageCount() > 0,
-            avatar: conversationWith.getAvatar()
+            avatar: conversationWith?.getAvatar?.() || conversationWith?.getIcon?.() || ''
           };
         });
         setChats(formattedChats);
@@ -61,6 +67,7 @@ export const RecentChats = ({
     };
     fetchRecentChats();
   }, [isCometChatReady]);
+
   if (isLoading || loading) {
     return <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -74,13 +81,14 @@ export const RecentChats = ({
         </div>
       </div>;
   }
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
+
   return <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          
           <h2 className="text-xl font-semibold">Recent Chats</h2>
         </div>
         <button onClick={() => navigate('/chat')} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
@@ -93,7 +101,6 @@ export const RecentChats = ({
           <p className="text-sm text-muted-foreground">No recent chats</p>
         </Card> : <div className="space-y-3">
           {chats.slice(0, 2).map(chat => <Card key={chat.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
-            // Check if this is a case group chat (format: group_case_{caseId})
             if (chat.id.startsWith('group_case_')) {
               const caseId = chat.id.replace('group_case_', '');
               navigate(`/cases/${caseId}?tab=chat`);

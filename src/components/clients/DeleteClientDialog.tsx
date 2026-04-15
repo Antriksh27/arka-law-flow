@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt, X } from 'lucide-react';
+import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt } from 'lucide-react';
 import { AuditLogger } from '@/lib/auditLogger';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DeleteClientDialogProps {
   clientId: string | null;
@@ -15,6 +18,9 @@ interface DeleteClientDialogProps {
 }
 
 export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, onSuccess }: DeleteClientDialogProps) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -146,7 +152,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['client-related-data'] });
       
-      onOpenChange(false);
+      handleClose();
       onSuccess?.();
     },
     onError: (error: any) => {
@@ -182,136 +188,139 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
     { key: 'appointments', icon: Calendar, label: 'Appointments', color: 'emerald', data: relatedData?.appointments, titleField: 'title', subtitleField: 'start_time' },
   ];
 
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <div className="flex flex-col h-full bg-slate-50">
-          {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">Delete Client</h2>
-                  <p className="text-sm text-muted-foreground">{clientName}</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
+  const fullFormView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Delete Client"
+        subtitle={clientName}
+        onClose={handleClose}
+        icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+        showBorder
+      />
+
+      {/* Content */}
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
             </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-              </div>
-            ) : (
-              <>
-                {/* Warning Card */}
-                <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-red-800">This action cannot be undone</p>
-                      <p className="text-sm text-red-700 mt-1">
-                        The following data will be permanently deleted:
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {totalItems === 0 ? (
-                  <div className="bg-white rounded-2xl shadow-sm p-6 text-center">
-                    <p className="text-sm text-slate-600">
-                      No related data found. Only the client record will be deleted.
+          ) : (
+            <>
+              {/* Warning Card */}
+              <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-red-800">This action cannot be undone</p>
+                    <p className="text-xs text-red-700 mt-1">
+                      The following data will be permanently deleted:
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {dataCategories.map(({ key, icon: Icon, label, color, data, titleField, subtitleField }) => {
-                      if (!data || data.length === 0) return null;
-                      
-                      return (
-                        <div key={key} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                          <div className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className={`w-10 h-10 rounded-xl bg-${color}-50 flex items-center justify-center`}>
-                                <Icon className={`w-5 h-5 text-${color}-500`} />
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-slate-900">{label}</p>
-                                <p className="text-xs text-muted-foreground">{data.length} item{data.length !== 1 ? 's' : ''}</p>
-                              </div>
+                </div>
+              </div>
+
+              {totalItems === 0 ? (
+                <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-border/50">
+                  <p className="text-sm text-slate-600">
+                    No related data found. Only the client record will be deleted.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {dataCategories.map(({ key, icon: Icon, label, color, data, titleField, subtitleField }) => {
+                    if (!data || data.length === 0) return null;
+                    
+                    return (
+                      <div key={key} className="bg-white rounded-2xl shadow-sm overflow-hidden border border-border/50">
+                        <div className="p-3">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`w-9 h-9 rounded-xl bg-${color}-50 flex items-center justify-center`}>
+                              <Icon className={`w-4 h-4 text-${color}-500`} />
                             </div>
-                            
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                              {data.slice(0, 5).map((item: any) => (
-                                <div key={item.id} className="p-2 rounded-xl bg-slate-50 text-sm">
-                                  <p className="font-medium text-slate-900 truncate">
-                                    {item[titleField] || `Untitled ${label.slice(0, -1)}`}
-                                  </p>
-                                  {subtitleField && item[subtitleField] && (
-                                    <p className="text-xs text-slate-500 truncate">
-                                      {subtitleField === 'start_time' 
-                                        ? new Date(item[subtitleField]).toLocaleDateString()
-                                        : item[subtitleField]
-                                      }
-                                    </p>
-                                  )}
-                                </div>
-                              ))}
-                              {data.length > 5 && (
-                                <p className="text-xs text-slate-500 italic px-2">
-                                  + {data.length - 5} more {label.toLowerCase()}
-                                </p>
-                              )}
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{label}</p>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{data.length} item{data.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>
+                          
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {data.slice(0, 5).map((item: any) => (
+                              <div key={item.id} className="p-2 rounded-xl bg-slate-50 text-[11px] border border-slate-100">
+                                <p className="font-bold text-slate-800 truncate">
+                                  {item[titleField] || `Untitled ${label.slice(0, -1)}`}
+                                </p>
+                                {subtitleField && item[subtitleField] && (
+                                  <p className="text-[10px] text-slate-500 truncate mt-0.5 font-medium">
+                                    {subtitleField === 'start_time' 
+                                      ? new Date(item[subtitleField]).toLocaleDateString()
+                                      : item[subtitleField]
+                                    }
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                            {data.length > 5 && (
+                              <p className="text-[10px] text-slate-500 italic px-2 font-medium">
+                                + {data.length - 5} more {label.toLowerCase()}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    );
+                  })}
 
-                    {/* Summary */}
-                    <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                      <p className="text-sm text-amber-800">
-                        <strong>Total items to be deleted:</strong> {totalItems} record{totalItems !== 1 ? 's' : ''} plus all associated data
-                      </p>
-                    </div>
+                  {/* Summary */}
+                  <div className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                    <p className="text-xs text-amber-800 font-medium">
+                      <span className="font-bold">Total items to be deleted:</span> {totalItems} record{totalItems !== 1 ? 's' : ''} plus all associated data
+                    </p>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Footer */}
-          <AlertDialogFooter className="px-6 py-4 bg-white border-t border-slate-100 flex-row gap-3 sm:gap-3">
-            <AlertDialogCancel className="flex-1 rounded-full" disabled={deleteMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete}
-              disabled={isLoading || !clientId || deleteMutation.isPending}
-              className="flex-1 rounded-full bg-red-600 hover:bg-red-700 text-white"
-            >
-              {deleteMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete Client'
+                </div>
               )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            </>
+          )}
         </div>
+      </ScrollArea>
+
+      {/* Footer */}
+      <div className="px-4 py-4 bg-white/80 backdrop-blur-lg border-t border-slate-100 flex gap-3">
+        <Button 
+          variant="outline" 
+          className="flex-1 rounded-full h-12 font-semibold text-slate-600 border-slate-200 hover:bg-slate-50" 
+          disabled={deleteMutation.isPending}
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleDelete}
+          disabled={isLoading || !clientId || deleteMutation.isPending}
+          variant="destructive"
+          className="flex-1 rounded-full h-12 font-bold shadow-lg"
+        >
+          {deleteMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Deleting...
+            </>
+          ) : (
+            'Delete'
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullFormView;
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={handleClose}>
+      <AlertDialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
+        {fullFormView}
       </AlertDialogContent>
     </AlertDialog>
   );

@@ -43,30 +43,13 @@ export const DayHearingsDialog: React.FC<DayHearingsDialogProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      {/* Header */}
-      <div className="px-6 py-5 bg-white border-b border-slate-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-amber-500" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                {format(selectedDate, 'MMMM d, yyyy')}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {hearings.length} hearing{hearings.length !== 1 ? 's' : ''} scheduled
-              </p>
-            </div>
-          </div>
-          <button 
-            onClick={onClose}
-            className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-          >
-            <X className="w-4 h-4 text-slate-500" />
-          </button>
-        </div>
-      </div>
+      <MobileDialogHeader
+        title={format(selectedDate, 'MMMM d, yyyy')}
+        subtitle={`${hearings.length} hearing${hearings.length !== 1 ? 's' : ''} scheduled`}
+        onClose={onClose}
+        icon={<Calendar className="w-5 h-5 text-amber-500" />}
+        showBorder
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-3">
@@ -153,16 +136,6 @@ export const DayHearingsDialog: React.FC<DayHearingsDialogProps> = ({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-4 bg-white border-t border-slate-100">
-        <Button 
-          variant="outline" 
-          onClick={onClose}
-          className="w-full rounded-full"
-        >
-          Close
-        </Button>
-      </div>
     </div>
   );
 };

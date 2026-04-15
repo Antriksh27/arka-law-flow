@@ -291,7 +291,7 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
               <div>
                 <Label htmlFor="case_number" className="text-sm">Case Number</Label>
-                <Input id="case_number" {...register('case_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Case number..." />
+                <Input id="case_number" inputMode="numeric" {...register('case_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Case number..." />
               </div>
 
               <div>
@@ -306,12 +306,12 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
 
               <div>
                 <Label htmlFor="cnr_number" className="text-sm">CNR Number</Label>
-                <Input id="cnr_number" {...register('cnr_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="CNR number..." />
+                <Input id="cnr_number" inputMode="numeric" {...register('cnr_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="CNR number..." />
               </div>
 
               <div>
                 <Label htmlFor="filing_number" className="text-sm">Filing Number</Label>
-                <Input id="filing_number" {...register('filing_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Filing number..." />
+                <Input id="filing_number" inputMode="numeric" {...register('filing_number')} className="mt-1.5 bg-white border-slate-200 rounded-xl" placeholder="Filing number..." />
               </div>
 
               <div>
@@ -360,12 +360,8 @@ export const NewCaseForm: React.FC<NewCaseFormProps> = ({
             <textarea id="description" {...register('description')} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm" rows={3} placeholder="Enter case description..." />
           </div>
 
-          {/* Action Buttons - Sticky on mobile */}
           <div className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t border-slate-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mt-4 flex gap-3">
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700">
+            <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700 h-11">
               {isSubmitting ? 'Creating...' : 'Create Case'}
             </Button>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -22,6 +21,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Plus, Check, ChevronsUpDown, Calendar, Briefcase, User, Clock, FileText, Loader2 } from 'lucide-react';
 import { SmartBookingCalendar } from '@/components/appointments/SmartBookingCalendar';
 import { CaseSelector } from '@/components/appointments/CaseSelector';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 
 interface BookAppointmentDialogProps {
   open: boolean;
@@ -52,6 +53,9 @@ const BookAppointmentDialog = ({
   initialTime
 }: BookAppointmentDialogProps) => {
   const isMobile = useIsMobile();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const { user, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -257,7 +261,7 @@ const BookAppointmentDialog = ({
         description: "Appointment booked successfully!"
       });
       form.reset();
-      onOpenChange(false);
+      handleClose();
     },
     onError: (error) => {
       console.error('Error booking appointment:', error);
@@ -272,8 +276,6 @@ const BookAppointmentDialog = ({
   const onSubmit = (data: AppointmentFormData) => {
     bookAppointmentMutation.mutate(data);
   };
-
-  const handleClose = () => onOpenChange(false);
 
   const formContent = (
     <Form {...form}>
@@ -344,7 +346,7 @@ const BookAppointmentDialog = ({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-background border border-border shadow-lg z-50" align="start">
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border shadow-lg z-50" align="start">
                       <Command>
                         <CommandInput placeholder="Search clients and contacts..." />
                         <CommandList>
@@ -421,7 +423,7 @@ const BookAppointmentDialog = ({
                     <FormItem>
                       <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Enter phone number" {...field} className="rounded-xl h-11 bg-white" />
+                        <Input type="tel" inputMode="numeric" placeholder="Enter phone number" {...field} className="rounded-xl h-11 bg-white" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -474,12 +476,11 @@ const BookAppointmentDialog = ({
                   )}
                 />
               </>
-
             )}
           </div>
         )}
 
-        {/* Case Selection Card - only show if a client (not contact) is selected AND in appointment mode */}
+        {/* Case Selection Card */}
         {bookingType === 'appointment' && getClientIdForCases() && (
           <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
             <div className="flex items-center gap-3 mb-2">
@@ -597,53 +598,51 @@ const BookAppointmentDialog = ({
             )}
           />
         </div>
-
-        {/* Footer buttons - only for desktop */}
-        {!isMobile && (
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1 rounded-full h-11">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={bookAppointmentMutation.isPending} className="flex-1 rounded-full h-11">
-              {bookAppointmentMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Booking...
-                </>
-              ) : (
-                'Book ' + (bookingType === 'event' ? 'Event' : 'Appointment')
-              )}
-            </Button>
-          </div>
-        )}
       </form>
     </Form >
   );
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto p-0" hideCloseButton>
-        <MobileDialogHeader
-          title={bookingType === 'event' ? "Schedule Internal Event" : "Book New Appointment"}
-          subtitle={bookingType === 'event' ? "Add a blocked time or internal meeting" : "Schedule a new appointment for a client"}
-          onClose={handleClose}
-          icon={<Calendar className="w-5 h-5 text-emerald-500" />}
-          showBorder
-        />
-        <div className="p-4 bg-slate-50">
+  const fullFormView = (
+    <div className={`flex flex-col h-full bg-slate-50`}>
+      <MobileDialogHeader
+        title={bookingType === 'event' ? "Schedule Internal Event" : "Book New Appointment"}
+        subtitle={bookingType === 'event' ? "Add a blocked time or internal meeting" : "Schedule a new appointment for a client"}
+        onClose={handleClose}
+        icon={<Calendar className="w-5 h-5 text-emerald-500" />}
+        showBorder
+      />
+
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 pb-32">
           <Tabs defaultValue="appointment" value={bookingType} onValueChange={(v) => setBookingType(v as 'appointment' | 'event')} className="w-full mb-4">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="appointment">Client Appointment</TabsTrigger>
               <TabsTrigger value="event">Internal Event</TabsTrigger>
             </TabsList>
-
-            {/* We render the same form for both, but fields show/hide based on state */}
             {formContent}
           </Tabs>
         </div>
+      </ScrollArea>
+
+      <div className="p-4 bg-white/80 backdrop-blur-lg border-t border-slate-100 flex gap-3 sticky bottom-0 z-50">
+        <Button
+          form="book-appointment-form"
+          type="submit"
+          disabled={bookAppointmentMutation.isPending}
+          className="flex-1 rounded-full h-12 font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-lg transition-transform active:scale-[0.98]"
+        >
+          {bookAppointmentMutation.isPending ? 'Booking...' : (bookingType === 'event' ? 'Book Event' : 'Book Appointment')}
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        {fullFormView}
       </DialogContent>
     </Dialog>
   );
 };
-
 export default BookAppointmentDialog;

@@ -1,0 +1,75 @@
+{
+    "Case Header": {
+        "Case Title": "CIVIL REVISION APPLICATION - No. 132 of 2020",
+        "Cnr No": "GJHC240132232020",
+        "Status": "PENDING",
+        "Disposal Details": {
+            "Disposal Date": "-",
+            "Decided By": "HONOURABLE MR. JUSTICE J. C. DOSHI"
+        }
+    },
+    "Parties": {
+        "Petitioners": [
+            {
+                "Sno": "1",
+                "Name": "AMARSHIBHAI KANJIBHAI PATEL",
+                "Advocate On Record": "DECEASED LITIGANT(100) for: Applicant(s) 1\nMR. KIRTAN H MISTRY(10012) for: Applicant(s) 1.1-1.4"
+            },
+            {
+                "Sno": "1.1",
+                "Name": "GITABEN D/O AMARSHIBHAI PATEL W/O LABHUBHAI KATRODIYA",
+                "Advocate On Record": "DECEASED LITIGANT(100) for: Applicant(s) 1\nMR. KIRTAN H MISTRY(10012) for: Applicant(s) 1.1-1.4"
+            }
+        ],
+        "Respondents": [
+            {
+                "Sno": "1",
+                "Name": "THE BHAVNAGAR JAIN MURTIPURJAK TAPSANGH TRUST THROUGH ITS TRUSTEES",
+                "Advocate On Record": "MR HARSHIT S TOLIA(2708) for: Opponent(s) 1-1.1,1.10-1.15,1.2-1.9"
+            }
+        ]
+    },
+    "Case Meta": {
+        "Presented On": "19/02/2020",
+        "Registered On": "05/08/2020",
+        "Bench Category": "-",
+        "District": "AHMEDABAD",
+        "Case Originated From": "-",
+        "Purpose Of Listing": "182-FOR FINAL HEARING",
+        "Classification": "CIVIL PROCEDURE CODE, 1908",
+        "Act": "1222-SJ - CIVIL REVISION APPLICATION - BOMBAY RENTS, HOTEL AND LODGING HOUSE RATES CONTROL ACT, 1947 - UNDER SECTION 29(2)"
+    },
+    "Court Proceedings": [
+        {
+            "Sno": "1",
+            "Notified Date": "13/08/2020",
+            "Court Code": "12",
+            "Board Sr No": "8",
+            "Stage": "130-FOR REGULAR ADMISSION",
+            "Action": "1-NEXT DATE",
+            "Coram": "HONOURABLE MR. JUSTICE A.G.URAIZEE"
+        },
+        {
+            "Sno": "11",
+            "Notified Date": "29/08/2022",
+            "Court Code": "9",
+            "Board Sr No": "28",
+            "Stage": "182-FOR FINAL HEARING",
+            "Action": "2-RULE/ADMIT",
+            "Coram": "HONOURABLE MR. JUSTICE A.S. SUPEHIA"
+        }
+    ],
+    "Available Orders": [
+        {
+            "S.No.": "1",
+            "Case Details": "CRA/132/2020",
+            "Judge Name": "HONOURABLE MR. JUSTICE A.G.URAIZEE",
+            "Order Date": "13/08/2020",
+            "Cav": "N",
+            "Judgement": "null",
+            "Questions": "-",
+            "Transferred": "Y",
+            "Download Pdf": "JVBERi0xLjQKJeLjz9MKNSAwIG9..."
+        }
+    ]
+}

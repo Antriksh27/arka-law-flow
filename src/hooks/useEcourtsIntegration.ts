@@ -347,5 +347,3 @@ export const useEcourtsIntegration = () => {
   };
 };
 
-// Re-export as useLegalkartIntegration for backward compatibility
-export const useLegalkartIntegration = useEcourtsIntegration;

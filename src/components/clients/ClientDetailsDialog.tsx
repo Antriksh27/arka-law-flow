@@ -5,6 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, User, Mail, Phone, Building2, Calendar, Briefcase, MapPin, X } from 'lucide-react';
 import { TimeUtils } from '@/lib/timeUtils';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Client {
   id: string;
@@ -30,6 +35,10 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const getStatusBadgeVariant = (status: string): "default" | "outline" | "success" | "error" | "warning" => {
     switch (status) {
       case 'active': return 'success';
@@ -53,38 +62,26 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
         <div className="flex flex-col h-full bg-muted">
           {/* Header */}
-          <div className="px-6 py-5 bg-background border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center">
-                  <User className="w-6 h-6 text-violet-600" />
+            <MobileDialogHeader
+              title={client.full_name}
+              subtitle={client.status.charAt(0).toUpperCase() + client.status.slice(1) + (client.is_vip ? ' • VIP' : '')}
+              onClose={handleClose}
+              icon={
+                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center relative">
+                  <User className="w-5 h-5 text-violet-600" />
+                  {client.is_vip && (
+                    <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5">
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-semibold text-foreground">{client.full_name}</h2>
-                    {client.is_vip && (
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={`${getStatusColor(client.status)} border-0 rounded-full px-2.5 py-0.5 text-xs font-medium`}>
-                      {client.status === 'new' ? 'New' : client.status.charAt(0).toUpperCase() + client.status.slice(1)}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              <button 
-                onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-          </div>
+              }
+              showBorder
+            />
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
@@ -187,7 +184,7 @@ export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
           {/* Footer */}
           <div className="px-6 py-4 bg-background border-t border-border">
             <Button 
-              onClick={() => onOpenChange(false)} 
+              onClick={handleClose} 
               className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Close

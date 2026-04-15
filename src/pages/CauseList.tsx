@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLegalkartIntegration } from '@/hooks/useLegalkartIntegration';
+import { useEcourtsIntegration } from '@/hooks/useEcourtsIntegration';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { CauseListHeader } from '@/components/cause-list/CauseListHeader';
 import { CauseListContent } from '@/components/cause-list/CauseListContent';
@@ -7,7 +7,7 @@ import { CauseListContent } from '@/components/cause-list/CauseListContent';
 import { Card } from '@/components/ui/card';
 
 const CauseList = () => {
-  const { getDisplayBoard } = useLegalkartIntegration();
+  const { getDisplayBoard } = useEcourtsIntegration();
   const [causeListData, setCauseListData] = useState<any>(null);
 
   useEffect(() => {

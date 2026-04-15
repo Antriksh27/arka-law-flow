@@ -27,6 +27,10 @@ import { CaseSelector } from '@/components/appointments/CaseSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { bg, border, text } from '@/lib/colors';
+import { useContext } from 'react';
+import { DialogContentContext } from '@/hooks/use-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Appointment {
   id: string;
@@ -65,6 +69,8 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
 }) => {
   const { closeDialog } = useDialog();
   const { user, firmId } = useAuth();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = closeDialog;
   const [loading, setLoading] = useState(false);
   const [cases, setCases] = useState<Case[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -228,7 +234,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
           : 'Appointment updated successfully'
       );
       onSuccess();
-      closeDialog();
+      handleClose();
     } catch (error) {
       console.error('Error updating appointment:', error);
       toast.error('Failed to update appointment');
@@ -264,297 +270,299 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
     { value: 'phone', label: 'Phone Call' },
   ];
 
-  return (
-    <Dialog open onOpenChange={closeDialog}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className={`flex flex-col h-full max-h-[90vh] ${bg.page}`}>
-          <MobileDialogHeader
-            title="Edit Appointment"
-            subtitle="Update appointment details"
-            onClose={closeDialog}
-          />
-          
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Title Card */}
-              <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <Type className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Title</Label>
-                      <p className="text-xs text-muted-foreground">Appointment title</p>
-                    </div>
+  const formContent = (
+    <div className={`flex flex-col h-full bg-slate-50`}>
+      <MobileDialogHeader
+        title="Edit Appointment"
+        subtitle="Update appointment details"
+        onClose={handleClose}
+      />
+      
+      {/* Content */}
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Title Card */}
+            <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <Type className="w-5 h-5 text-emerald-500" />
                   </div>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Appointment title"
-                    required
-                    className={`${bg.input} ${border.default} rounded-xl h-11`}
-                  />
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground">Title</Label>
+                    <p className="text-xs text-muted-foreground">Appointment title</p>
+                  </div>
                 </div>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="Appointment title"
+                  required
+                  className={`${bg.input} ${border.default} rounded-xl h-11`}
+                />
               </div>
+            </div>
 
-              {/* Assigned Team Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-violet-500" />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Assigned Team</Label>
-                      <p className="text-xs text-muted-foreground">Who should attend?</p>
-                    </div>
+            {/* Assigned Team Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-violet-500" />
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">Primary Assignee *</Label>
-                      <Select
-                        value={formData.lawyer_id}
-                        onValueChange={(value) => handleInputChange('lawyer_id', value)}
-                        required
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                          <SelectValue placeholder="Select user" />
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground">Assigned Team</Label>
+                    <p className="text-xs text-muted-foreground">Who should attend?</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Primary Assignee *</Label>
+                    <Select
+                      value={formData.lawyer_id}
+                      onValueChange={(value) => handleInputChange('lawyer_id', value)}
+                      required
+                    >
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                        <SelectValue placeholder="Select user" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Additional Lawyers */}
+                  <div className="pt-3 border-t border-slate-100">
+                    <Label className="text-xs text-muted-foreground mb-2 block">Additional Team Members</Label>
+                    
+                    {additionalLawyers.filter(id => id !== formData.lawyer_id).length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {additionalLawyers.map(lawyerId => {
+                          const lawyer = users.find(u => u.id === lawyerId);
+                          if (!lawyer || lawyerId === formData.lawyer_id) return null;
+                          return (
+                            <Badge 
+                              key={lawyerId} 
+                              variant="outline" 
+                              className="flex items-center gap-1 pl-3 pr-1 py-1.5 bg-violet-50 border-violet-200 rounded-full"
+                            >
+                              {lawyer.full_name}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveLawyer(lawyerId)}
+                                className="ml-1 rounded-full p-0.5 hover:bg-violet-100 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    {getAvailableLawyers().length > 0 && (
+                      <Select onValueChange={handleAddLawyer} value="">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-10">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <UserPlus className="h-4 w-4" />
+                            <span>Add team member...</span>
+                          </div>
                         </SelectTrigger>
                         <SelectContent className="bg-white border-slate-200 rounded-xl">
-                          {users.map((user) => (
+                          {getAvailableLawyers().map(user => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    {/* Additional Lawyers */}
-                    <div className="pt-3 border-t border-slate-100">
-                      <Label className="text-xs text-muted-foreground mb-2 block">Additional Team Members</Label>
-                      
-                      {additionalLawyers.filter(id => id !== formData.lawyer_id).length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {additionalLawyers.map(lawyerId => {
-                            const lawyer = users.find(u => u.id === lawyerId);
-                            if (!lawyer || lawyerId === formData.lawyer_id) return null;
-                            return (
-                              <Badge 
-                                key={lawyerId} 
-                                variant="outline" 
-                                className="flex items-center gap-1 pl-3 pr-1 py-1.5 bg-violet-50 border-violet-200 rounded-full"
-                              >
-                                {lawyer.full_name}
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveLawyer(lawyerId)}
-                                  className="ml-1 rounded-full p-0.5 hover:bg-violet-100 transition-colors"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      )}
-                      
-                      {getAvailableLawyers().length > 0 && (
-                        <Select onValueChange={handleAddLawyer} value="">
-                          <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-10">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <UserPlus className="h-4 w-4" />
-                              <span>Add team member...</span>
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border-slate-200 rounded-xl">
-                            {getAvailableLawyers().map(user => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.full_name} {user.role && <span className="text-muted-foreground">({user.role})</span>}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Newly added team members will receive a notification
-                      </p>
-                    </div>
+                    )}
+                    
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Newly added team members will receive a notification
+                    </p>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Schedule Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 text-amber-500" />
+            {/* Schedule Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground">Schedule</Label>
+                    <p className="text-xs text-muted-foreground">Date and time</p>
+                  </div>
+                </div>
+                <SmartBookingCalendar
+                  selectedLawyer={formData.lawyer_id || null}
+                  selectedDate={formData.appointment_date}
+                  selectedTime={formData.appointment_time}
+                  hideLawyerPicker
+                  onTimeSlotSelect={(date, time, duration) => {
+                    handleInputChange('appointment_date', date);
+                    handleInputChange('appointment_time', time);
+                    handleInputChange('duration_minutes', duration);
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Details Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <Label className="text-sm font-medium text-foreground">Duration</Label>
                     </div>
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground">Schedule</Label>
-                      <p className="text-xs text-muted-foreground">Date and time</p>
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-foreground">
+                      {formData.duration_minutes} minutes
                     </div>
                   </div>
-                  <SmartBookingCalendar
-                    selectedLawyer={formData.lawyer_id || null}
-                    selectedDate={formData.appointment_date}
-                    selectedTime={formData.appointment_time}
-                    hideLawyerPicker
-                    onTimeSlotSelect={(date, time, duration) => {
-                      handleInputChange('appointment_date', date);
-                      handleInputChange('appointment_time', time);
-                      handleInputChange('duration_minutes', duration);
-                    }}
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <Label className="text-sm font-medium text-foreground">Type</Label>
+                    </div>
+                    <Select
+                      value={formData.location}
+                      onValueChange={(value) => handleInputChange('location', value)}
+                    >
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        {locationTypeOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <Label className="text-sm font-medium text-foreground">Client</Label>
+                    </div>
+                    <ClientSelector
+                      value={formData.client_id}
+                      onValueChange={(value) => handleInputChange('client_id', value)}
+                      placeholder="Select client"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      <Label className="text-sm font-medium text-foreground">Status</Label>
+                    </div>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => handleInputChange('status', value)}
+                    >
+                      <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-slate-200 rounded-xl">
+                        <SelectItem value="upcoming">Upcoming</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Case & Notes Card */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="p-4 space-y-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-sky-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Related Case</Label>
+                      <p className="text-xs text-muted-foreground">Optional</p>
+                    </div>
+                  </div>
+                  <CaseSelector
+                    value={formData.case_id}
+                    onValueChange={(value) => handleInputChange('case_id', value)}
+                    placeholder="Select case (optional)"
+                    clientId={formData.client_id}
+                  />
+                </div>
+                
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-foreground">Notes</Label>
+                      <p className="text-xs text-muted-foreground">Additional details</p>
+                    </div>
+                  </div>
+                  <Textarea
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    placeholder="Additional notes or agenda items..."
+                    rows={3}
+                    className="bg-slate-50 border-slate-200 rounded-xl resize-none"
                   />
                 </div>
               </div>
-              
-              {/* Details Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm font-medium text-foreground">Duration</Label>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-foreground">
-                        {formData.duration_minutes} minutes
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm font-medium text-foreground">Type</Label>
-                      </div>
-                      <Select
-                        value={formData.location}
-                        onValueChange={(value) => handleInputChange('location', value)}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl">
-                          {locationTypeOptions.map(opt => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+            </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm font-medium text-foreground">Client</Label>
-                      </div>
-                      <ClientSelector
-                        value={formData.client_id}
-                        onValueChange={(value) => handleInputChange('client_id', value)}
-                        placeholder="Select client"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Briefcase className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm font-medium text-foreground">Status</Label>
-                      </div>
-                      <Select
-                        value={formData.status}
-                        onValueChange={(value) => handleInputChange('status', value)}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 rounded-xl h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-200 rounded-xl">
-                          <SelectItem value="upcoming">Upcoming</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="rescheduled">Rescheduled</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
+            {/* Footer */}
+            <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2">
+              <div className="flex gap-3">
+                <Button 
+                  type="submit" 
+                  className="flex-1 h-12 rounded-full px-6 shadow-sm bg-slate-800 hover:bg-slate-700 text-white"
+                  disabled={loading}
+                >
+                  {loading ? 'Updating...' : 'Update Appointment'}
+                </Button>
               </div>
-
-              {/* Case & Notes Card */}
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-sky-500" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold text-foreground">Related Case</Label>
-                        <p className="text-xs text-muted-foreground">Optional</p>
-                      </div>
-                    </div>
-                    <CaseSelector
-                      value={formData.case_id}
-                      onValueChange={(value) => handleInputChange('case_id', value)}
-                      placeholder="Select case (optional)"
-                      clientId={formData.client_id}
-                    />
-                  </div>
-                  
-                  <div className="pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-rose-500" />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-semibold text-foreground">Notes</Label>
-                        <p className="text-xs text-muted-foreground">Additional details</p>
-                      </div>
-                    </div>
-                    <Textarea
-                      value={formData.notes}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
-                      placeholder="Additional notes or agenda items..."
-                      rows={3}
-                      className="bg-slate-50 border-slate-200 rounded-xl resize-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2">
-                <div className="flex gap-3 justify-end">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={closeDialog}
-                    className="rounded-full px-6 border-slate-200"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="rounded-full px-6"
-                    disabled={loading}
-                  >
-                    {loading ? 'Updating...' : 'Update Appointment'}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
+      </ScrollArea>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return formContent;
+  }
+
+  return (
+    <Dialog open onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[95vh] sm:h-auto">
+        {formContent}
       </DialogContent>
     </Dialog>
   );

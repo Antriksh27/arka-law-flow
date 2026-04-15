@@ -3,9 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertTriangle, Trash2, X, Shield, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Trash2, X, Shield, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DeleteAllCasesDialogProps {
   open: boolean;
@@ -15,6 +19,9 @@ interface DeleteAllCasesDialogProps {
 export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialogProps) => {
   const [confirmation, setConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
 
   const handleDelete = async () => {
     if (confirmation !== 'DELETE_ALL_CASES') {
@@ -56,7 +63,7 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
       toast.success('Deletion complete', {
         description: `Total cases deleted: ${totalDeleted}`
       });
-      onOpenChange(false);
+      handleClose();
       setConfirmation('');
       setTimeout(() => {
         window.location.reload();
@@ -71,158 +78,148 @@ export const DeleteAllCasesDialog = ({ open, onOpenChange }: DeleteAllCasesDialo
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <div className="flex flex-col h-full bg-muted">
-          {/* Header */}
-          <div className="px-6 py-5 bg-background border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-red-600">Delete All Cases</h2>
-                  <p className="text-sm text-muted-foreground">Danger zone action</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => onOpenChange(false)}
-                className="md:hidden w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-accent transition-colors"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-          </div>
+  const fullFormView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Delete All Cases"
+        subtitle="This action is permanent and cannot be undone."
+        onClose={handleClose}
+        icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+        showBorder
+      />
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-            {/* Warning Card */}
-            <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-red-800">This action cannot be undone!</p>
-                  <p className="text-sm text-red-700 mt-1">
-                    This will permanently delete all cases and related data.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* What Will Be Deleted Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                    <Trash2 className="w-5 h-5 text-rose-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Will Be Deleted</p>
-                    <p className="text-xs text-muted-foreground">Permanently removed</p>
-                  </div>
-                </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                    All cases in your firm
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                    Case documents, hearings, orders, objections
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                    Case notes, contacts, and activities
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                    Case fetch queue and history
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* What Will Be Preserved Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Will Be Preserved</p>
-                    <p className="text-xs text-muted-foreground">Unaffected data</p>
-                  </div>
-                </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Clients
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Appointments
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Tasks
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Documents
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Audit Logs
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Confirmation Input Card */}
-            <div className="bg-background rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4">
-                <Label className="text-sm font-semibold text-foreground">
-                  Type <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-red-600">DELETE_ALL_CASES</span> to confirm
-                </Label>
-                <Input 
-                  value={confirmation} 
-                  onChange={e => setConfirmation(e.target.value)} 
-                  placeholder="DELETE_ALL_CASES" 
-                  className="mt-2 bg-muted border-input rounded-xl h-11 font-mono"
-                  disabled={isDeleting} 
-                />
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 space-y-4">
+          {/* Warning Card */}
+          <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-red-800">This action cannot be undone!</p>
+                <p className="text-xs text-red-700 mt-1">
+                  This will permanently delete all cases and related data.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-background border-t">
-            <div className="flex gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  onOpenChange(false);
-                  setConfirmation('');
-                }} 
-                disabled={isDeleting}
-                className="flex-1 rounded-full"
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleDelete} 
-                disabled={confirmation !== 'DELETE_ALL_CASES' || isDeleting}
-                className="flex-1 rounded-full"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete All Cases'}
-              </Button>
+          {/* What Will Be Deleted Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-border/50">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Will Be Deleted</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Permanently removed</p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-[11px] text-slate-600 font-medium">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  All cases in your firm
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  Case documents, hearings, orders, objections
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  Case notes, contacts, and activities
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  Case fetch queue and history
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* What Will Be Preserved Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-border/50">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Will Be Preserved</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Unaffected data</p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-[11px] text-slate-600 font-medium">
+                <li className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Clients
+                </li>
+                <li className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Appointments
+                </li>
+                <li className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Tasks
+                </li>
+                <li className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Documents
+                </li>
+                <li className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Audit Logs
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Confirmation Input Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-border/50">
+            <div className="p-4 space-y-3">
+              <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Type <span className="font-mono bg-red-50 px-1.5 py-0.5 rounded text-red-600">DELETE_ALL_CASES</span> to confirm
+              </Label>
+              <Input 
+                value={confirmation} 
+                onChange={e => setConfirmation(e.target.value)} 
+                placeholder="DELETE_ALL_CASES" 
+                className="bg-slate-50 border-0 rounded-xl h-12 font-mono"
+                disabled={isDeleting} 
+              />
             </div>
           </div>
         </div>
+      </ScrollArea>
+
+      <div className="p-4 bg-white/80 backdrop-blur-lg border-t border-slate-100 flex gap-3">
+        <Button 
+          variant="outline" 
+          onClick={handleClose} 
+          disabled={isDeleting}
+          className="flex-1 rounded-full h-12 font-semibold text-slate-600 border-slate-200 hover:bg-slate-50"
+        >
+          Cancel
+        </Button>
+        <Button 
+          variant="destructive" 
+          onClick={handleDelete} 
+          disabled={confirmation !== 'DELETE_ALL_CASES' || isDeleting}
+          className="flex-[1.5] rounded-full h-12 font-bold shadow-lg"
+        >
+          {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : 'Delete All Cases'}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullFormView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] rounded-3xl">
+        {fullFormView}
       </DialogContent>
     </Dialog>
   );

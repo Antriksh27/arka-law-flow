@@ -39,7 +39,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import TimeUtils from "@/lib/timeUtils";
 import { useNavigate } from "react-router-dom";
-import { resolveLegalkartSearchType } from "@/lib/legalkartSearchType";
+import { resolveEcourtsSearchType } from "@/lib/ecourtsSearchType";
 
 interface Case {
   id: string;
@@ -93,7 +93,7 @@ export const CasesFetchManager = () => {
       }
 
       // Use centralized court type resolver
-      const searchType = resolveLegalkartSearchType({ cnr: caseData.cnr_number, courtType: caseData.court_name });
+      const searchType = resolveEcourtsSearchType({ cnr: caseData.cnr_number, courtType: caseData.court_name });
 
       const { data, error } = await supabase.functions.invoke('ecourts-api', {
         body: { 
@@ -412,7 +412,7 @@ export const CasesFetchManager = () => {
             <div>
               <CardTitle>Cases Fetch Manager</CardTitle>
               <CardDescription>
-                Fetch case details from Legalkart for cases with CNR numbers
+                Fetch case details from eCourts for cases with CNR numbers
               </CardDescription>
             </div>
             <div className="flex gap-2">

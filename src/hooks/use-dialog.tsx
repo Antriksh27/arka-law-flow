@@ -7,6 +7,7 @@ interface DialogContextType {
 }
 
 const DialogContext = createContext<DialogContextType | undefined>(undefined);
+export const DialogContentContext = createContext<boolean>(false);
 
 export const DialogProvider = ({ children }: { children: ReactNode }) => {
   const [dialogContent, setDialogContent] = useState<ReactNode | null>(null);
@@ -24,7 +25,9 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
       {children}
       <Dialog open={!!dialogContent} onOpenChange={(open) => { if (!open) closeDialog(); }}>
         <DialogContent hideCloseButton className="p-0 gap-0 overflow-hidden duration-300 ease-out">
-          {dialogContent}
+          <DialogContentContext.Provider value={true}>
+            {dialogContent}
+          </DialogContentContext.Provider>
         </DialogContent>
       </Dialog>
     </DialogContext.Provider>

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, FileText, Calendar, Building2, Search, Upload, History, CheckCircle, XCircle, Clock, List } from "lucide-react";
 import TimeUtils from '@/lib/timeUtils';
-import { LegalkartCaseSearch } from "@/components/cases/LegalkartCaseSearch";
+import { ECourtsCaseSearch } from "@/components/cases/ECourtsCaseSearch";
 import { CasesUploadSection } from "@/components/ecourts/CasesUploadSection";
 import { CasesFetchManager } from "@/components/ecourts/CasesFetchManager";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +25,7 @@ export const ECourts = () => {
   const { firmId } = useAuth();
   const isMobile = useIsMobile();
 
-  const { data: legalkartCases, refetch } = useQuery({
+  const { data: ecourtsCases, refetch } = useQuery({
     queryKey: ['legalkart-case-searches', firmId],
     queryFn: async () => {
       const { data: searches, error: searchesError } = await supabase
@@ -69,14 +69,14 @@ export const ECourts = () => {
   };
 
   // Get statistics for the overview
-  const successfulSearches = legalkartCases?.filter((c: any) => c.status === 'success').length || 0;
-  const failedSearches = legalkartCases?.filter((c: any) => c.status === 'failed').length || 0;
-  const totalSearches = legalkartCases?.length || 0;
+  const successfulSearches = ecourtsCases?.filter((c: any) => c.status === 'success').length || 0;
+  const failedSearches = ecourtsCases?.filter((c: any) => c.status === 'failed').length || 0;
+  const totalSearches = ecourtsCases?.length || 0;
 
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <MobileHeader title="Legalkart" />
+        <MobileHeader title="eCourts" />
 
         <div className="p-4 space-y-4">
           {/* Stats Strip - Horizontal Scroll */}
@@ -133,9 +133,9 @@ export const ECourts = () => {
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <h3 className="font-semibold text-sm mb-2">Search by CNR</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Fetch case details from Legalkart
+                  Fetch case details from eCourts
                 </p>
-                <LegalkartCaseSearch 
+                <ECourtsCaseSearch 
                   onCaseDataFetched={() => { 
                     refetch(); 
                     queryClient.invalidateQueries({ queryKey: ["cases"] }); 
@@ -160,8 +160,8 @@ export const ECourts = () => {
             </TabsContent>
 
             <TabsContent value="history" className="mt-0 space-y-3">
-              {legalkartCases && legalkartCases.length > 0 ? (
-                legalkartCases.map((item: any) => (
+              {ecourtsCases && ecourtsCases.length > 0 ? (
+                ecourtsCases.map((item: any) => (
                   <div key={item.id} className="bg-white rounded-xl p-4 shadow-sm space-y-3">
                     <div className="space-y-2">
                       <h4 className="font-semibold text-sm">
@@ -228,8 +228,8 @@ export const ECourts = () => {
     <div className="min-h-screen p-6 space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Legalkart Integration</h1>
-        <p className="text-muted-foreground">Fetch and sync case details directly from Legalkart API</p>
+        <h1 className="text-3xl font-bold">eCourts Integration</h1>
+        <p className="text-muted-foreground">Fetch and sync case details directly from eCourts API</p>
       </div>
 
       {/* Statistics Cards */}
@@ -307,7 +307,7 @@ export const ECourts = () => {
               <div className="space-y-2 mb-6">
                 <h3 className="text-lg font-semibold">Fetch All Cases with CNR</h3>
                 <p className="text-sm text-muted-foreground">
-                  View all cases and fetch their details from Legalkart. Cases are automatically categorized by fetch status.
+                  View all cases and fetch their details from eCourts. Cases are automatically categorized by fetch status.
                 </p>
               </div>
               <CasesFetchManager />
@@ -318,10 +318,10 @@ export const ECourts = () => {
               <div className="space-y-2 mb-6">
                 <h3 className="text-lg font-semibold">Search Case by CNR</h3>
                 <p className="text-sm text-muted-foreground">
-                  Enter a CNR number to fetch complete case details from Legalkart including parties, documents, hearings, and orders
+                  Enter a CNR number to fetch complete case details from eCourts including parties, documents, hearings, and orders
                 </p>
               </div>
-              <LegalkartCaseSearch 
+              <ECourtsCaseSearch 
                 onCaseDataFetched={() => { 
                   refetch(); 
                   queryClient.invalidateQueries({ queryKey: ["cases"] }); 
@@ -354,9 +354,9 @@ export const ECourts = () => {
                 </p>
               </div>
 
-              {legalkartCases && legalkartCases.length > 0 ? (
+              {ecourtsCases && ecourtsCases.length > 0 ? (
                 <div className="space-y-3">
-                  {legalkartCases.map((item: any) => (
+                  {ecourtsCases.map((item: any) => (
                     <Card key={item.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between gap-4">

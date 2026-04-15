@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useMemo, useContext } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useDialog } from '@/hooks/use-dialog';
+import { useDialog, DialogContentContext } from '@/hooks/use-dialog';
 import { EditAppointmentDialog } from './EditAppointmentDialog';
 import RescheduleAppointmentDialog from '../reception/RescheduleAppointmentDialog';
-import { ConvertToClientDialog } from './ConvertToClientDialog';
 import { ConvertToClientDialog as ConvertContactDialog } from '@/components/contacts/ConvertToClientDialog';
 import { CreateNoteMultiModal } from '@/components/notes/CreateNoteMultiModal';
 import { CreateTaskDialog } from '@/components/tasks/CreateTaskDialog';
@@ -19,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAppointmentStatusColor } from '@/lib/statusColors';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ViewAppointmentDialogProps {
   appointment: {
@@ -43,6 +43,7 @@ interface ViewAppointmentDialogProps {
 export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   appointment,
 }) => {
+  const isInsideDialog = useContext(DialogContentContext);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
@@ -109,7 +110,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
   const { firmId, role } = useAuth();
 
   // Fetch contact data by client name if available
-  const { data: contactData, isLoading: contactLoading, error: contactError } = useQuery({
+  const { data: contactData } = useQuery({
     queryKey: ['contact-by-name', extractedClientName, firmId],
     queryFn: async () => {
       if (!extractedClientName || !firmId) {
@@ -117,7 +118,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       }
       
       // First try exact match
-      const { data: exactData, error: exactError } = await supabase
+      const { data: exactData } = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
@@ -128,7 +129,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       }
       
       // Try case-insensitive search  
-      const { data: fuzzyData, error: fuzzyError } = await supabase
+      const { data: fuzzyData } = await supabase
         .from('contacts')
         .select('*')
         .eq('firm_id', firmId)
@@ -188,7 +189,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       queryClient.invalidateQueries({ queryKey: ['appointments-timeline'] });
       closeDialog();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Delete appointment error:', error);
       toast({
         title: "Error",
@@ -286,7 +287,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
       updated_at: new Date().toISOString(),
       created_by: null,
       last_visited_at: new Date().toISOString()
-    };
+    } as any;
     
     openDialog(
       <ConvertContactDialog
@@ -331,11 +332,25 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
     return TimeUtils.formatTime(`2000-01-01T${time}`, 'h:mm a');
   };
 
-  return (
-    <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        {/* Mobile-friendly Header with Close Button */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between">
+  const fullFormView = (
+    <div className={`flex flex-col h-full bg-slate-50`}>
+      {!isInsideDialog && (
+        <MobileDialogHeader
+          title="Appointment Details"
+          onClose={closeDialog}
+          icon={appointment.daily_serial_number ? (
+            <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-lg px-2 py-1 text-center min-w-[36px] shadow-sm">
+              <div className="text-[10px] font-bold leading-none">{appointment.daily_serial_number}</div>
+            </div>
+          ) : (
+            <Calendar className="w-5 h-5 text-primary" />
+          )}
+          showBorder
+        />
+      )}
+
+      {isInsideDialog && (
+        <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {appointment.daily_serial_number && (
               <div className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground rounded-xl px-3 py-2 text-center min-w-[52px] shadow-sm">
@@ -344,237 +359,238 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
               </div>
             )}
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Appointment Details</h2>
+              <h2 className="text-sm font-semibold">Appointment Details</h2>
               {appointment.status && (
-                <Badge className={`mt-1 ${getStatusColor(appointment.status)}`}>
+                <Badge className={`mt-0.5 scale-75 origin-left ${getStatusColor(appointment.status)}`}>
                   {appointment.status}
                 </Badge>
               )}
             </div>
           </div>
-          <button 
-            onClick={() => closeDialog()}
-            className="p-2 rounded-full hover:bg-muted active:scale-95 transition-all"
-          >
-            <X className="h-5 w-5 text-muted-foreground" />
-          </button>
         </div>
+      )}
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 bg-slate-50">
-          <div className="space-y-4">
-            {/* Title Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4">
-              <h3 className="text-base font-medium text-foreground">
-                {appointment.title || 'Untitled Appointment'}
-              </h3>
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 space-y-4">
+          {/* Status Badge (if not in header) */}
+          {appointment.status && !isInsideDialog && (
+            <div className="flex justify-center">
+              <Badge className={`${getStatusColor(appointment.status)}`}>
+                {appointment.status}
+              </Badge>
             </div>
+          )}
 
-            {/* Date, Time & Location Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
-                  <Calendar className="h-4 w-4 text-sky-500" />
+          {/* Title Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+            <h3 className="text-base font-semibold text-slate-800">
+              {appointment.title || 'Untitled Appointment'}
+            </h3>
+          </div>
+
+          {/* Date, Time & Location Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4 border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-sky-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Date</p>
+                <p className="text-sm font-medium text-slate-900">{formatDate(appointment.appointment_date)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-4 border-t border-slate-50">
+              <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-violet-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Time</p>
+                <p className="text-sm font-medium text-slate-900">{formatTime(appointment.appointment_time)}</p>
+              </div>
+            </div>
+            {appointment.location && (
+              <div className="flex items-center gap-3 pt-4 border-t border-slate-50">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <MapPin className="h-4 w-4 text-emerald-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Date</p>
-                  <p className="text-sm font-medium text-foreground">{formatDate(appointment.appointment_date)}</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Location</p>
+                  <p className="text-sm font-medium text-slate-900">{appointment.location}</p>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Client & Team Card */}
+          <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4 border border-border/50">
+            {appointment.client_name && (
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-violet-500" />
+                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <User className="h-4 w-4 text-amber-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Time</p>
-                  <p className="text-sm font-medium text-foreground">{formatTime(appointment.appointment_time)}</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Client</p>
+                  <p className="text-sm font-medium text-slate-900">{appointment.client_name}</p>
                 </div>
               </div>
-              {appointment.location && (
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <MapPin className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm font-medium text-foreground">{appointment.location}</p>
+            )}
+
+            {/* Case Information */}
+            {caseData && (
+              <div className="flex items-start gap-3 pt-4 border-t border-slate-50">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <Briefcase className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Related Case</p>
+                  <p className="text-sm font-medium text-slate-900">{caseData.case_title}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {caseData.case_number && (
+                      <Badge variant="outline" className="text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-200">
+                        {caseData.case_number}
+                      </Badge>
+                    )}
+                    {caseData.cnr_number && (
+                      <Badge variant="outline" className="text-[10px] h-5 bg-slate-50 text-slate-700 border-slate-200">
+                        CNR: {caseData.cnr_number}
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
+
+            <div className="flex items-start gap-3 pt-4 border-t border-slate-50">
+              <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
+                <Users className="h-4 w-4 text-rose-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Assigned Team</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {appointment.lawyer_name && (
+                    <Badge variant="default" className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px] h-5">
+                      {appointment.lawyer_name}
+                    </Badge>
+                  )}
+                  {additionalLawyerNames.map((name, index) => (
+                    <Badge key={index} variant="outline" className="text-[10px] h-5">
+                      {name}
+                    </Badge>
+                  ))}
+                  {!appointment.lawyer_name && additionalLawyerNames.length === 0 && (
+                    <span className="text-xs text-slate-400">No team members assigned</span>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Client & Team Card */}
-            <div className="bg-background rounded-2xl shadow-sm p-4 space-y-3">
-              {appointment.client_name && (
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <User className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Client</p>
-                    <p className="text-sm font-medium text-foreground">{appointment.client_name}</p>
-                  </div>
-                </div>
-              )}
+            {appointment.type && (
+              <div className="flex items-center gap-3 pt-4 border-t border-slate-50">
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Type:</p>
+                <p className="text-sm font-medium text-slate-900 capitalize">{appointment.type.replace('_', ' ')}</p>
+              </div>
+            )}
+          </div>
 
-              {/* Case Information */}
-              {caseData && (
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <Briefcase className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Related Case</p>
-                    <p className="text-sm font-medium text-foreground">{caseData.case_title}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {caseData.case_number && (
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                          {caseData.case_number}
-                        </Badge>
-                      )}
-                      {caseData.cnr_number && (
-                        <Badge variant="outline" className="text-xs bg-slate-50 text-slate-700 border-slate-200">
-                          CNR: {caseData.cnr_number}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
+          {/* Notes Card */}
+          {appointment.notes && (
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center">
-                  <Users className="h-4 w-4 text-rose-500" />
+                <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-slate-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Assigned Team</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {appointment.lawyer_name && (
-                      <Badge variant="default" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                        {appointment.lawyer_name}
-                      </Badge>
-                    )}
-                    {additionalLawyerNames.map((name, index) => (
-                      <Badge key={index} variant="outline" className="bg-accent text-xs">
-                        {name}
-                      </Badge>
-                    ))}
-                    {!appointment.lawyer_name && additionalLawyerNames.length === 0 && (
-                      <span className="text-sm text-muted-foreground">No team members assigned</span>
-                    )}
-                  </div>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Notes</p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{appointment.notes}</p>
                 </div>
               </div>
-
-              {appointment.type && (
-                <div className="flex items-center gap-3 pt-2 border-t border-border">
-                  <p className="text-xs text-muted-foreground">Type:</p>
-                  <p className="text-sm font-medium text-foreground capitalize">{appointment.type.replace('_', ' ')}</p>
-                </div>
-              )}
             </div>
-
-            {/* Notes Card */}
-            {appointment.notes && (
-              <div className="bg-background rounded-2xl shadow-sm p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-1">Notes</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{appointment.notes}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+      </ScrollArea>
 
-        {/* Fixed Bottom Action Bar */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-3 sm:p-4">
-          <div className="grid grid-cols-3 gap-2">
+      <div className="p-4 bg-white/80 backdrop-blur-lg border-t border-slate-100 sticky bottom-0 z-50">
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowNoteDialog(true)}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1 border-slate-200"
+            size="sm"
+          >
+            <StickyNote className="h-4 w-4 text-emerald-500" />
+            <span className="text-[10px] font-bold text-slate-600">Note</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowTaskDialog(true)}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1 border-slate-200"
+            size="sm"
+          >
+            <CheckSquare className="h-4 w-4 text-sky-500" />
+            <span className="text-[10px] font-bold text-slate-600">Task</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleEdit}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1 border-slate-200"
+            size="sm"
+          >
+            <Edit className="h-4 w-4 text-violet-500" />
+            <span className="text-[10px] font-bold text-slate-600">Edit</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleReschedule}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1 border-slate-200"
+            size="sm"
+          >
+            <RotateCcw className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-bold text-slate-600">Reschedule</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={cancelMutation.isPending}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1 border-slate-200"
+            size="sm"
+          >
+            <X className="h-4 w-4 text-slate-500" />
+            <span className="text-[10px] font-bold text-slate-600">{cancelMutation.isPending ? 'Wait' : 'Cancel'}</span>
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteClick}
+            disabled={deleteMutation.isPending}
+            className="rounded-xl text-xs h-14 flex flex-col items-center justify-center gap-1 py-1"
+            size="sm"
+          >
+            <Trash className="h-4 w-4" />
+            <span className="text-[10px] font-bold">{deleteMutation.isPending ? '...' : 'Delete'}</span>
+          </Button>
+          {extractedClientName && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
             <Button
-              variant="outline"
-              onClick={() => setShowNoteDialog(true)}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
+              onClick={handleConvertToClient}
+              className="rounded-xl text-xs h-12 flex items-center justify-center gap-2 py-1 col-span-3 mt-1 bg-slate-900"
               size="sm"
             >
-              <StickyNote className="h-4 w-4" />
-              <span className="text-[10px]">Note</span>
+              <UserPlus className="h-4 w-4" />
+              <span className="text-xs font-bold">Convert to Client</span>
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowTaskDialog(true)}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
-              size="sm"
-            >
-              <CheckSquare className="h-4 w-4" />
-              <span className="text-[10px]">Task</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleEdit}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
-              size="sm"
-            >
-              <Edit className="h-4 w-4" />
-              <span className="text-[10px]">Edit</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleReschedule}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
-              size="sm"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span className="text-[10px]">Reschedule</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={cancelMutation.isPending}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
-              size="sm"
-            >
-              <X className="h-4 w-4" />
-              <span className="text-[10px]">{cancelMutation.isPending ? 'Cancelling' : 'Cancel'}</span>
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteClick}
-              disabled={deleteMutation.isPending}
-              className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1"
-              size="sm"
-            >
-              <Trash className="h-4 w-4" />
-              <span className="text-[10px]">{deleteMutation.isPending ? 'Deleting' : 'Delete'}</span>
-            </Button>
-            {extractedClientName && !appointment.client_id && (role === 'lawyer' || role === 'junior') && (
-              <Button
-                onClick={handleConvertToClient}
-                className="rounded-xl text-xs h-9 flex flex-col items-center justify-center gap-0.5 py-1 col-span-3"
-                size="sm"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span className="text-[10px]">Convert to Client</span>
-              </Button>
-            )}
-          </div>
+          )}
         </div>
-      </DialogContent>
-      
+      </div>
+
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl max-w-[90vw] sm:max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg font-bold">Delete Appointment</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
               Are you sure you want to delete this appointment? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="flex-1 mt-0 rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="flex-1 bg-red-600 hover:bg-red-700 rounded-xl">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -596,6 +612,18 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         clientId={appointment.client_id || undefined}
         contactId={contactData?.id || undefined}
       />
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullFormView;
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && closeDialog()}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        {fullFormView}
+      </DialogContent>
     </Dialog>
   );
 };

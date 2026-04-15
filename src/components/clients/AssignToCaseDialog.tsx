@@ -6,6 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { AddCaseDialog } from '@/components/cases/AddCaseDialog';
 import { Plus, FileText, ArrowLeft, Search, Link2, X, Briefcase, Loader2 } from 'lucide-react';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 interface AssignToCaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,11 +36,20 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
   clientId,
   clientName
 }) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
   const [view, setView] = useState<'selection' | 'existing' | 'new'>('selection');
   const [showAddCaseDialog, setShowAddCaseDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleClose = isInsideDialog ? closeDialog : () => {
+    onOpenChange?.(false);
+    setView('selection');
+    setSearchQuery('');
+  };
 
   // Server-side search function - only search when 4+ characters typed
   const searchCases = useCallback(async (searchTerm: string) => {
@@ -96,8 +110,7 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         client_id: clientId
       }).eq('id', caseId);
       if (error) throw error;
-      onOpenChange(false);
-      setView('selection');
+      handleClose();
     } catch (error) {
       console.error('Error assigning client to case:', error);
     }
@@ -118,11 +131,6 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         return 'bg-slate-100 text-slate-700';
     }
   };
-  const handleClose = () => {
-    onOpenChange(false);
-    setView('selection');
-    setSearchQuery('');
-  };
   const handleNewCaseSuccess = () => {
     setShowAddCaseDialog(false);
     handleClose();
@@ -132,28 +140,14 @@ export const AssignToCaseDialog: React.FC<AssignToCaseDialogProps> = ({
         <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
           <div className="flex flex-col h-full bg-slate-50">
             {/* Header */}
-            <div className="px-6 py-5 bg-white border-b border-slate-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {view !== 'selection' && <button onClick={() => setView('selection')} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                      <ArrowLeft className="w-4 h-4 text-slate-500" />
-                    </button>}
-                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-                    <Link2 className="w-5 h-5 text-violet-500" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground">
-                      {view === 'selection' && 'Link to Case'}
-                      {view === 'existing' && 'Select Case'}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">{clientName}</p>
-                  </div>
-                </div>
-                <button onClick={handleClose} className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
-              </div>
-            </div>
+            <MobileDialogHeader
+              title={view === 'selection' ? 'Link to Case' : 'Select Case'}
+              subtitle={clientName}
+              onClose={handleClose}
+              onBack={view !== 'selection' ? () => setView('selection') : undefined}
+              icon={<Link2 className="w-5 h-5 text-violet-500" />}
+              showBorder
+            />
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-slate-50">

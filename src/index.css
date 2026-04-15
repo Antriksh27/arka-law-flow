@@ -441,3 +441,36 @@ input, textarea, select {
     transform: translate(-20px, 20px) rotate(240deg);
   }
 }
+
+/* NUCLEAR STICKER SUPPRESSION: Hide platform widgets that overlap mobile nav */
+#gpt-engineer-sticker, 
+[id*="gpt-engineer-sticker"],
+[id*="gpt-eng"],
+[class*="gpt-engineer"],
+[class*="gpteng"],
+iframe[src*="gptengineer.js"],
+div[style*="z-index: 2147483647"], 
+div[style*="z-index: 9999999"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+  width: 0 !important;
+  height: 0 !important;
+  left: -9999px !important;
+  position: absolute !important;
+}
+#gpt-engineer-sticker, 
+[id*="gpt-engineer-sticker"],
+[id*="gpt-eng"],
+.gpt-engineer-sticker,
+iframe[src*="gptengineer.js"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+  width: 0 !important;
+  height: 0 !important;
+}

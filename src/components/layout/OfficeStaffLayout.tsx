@@ -5,6 +5,9 @@ import Header from './Header';
 import { MobileSidebar } from '@/components/ui/sidebar';
 import { OfficeStaffTopNavBar } from './OfficeStaffTopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { DashboardMobileFAB } from '@/components/dashboard/DashboardMobileFAB';
+import { cn } from '@/lib/utils';
 
 interface OfficeStaffLayoutProps {
   children: React.ReactNode;
@@ -32,7 +35,7 @@ const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
   }
 
   return (
-    <div className="flex h-screen w-screen flex-row bg-[#F9FAFB]">
+    <div className="flex h-screen w-screen flex-row bg-[#F9FAFB] overflow-x-hidden">
       {/* Mobile only: Collapsible sidebar */}
       <MobileSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
@@ -46,9 +49,13 @@ const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
         {/* Desktop only: Render top nav bar */}
         {!isMobile && <OfficeStaffTopNavBar />}
         
-        <main className="flex-1 overflow-auto bg-[#F9FAFB]">
+        <main className={cn("flex-1 overflow-auto bg-[#F9FAFB]", isMobile && "pb-20")}>
           {children}
         </main>
+
+        {/* Mobile only elements */}
+        {isMobile && <MobileBottomNav />}
+        {isMobile && <DashboardMobileFAB />}
       </div>
     </div>
   );

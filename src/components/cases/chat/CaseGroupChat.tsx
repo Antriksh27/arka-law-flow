@@ -296,7 +296,7 @@ export const CaseGroupChat: React.FC<CaseGroupChatProps> = ({ caseId, caseName, 
               {/* Avatar */}
               {shouldShowAvatar && !isMe ? (
                 <Avatar className="h-7 w-7 mb-5">
-                  <AvatarImage src={message.getSender().getAvatar()} />
+                  <AvatarImage src={message.getSender().getAvatar?.()} />
                   <AvatarFallback className="bg-emerald-50 text-emerald-600 text-xs font-medium">
                     {getInitials(senderName)}
                   </AvatarFallback>

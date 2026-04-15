@@ -142,7 +142,7 @@ export function mapEcourtsCaseToCRM(apiResponse: any): MappedCaseData {
     advocate_name: petAdvocate,
     category: cc.caseCategoryFacetPath ?? null,
     under_act: cc.actsAndSections ?? null,
-    under_section: null,
+    under_section: cc.sections || null,
     priority,
     description: caseAi?.caseSummary ?? null,
     fetched_data: apiResponse,
@@ -158,7 +158,7 @@ export function mapEcourtsCaseToCRM(apiResponse: any): MappedCaseData {
  */
 export function extractHearings(apiResponse: any, caseId: string): any[] {
   const cc = apiResponse?.data?.courtCaseData ?? {};
-  const hearings = cc.hearings ?? cc.hearingHistory ?? [];
+  const hearings = cc.historyOfCaseHearings ?? cc.hearings ?? cc.hearingHistory ?? [];
   if (!Array.isArray(hearings)) return [];
 
   return hearings.map((h: any) => ({

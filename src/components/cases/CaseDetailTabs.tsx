@@ -16,9 +16,9 @@ import { CaseOverview } from './CaseOverview';
 import { CaseDetails } from './CaseDetails';
 import { CaseTimeline } from './CaseTimeline';
 import { CaseResearch } from './CaseResearch';
-import { CaseLegalkartIntegration } from './CaseLegalkartIntegration';
+import { CaseECourtsIntegration } from './CaseECourtsIntegration';
 import { CreateNoteMultiModal } from '../notes/CreateNoteMultiModal';
-import { LegalkartApiDocuments } from './legalkart/LegalkartApiDocuments';
+import { ECourtsApiDocuments } from './ecourts_api/ECourtsApiDocuments';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
@@ -146,7 +146,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
     icon: Bot
   }, {
     value: 'legalkart',
-    label: 'Legalkart API',
+    label: 'eCourts API',
     icon: ExternalLink
   }, {
     value: 'activity',
@@ -193,9 +193,9 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
             </div>
           )}
           <CaseDocuments caseId={caseId} />
-          {/* Legalkart API-sourced documents (opens via iframe) */}
+          {/* eCourts API-sourced documents (opens via iframe) */}
           <div className="mt-8">
-            <LegalkartApiDocuments caseId={caseId} />
+            <ECourtsApiDocuments caseId={caseId} />
           </div>
         </div>
       </TabsContent>
@@ -217,7 +217,7 @@ export const CaseDetailTabs: React.FC<CaseDetailTabsProps> = ({
       </TabsContent>
 
       <TabsContent value="legalkart" className="m-0">
-        <CaseLegalkartIntegration 
+        <CaseECourtsIntegration 
           caseId={caseId}
           cnrNumber={caseData?.cnr_number}
           autoFetchEnabled={caseData?.cnr_auto_fetch_enabled}

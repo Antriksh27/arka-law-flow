@@ -41,7 +41,7 @@ import {
   Plug
 } from "lucide-react";
 import { useFetchQueue, QueueItem } from "@/hooks/useFetchQueue";
-import { useLegalkartIntegration } from "@/hooks/useLegalkartIntegration";
+import { useEcourtsIntegration } from "@/hooks/useEcourtsIntegration";
 import { useNavigate } from "react-router-dom";
 import TimeUtils from "@/lib/timeUtils";
 
@@ -60,7 +60,7 @@ export const FetchQueueDashboard = () => {
     stopProcessing,
   } = useFetchQueue();
 
-  const { searchCase: authenticate } = useLegalkartIntegration();
+  const { searchCase: authenticate } = useEcourtsIntegration();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");

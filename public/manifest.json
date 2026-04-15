@@ -1,0 +1,26 @@
+{
+  "name": "HRU LEGAL",
+  "short_name": "HRULegal",
+  "description": "Comprehensive Legal CRM platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFF6FF",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/BtQgYYaLL2TcZ0hH9t61Mxu3ZXs1/uploads/1758902923991-image.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/BtQgYYaLL2TcZ0hH9t61Mxu3ZXs1/uploads/1758902923991-image.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

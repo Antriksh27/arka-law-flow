@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X, User, Building2, Phone, MapPin, UserCheck, FileText, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { bg, border, text } from '@/lib/colors';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditContactDialogProps {
   open: boolean;
@@ -44,6 +48,8 @@ interface ContactFormData {
 export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOpenChange, contact }) => {
   const { user, firmId } = useAuth();
   const { toast } = useToast();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [selectedStateId, setSelectedStateId] = useState<string>('');
@@ -170,7 +176,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
     onSuccess: () => {
       toast({ title: "Success", description: "Contact updated successfully" });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      onOpenChange(false);
+      handleClose();
     },
     onError: (error) => {
       toast({ title: "Error", description: "Failed to update contact", variant: "destructive" });
@@ -192,232 +198,262 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
   if (!contact) return null;
 
   const contactType = form.watch('type');
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-        <div className={`flex flex-col h-full ${bg.page}`}>
-          {/* Header */}
-          <div className={`flex items-center justify-between p-4 ${bg.card} border-b ${border.default}`}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                <User className="w-5 h-5 text-sky-500" />
-              </div>
-              <div>
-                <h2 className={`text-lg font-semibold ${text.primary}`}>Edit Contact</h2>
-                <p className={`text-xs ${text.light}`}>Update contact information</p>
-              </div>
-            </div>
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full">
-                <X className="w-5 h-5" />
-              </Button>
-            )}
+  const fullFormView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      {!isInsideDialog && (
+        <MobileDialogHeader
+          title="Edit Contact"
+          subtitle="Update contact information"
+          onClose={handleClose}
+          icon={<User className="w-5 h-5 text-sky-500" />}
+          showBorder
+        />
+      )}
+
+      {isInsideDialog && (
+        <div className="px-4 py-3 border-b flex items-center gap-3 bg-white">
+          <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+            <User className="w-4 h-4 text-sky-500" />
           </div>
+          <div>
+            <h2 className="text-sm font-semibold">Edit Contact</h2>
+            <p className="text-xs text-muted-foreground">Update contact information</p>
+          </div>
+        </div>
+      )}
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <Form {...form}>
-              <form id="edit-contact-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                {/* Contact Type Card */}
-                <div className={`${bg.card} rounded-2xl shadow-sm p-4`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-8 h-8 rounded-lg ${bg.muted} flex items-center justify-center`}>
-                      <User className={`w-4 h-4 ${text.muted}`} />
-                    </div>
-                    <span className={`font-medium ${text.muted}`}>Contact Type</span>
+      <ScrollArea className="flex-1">
+        <div className="px-4 py-4 pb-32">
+          <Form {...form}>
+            <form id="edit-contact-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Contact Type Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-8 h-8 rounded-lg ${bg.muted} flex items-center justify-center`}>
+                    <User className={`w-4 h-4 ${text.muted}`} />
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="flex gap-2">
-                            {['Individual', 'Organization'].map((type) => (
-                              <button
-                                key={type}
-                                type="button"
-                                onClick={() => field.onChange(type)}
-                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                                  field.value === type
-                                    ? 'bg-sky-100 text-sky-700 ring-2 ring-sky-200'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                {type}
-                              </button>
-                            ))}
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <span className={`font-medium ${text.muted}`}>Contact Type</span>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="flex gap-2">
+                          {['Individual', 'Organization'].map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => field.onChange(type)}
+                              className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                                field.value === type
+                                  ? 'bg-sky-100 text-sky-700 ring-2 ring-sky-200'
+                                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                              }`}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Basic Information Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <User className="w-4 h-4 text-violet-500" />
+                  </div>
+                  <span className="font-medium text-slate-700">Basic Information</span>
                 </div>
 
-                {/* Basic Information Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  rules={{ required: "Name is required" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">
+                        {contactType === 'Organization' ? 'Contact Person Name' : 'Name'} *
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter name" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Organization Details Card */}
+              {contactType === 'Organization' && (
+                <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-                      <User className="w-4 h-4 text-violet-500" />
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-amber-500" />
                     </div>
-                    <span className="font-medium text-slate-700">Basic Information</span>
+                    <span className="font-medium text-slate-700">Organization Details</span>
                   </div>
 
                   <FormField
                     control={form.control}
-                    name="name"
-                    rules={{ required: "Name is required" }}
+                    name="organization"
+                    rules={{ required: contactType === 'Organization' ? "Organization name is required" : false }}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-slate-600">
-                          {contactType === 'Organization' ? 'Contact Person Name' : 'Name'} *
-                        </FormLabel>
+                        <FormLabel className="text-sm text-slate-600">Organization Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter name" {...field} className="rounded-xl h-11" />
+                          <Input placeholder="Enter organization name" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
 
-                {/* Organization Details Card */}
-                {contactType === 'Organization' && (
-                  <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                        <Building2 className="w-4 h-4 text-amber-500" />
-                      </div>
-                      <span className="font-medium text-slate-700">Organization Details</span>
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="designation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Designation</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter designation" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="organization"
-                      rules={{ required: contactType === 'Organization' ? "Organization name is required" : false }}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Organization Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter organization name" {...field} className="rounded-xl h-11" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="designation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Designation</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter designation" {...field} className="rounded-xl h-11" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="company_address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Company Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter company address" {...field} className="rounded-xl h-11" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="company_phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm text-slate-600">Company Phone</FormLabel>
-                            <FormControl>
-                              <Input type="tel" placeholder="Phone" {...field} className="rounded-xl h-11" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="company_email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm text-slate-600">Company Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="Email" {...field} className="rounded-xl h-11" />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Contact Details Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <Phone className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">
-                      {contactType === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
-                    </span>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="company_address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Company Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter company address" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="company_phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Email</FormLabel>
+                          <FormLabel className="text-sm text-slate-600">Company Phone</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="email@example.com" {...field} className="rounded-xl h-11" />
+                            <Input type="tel" placeholder="Phone" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                     <FormField
                       control={form.control}
-                      name="phone"
+                      name="company_email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
+                          <FormLabel className="text-sm text-slate-600">Company Email</FormLabel>
                           <FormControl>
-                            <Input type="tel" placeholder="+91 XXXXX XXXXX" {...field} className="rounded-xl h-11" />
+                            <Input type="email" placeholder="Email" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
                 </div>
+              )}
 
-                {/* Address Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-rose-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Address</span>
+              {/* Contact Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-emerald-500" />
                   </div>
+                  <span className="font-medium text-slate-700">
+                    {contactType === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+                  </span>
+                </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="address_line_1"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-slate-600">Address Line 1</FormLabel>
+                        <FormLabel className="text-sm text-slate-600">Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="Street address" {...field} className="rounded-xl h-11" />
+                          <Input type="email" placeholder="email@example.com" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Phone</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="+91 XXXXX XXXXX" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Address Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-rose-500" />
+                  </div>
+                  <span className="font-medium text-slate-700">Address</span>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="address_line_1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Address Line 1</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Street address" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address_line_2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm text-slate-600">Address Line 2</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Apartment, suite, etc." {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="pin_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">PIN Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="000000" maxLength={6} {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -425,213 +461,193 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
                   <FormField
                     control={form.control}
-                    name="address_line_2"
+                    name="state_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-slate-600">Address Line 2</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Apartment, suite, etc." {...field} className="rounded-xl h-11" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="pin_code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">PIN Code</FormLabel>
+                        <FormLabel className="text-sm text-slate-600">State</FormLabel>
+                        <Select
+                          onValueChange={value => {
+                            field.onChange(value);
+                            setSelectedStateId(value);
+                            form.setValue('district_id', '');
+                          }}
+                          value={field.value}
+                        >
                           <FormControl>
-                            <Input placeholder="000000" maxLength={6} {...field} className="rounded-xl h-11" />
+                            <SelectTrigger className="rounded-xl h-11 bg-slate-50 border-0">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
                           </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                          <SelectContent>
+                            {states.map(state => (
+                              <SelectItem key={state.id} value={state.id}>{state.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="state_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">State</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="district_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">District</FormLabel>
+                        {showAddDistrict ? (
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="District name"
+                              value={newDistrictName}
+                              onChange={e => setNewDistrictName(e.target.value)}
+                              className="rounded-xl h-11 bg-slate-50 border-0"
+                            />
+                            <Button type="button" size="sm" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} className="rounded-full">
+                              Add
+                            </Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => setShowAddDistrict(false)} className="rounded-full">
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
                           <Select
                             onValueChange={value => {
-                              field.onChange(value);
-                              setSelectedStateId(value);
-                              form.setValue('district_id', '');
+                              if (value === 'add_new') setShowAddDistrict(true);
+                              else field.onChange(value);
                             }}
                             value={field.value}
+                            disabled={!selectedStateId}
                           >
                             <FormControl>
-                              <SelectTrigger className="rounded-xl h-11">
-                                <SelectValue placeholder="Select state" />
+                              <SelectTrigger className="rounded-xl h-11 bg-slate-50 border-0">
+                                <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {states.map(state => (
-                                <SelectItem key={state.id} value={state.id}>{state.name}</SelectItem>
+                              {districts.map(district => (
+                                <SelectItem key={district.id} value={district.id}>{district.name}</SelectItem>
                               ))}
+                              {selectedStateId && (
+                                <SelectItem value="add_new" className="border-t">
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Add New
+                                  </div>
+                                </SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
-                        </FormItem>
-                      )}
-                    />
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
-                    <FormField
-                      control={form.control}
-                      name="district_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">District</FormLabel>
-                          {showAddDistrict ? (
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="District name"
-                                value={newDistrictName}
-                                onChange={e => setNewDistrictName(e.target.value)}
-                                className="rounded-xl h-11"
-                              />
-                              <Button type="button" size="sm" onClick={handleAddDistrict} disabled={addDistrictMutation.isPending} className="rounded-full">
-                                Add
-                              </Button>
-                              <Button type="button" size="sm" variant="outline" onClick={() => setShowAddDistrict(false)} className="rounded-full">
-                                ✕
-                              </Button>
-                            </div>
-                          ) : (
-                            <Select
-                              onValueChange={value => {
-                                if (value === 'add_new') setShowAddDistrict(true);
-                                else field.onChange(value);
-                              }}
-                              value={field.value}
-                              disabled={!selectedStateId}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="rounded-xl h-11">
-                                  <SelectValue placeholder={!selectedStateId ? "Select state first" : "Select"} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {districts.map(district => (
-                                  <SelectItem key={district.id} value={district.id}>{district.name}</SelectItem>
-                                ))}
-                                {selectedStateId && (
-                                  <SelectItem value="add_new" className="border-t">
-                                    <div className="flex items-center gap-2">
-                                      <Plus className="h-4 w-4" />
-                                      Add New
-                                    </div>
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </FormItem>
-                      )}
-                    />
+              {/* Referral Information Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <UserCheck className="w-4 h-4 text-violet-500" />
                   </div>
+                  <span className="font-medium text-slate-700">Referral Information</span>
                 </div>
 
-                {/* Referral Information Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-                      <UserCheck className="w-4 h-4 text-violet-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Referral Information</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="referred_by_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Referred By (Name)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Referrer's name" {...field} className="rounded-xl h-11" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="referred_by_phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-slate-600">Referred By (Phone)</FormLabel>
-                          <FormControl>
-                            <Input type="tel" placeholder="Referrer's phone" {...field} className="rounded-xl h-11" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Notes Card */}
-                <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-slate-500" />
-                    </div>
-                    <span className="font-medium text-slate-700">Notes</span>
-                  </div>
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="notes"
+                    name="referred_by_name"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Referred By (Name)</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Additional notes about the contact..."
-                            rows={3}
-                            {...field}
-                            className="rounded-xl"
-                          />
+                          <Input placeholder="Referrer's name" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="referred_by_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-slate-600">Referred By (Phone)</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="Referrer's phone" {...field} className="rounded-xl h-11 bg-slate-50 border-0" />
                         </FormControl>
                       </FormItem>
                     )}
                   />
                 </div>
-              </form>
-            </Form>
-          </div>
+              </div>
 
-          {/* Footer */}
-          <div className="p-4 bg-white border-t border-slate-200">
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1 rounded-full h-11"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                form="edit-contact-form"
-                disabled={updateContactMutation.isPending}
-                className="flex-1 rounded-full h-11"
-              >
-                {updateContactMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update Contact'
-                )}
-              </Button>
-            </div>
+              {/* Notes Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <span className="font-medium text-slate-700">Notes</span>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Additional notes about the contact..."
+                          rows={3}
+                          {...field}
+                          className="rounded-xl bg-slate-50 border-0"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </form>
+          </Form>
+        </div>
+      </ScrollArea>
+
+      {/* Standardized Footer for Mobile/Side-panel */}
+      {(isMobile || isInsideDialog) && (
+        <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
+          <div className="flex gap-3">
+            <Button
+              type="submit"
+              form="edit-contact-form"
+              disabled={updateContactMutation.isPending}
+              className="flex-1 rounded-full h-12 bg-slate-900 text-white hover:bg-slate-800 shadow-lg font-semibold"
+            >
+              {updateContactMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update Contact'
+              )}
+            </Button>
           </div>
         </div>
+      )}
+    </div>
+  );
+
+  if (isInsideDialog) {
+    return fullFormView;
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        {fullFormView}
       </DialogContent>
     </Dialog>
   );
 };
+
+export default EditContactDialog;

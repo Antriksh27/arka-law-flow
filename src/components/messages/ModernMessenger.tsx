@@ -276,8 +276,8 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
     return conversationWith.getName() || conversationWith.getUid();
   };
   const getConversationAvatar = (conversation: CometChat.Conversation): string => {
-    const conversationWith = conversation.getConversationWith() as CometChat.User;
-    return conversationWith.getAvatar() || '';
+    const conversationWith = conversation.getConversationWith() as any;
+    return conversationWith.getAvatar?.() || conversationWith.getIcon?.() || '';
   };
   const getInitials = (name: string): string => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -436,7 +436,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             }} className="rounded-xl p-4 active:scale-[0.98] transition-all cursor-pointer bg-sidebar text-sidebar-foreground">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-12 w-12 border-2 border-white/20">
-                          <AvatarImage src={conversationWith.getAvatar()} />
+                          <AvatarImage src={conversationWith.getAvatar?.() || (conversationWith as any).getIcon?.()} />
                           <AvatarFallback className="bg-slate-700 text-white">
                             {getInitials(conversationWith.getName())}
                           </AvatarFallback>
@@ -551,7 +551,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
             {/* Chat Header */}
             <div className="border-b border-border px-6 py-4 flex items-center gap-3 bg-card">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={selectedUser.getAvatar()} />
+                <AvatarImage src={selectedUser.getAvatar?.() || (selectedUser as any).getIcon?.()} />
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {getInitials(selectedUser.getName())}
                 </AvatarFallback>
@@ -636,7 +636,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
                         duration: 0.2
                       }} className="flex-shrink-0">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage src={message.getSender().getAvatar()} />
+                                  <AvatarImage src={message.getSender().getAvatar?.()} />
                                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
                                     {getInitials(message.getSender().getName())}
                                   </AvatarFallback>

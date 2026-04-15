@@ -7,6 +7,11 @@ import { Upload, Download, Loader2, Link2, X, CheckCircle, AlertCircle, FileSpre
 import * as XLSX from 'xlsx';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface LinkClientsDialogProps {
   open: boolean;
@@ -39,12 +44,26 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentRow, setCurrentRow] = useState(0);
   const [totalRows, setTotalRows] = useState(0);
   const [result, setResult] = useState<ProcessingResult | null>(null);
+
+  const handleClose = isInsideDialog ? closeDialog : () => {
+    if (!isProcessing) {
+      setFile(null);
+      setResult(null);
+      setProgress(0);
+      setCurrentRow(0);
+      setTotalRows(0);
+      onOpenChange?.(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -204,42 +223,19 @@ export const LinkClientsDialog: React.FC<LinkClientsDialogProps> = ({
     }
   };
 
-  const handleClose = () => {
-    if (!isProcessing) {
-      setFile(null);
-      setResult(null);
-      setProgress(0);
-      setCurrentRow(0);
-      setTotalRows(0);
-      onOpenChange(false);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent hideCloseButton className="sm:max-w-xl p-0 bg-slate-50 overflow-hidden">
         <div className="flex flex-col h-full sm:h-auto">
           {/* Header */}
-          <div className="px-6 py-5 bg-white border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                  <Link2 className="w-5 h-5 text-sky-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground">Link Clients to Cases</h2>
-                  <p className="text-sm text-muted-foreground">Upload Excel with CNR and client names</p>
-                </div>
-              </div>
-              <button
-                onClick={handleClose}
-                disabled={isProcessing}
-                className="md:hidden w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
-              >
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-          </div>
+            <MobileDialogHeader
+              title="Link Clients to Cases"
+              subtitle="Upload Excel with CNR and client names"
+              onClose={handleClose}
+              icon={<Link2 className="w-5 h-5 text-sky-500" />}
+              showBorder
+            />
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">

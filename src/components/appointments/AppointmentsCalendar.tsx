@@ -59,7 +59,7 @@ interface CalendarDayData {
 export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
   filters,
 }) => {
-  const { openDialog } = useDialog();
+  const { openDialog, closeDialog } = useDialog();
   const { user } = useAuth();
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfToday());
 
@@ -205,9 +205,7 @@ export const AppointmentsCalendar: React.FC<AppointmentsCalendarProps> = ({
       <DayAppointmentsDialog 
         selectedDate={date}
         appointments={appointmentsForDate}
-        onClose={() => {
-          // This will be handled by the dialog hook automatically
-        }}
+        onClose={closeDialog}
       />
     );
   };

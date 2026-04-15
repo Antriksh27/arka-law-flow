@@ -11,6 +11,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useContext } from 'react';
+import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Client {
   id: string;
@@ -61,6 +66,10 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   onSuccess,
 }) => {
   const { toast } = useToast();
+  const { closeDialog } = useDialog();
+  const isInsideDialog = useContext(DialogContentContext);
+  const isMobile = useIsMobile();
+  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const [clientType, setClientType] = useState<string>('Individual');
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
@@ -214,6 +223,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
         description: "Client updated successfully",
       });
       
+      handleClose();
       onSuccess();
     } catch (error: any) {
       console.error('Error updating client:', error);
@@ -250,260 +260,286 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-6">
-        <DialogHeader>
-          <DialogTitle>Edit Client</DialogTitle>
-          <DialogDescription>
-            Update the client's information below.
-          </DialogDescription>
-        </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
-          {/* Client Type */}
-          <div>
-            <Label>Client Type *</Label>
-            <RadioGroup
-              value={type || 'Individual'}
-              onValueChange={(value) => {
-                setValue('type', value);
-                setClientType(value);
-              }}
-              className="flex gap-4 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Individual" id="individual" />
-                <Label htmlFor="individual" className="font-normal cursor-pointer">Individual</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Organization" id="organization" />
-                <Label htmlFor="organization" className="font-normal cursor-pointer">Organization</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Basic Information</h3>
-            
-            <div>
-              <Label htmlFor="full_name">{type === 'Organization' ? 'Contact Person Name' : 'Full Name'} *</Label>
-              <Input
-                id="full_name"
-                {...register('full_name', { required: 'Full name is required' })}
-                placeholder="Enter full name"
-              />
-              {errors.full_name && (
-                <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
-              )}
+  const formView = (
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Edit Client"
+        subtitle="Update the client's information below."
+        onClose={handleClose}
+      />
+      <ScrollArea className="flex-1">
+        <div className="px-6 py-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Client Type */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50">
+              <Label className="text-sm font-semibold text-foreground mb-3 block">Client Type *</Label>
+              <RadioGroup
+                value={type || 'Individual'}
+                onValueChange={(value) => {
+                  setValue('type', value);
+                  setClientType(value);
+                }}
+                className="flex gap-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Individual" id="individual" />
+                  <Label htmlFor="individual" className="font-normal cursor-pointer">Individual</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Organization" id="organization" />
+                  <Label htmlFor="organization" className="font-normal cursor-pointer">Organization</Label>
+                </div>
+              </RadioGroup>
             </div>
-          </div>
 
-          {/* Organization Details - Only for Organization */}
-          {type === 'Organization' && (
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Organization Details</h3>
+            {/* Basic Information */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Basic Information</h3>
               
               <div>
-                <Label htmlFor="organization">Organization Name *</Label>
+                <Label htmlFor="full_name" className="text-xs text-slate-500 mb-1">{type === 'Organization' ? 'Contact Person Name' : 'Full Name'} *</Label>
                 <Input
-                  id="organization"
-                  {...register('organization', { 
-                    required: type === 'Organization' ? 'Organization name is required' : false 
-                  })}
-                  placeholder="Enter organization/company name"
+                  id="full_name"
+                  {...register('full_name', { required: 'Full name is required' })}
+                  placeholder="Enter full name"
+                  className="rounded-xl bg-slate-50 border-0 h-11"
                 />
-                {errors.organization && (
-                  <p className="text-sm text-red-600 mt-1">{errors.organization.message}</p>
+                {errors.full_name && (
+                  <p className="text-sm text-red-600 mt-1">{errors.full_name.message}</p>
                 )}
               </div>
             </div>
-          )}
 
-          {/* Contact Details */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">
-              {type === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
-            </h3>
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register('email')}
-                placeholder="Enter email address"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Phone *</Label>
-              <Input
-                id="phone"
-                {...register('phone', { required: 'Phone is required' })}
-                placeholder="Enter phone number"
-              />
-              {errors.phone && (
-                <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={watch('status') || 'active'}
-                onValueChange={(value: any) => setValue('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="lead">Lead</SelectItem>
-                  <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-accent/10">
-              <div className="flex-1">
-                <Label htmlFor="vip-toggle" className="text-base font-medium">VIP Client</Label>
-                <p className="text-sm text-muted-foreground mt-1">Mark this client as a VIP for priority handling</p>
+            {/* Organization Details - Only for Organization */}
+            {type === 'Organization' && (
+              <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Organization Details</h3>
+                
+                <div>
+                  <Label htmlFor="organization" className="text-xs text-slate-500 mb-1">Organization Name *</Label>
+                  <Input
+                    id="organization"
+                    {...register('organization', { 
+                      required: type === 'Organization' ? 'Organization name is required' : false 
+                    })}
+                    placeholder="Enter organization/company name"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                  {errors.organization && (
+                    <p className="text-sm text-red-600 mt-1">{errors.organization.message}</p>
+                  )}
+                </div>
               </div>
-              <Switch
-                id="vip-toggle"
-                checked={isVip}
-                onCheckedChange={setIsVip}
-              />
-            </div>
-          </div>
+            )}
 
-          {/* Address Information */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Address Information</h3>
+            {/* Contact Details */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                {type === 'Organization' ? 'Contact Person Details' : 'Contact Details'}
+              </h3>
 
-            <div>
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                {...register('address')}
-                placeholder="Street address, building, etc."
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="email" className="text-xs text-slate-500 mb-1">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...register('email')}
+                    placeholder="Enter email address"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="phone" className="text-xs text-slate-500 mb-1">Phone *</Label>
+                  <Input
+                    id="phone"
+                    {...register('phone', { required: 'Phone is required' })}
+                    placeholder="Enter phone number"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+                  )}
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="state">State</Label>
+                <Label htmlFor="status" className="text-xs text-slate-500 mb-1">Status</Label>
                 <Select
-                  value={selectedState}
-                  onValueChange={(value) => {
-                    setSelectedState(value);
-                    setSelectedDistrict('');
-                    const stateName = states.find(s => s.id === value)?.name;
-                    setValue('state', stateName || '');
-                  }}
+                  value={watch('status') || 'active'}
+                  onValueChange={(value: any) => setValue('status', value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state..." />
+                  <SelectTrigger className="rounded-xl bg-slate-50 border-0 h-11">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {states.map((state) => (
-                      <SelectItem key={state.id} value={state.id}>
-                        {state.name}
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between p-4 border border-border/50 rounded-2xl bg-accent/5">
+                <div className="flex-1">
+                  <Label htmlFor="vip-toggle" className="text-sm font-medium">VIP Client</Label>
+                  <p className="text-xs text-muted-foreground mt-1">Mark this client as a VIP for priority handling</p>
+                </div>
+                <Switch
+                  id="vip-toggle"
+                  checked={isVip}
+                  onCheckedChange={setIsVip}
+                />
+              </div>
+            </div>
+
+            {/* Address Information */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Address Information</h3>
+
+              <div>
+                <Label htmlFor="address" className="text-xs text-slate-500 mb-1">Address</Label>
+                <Input
+                  id="address"
+                  {...register('address')}
+                  placeholder="Street address, building, etc."
+                  className="rounded-xl bg-slate-50 border-0 h-11"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="state" className="text-xs text-slate-500 mb-1">State</Label>
+                  <Select
+                    value={selectedState}
+                    onValueChange={(value) => {
+                      setSelectedState(value);
+                      setSelectedDistrict('');
+                      const stateName = states.find(s => s.id === value)?.name;
+                      setValue('state', stateName || '');
+                    }}
+                  >
+                    <SelectTrigger className="rounded-xl bg-slate-50 border-0 h-11">
+                      <SelectValue placeholder="Select state..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state.id} value={state.id}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="pin_code" className="text-xs text-slate-500 mb-1">PIN Code</Label>
+                  <Input
+                    id="pin_code"
+                    {...register('pin_code')}
+                    placeholder="Enter PIN code"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="district" className="text-xs text-slate-500 mb-1">District</Label>
+                <Select
+                  value={selectedDistrict}
+                  onValueChange={(value) => {
+                    setSelectedDistrict(value);
+                    setValue('district', value);
+                  }}
+                  disabled={!selectedState}
+                >
+                  <SelectTrigger className="rounded-xl bg-slate-50 border-0 h-11">
+                    <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map((district) => (
+                      <SelectItem key={district.id} value={district.name}>
+                        {district.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Referral Information */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Referral Information</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="referred_by_name" className="text-xs text-slate-500 mb-1">Reference Name</Label>
+                  <Input
+                    id="referred_by_name"
+                    {...register('referred_by_name')}
+                    placeholder="Name of referrer"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="referred_by_phone" className="text-xs text-slate-500 mb-1">Reference Contact</Label>
+                  <Input
+                    id="referred_by_phone"
+                    {...register('referred_by_phone')}
+                    placeholder="Contact count"
+                    className="rounded-xl bg-slate-50 border-0 h-11"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Notes */}
+            <div className="bg-white rounded-2xl shadow-sm p-4 border border-border/50 space-y-4 mb-20">
+              <h3 className="text-sm font-semibold text-foreground">Additional Notes</h3>
 
               <div>
-                <Label htmlFor="pin_code">PIN Code</Label>
-                <Input
-                  id="pin_code"
-                  {...register('pin_code')}
-                  placeholder="Enter PIN code"
+                <Label htmlFor="notes" className="text-xs text-slate-500 mb-1">Notes</Label>
+                <Textarea
+                  id="notes"
+                  {...register('notes')}
+                  rows={4}
+                  placeholder="Additional notes about the client"
+                  className="rounded-xl bg-slate-50 border-0"
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="district">District</Label>
-              <Select
-                value={selectedDistrict}
-                onValueChange={(value) => {
-                  setSelectedDistrict(value);
-                  setValue('district', value);
-                }}
-                disabled={!selectedState}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={selectedState ? "Select district..." : "Select state first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {districts.map((district) => (
-                    <SelectItem key={district.id} value={district.name}>
-                      {district.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Standard Footer within Form */}
+            <div className="pt-4 sticky bottom-0 bg-white border-t border-slate-100 px-6 pb-6 pt-4 mt-6 z-20 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
+              <div className="flex gap-3">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-full h-12 shadow-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold"
+                >
+                  {isSubmitting ? 'Updating...' : 'Update Client'}
+                </Button>
+              </div>
             </div>
-          </div>
+          </form>
+        </div>
+      </ScrollArea>
+    </div>
+  );
 
-          {/* Referral Information */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Referral Information</h3>
+  if (isInsideDialog) {
+    return formView;
+  }
 
-            <div>
-              <Label htmlFor="referred_by_name">Reference Name</Label>
-              <Input
-                id="referred_by_name"
-                {...register('referred_by_name')}
-                placeholder="Name of person who referred"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="referred_by_phone">Reference Contact</Label>
-              <Input
-                id="referred_by_phone"
-                {...register('referred_by_phone')}
-                placeholder="Contact number of referrer"
-              />
-            </div>
-          </div>
-
-          {/* Additional Notes */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground border-b-2 border-border pb-3 mb-4">Additional Notes</h3>
-
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                {...register('notes')}
-                rows={4}
-                placeholder="Additional notes about the client"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Updating...' : 'Update Client'}
-            </Button>
-          </DialogFooter>
-        </form>
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-slate-50 h-[95vh] sm:h-auto">
+        {formView}
       </DialogContent>
     </Dialog>
   );
