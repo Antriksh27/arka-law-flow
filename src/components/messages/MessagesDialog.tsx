@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, CheckCheck, Settings } from 'lucide-react';
+import { MessageSquare, CheckCheck } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useCometChat } from '@/hooks/useCometChat';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
@@ -10,8 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Chat {
@@ -226,74 +227,56 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
 
   const getAvatarColor = (name: string) => {
     const colors = [
-      { bg: 'bg-sky-100', text: 'text-sky-700' },
-      { bg: 'bg-emerald-100', text: 'text-emerald-700' },
-      { bg: 'bg-violet-100', text: 'text-violet-700' },
-      { bg: 'bg-amber-100', text: 'text-amber-700' },
-      { bg: 'bg-rose-100', text: 'text-rose-700' },
+      { bg: 'bg-sky-50', text: 'text-sky-700' },
+      { bg: 'bg-emerald-50', text: 'text-emerald-700' },
+      { bg: 'bg-violet-50', text: 'text-violet-700' },
+      { bg: 'bg-amber-50', text: 'text-amber-700' },
+      { bg: 'bg-rose-50', text: 'text-rose-700' },
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
 
   const content = (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 h-11 bg-white border-b border-slate-100 sticky top-0 z-10">
-        <button 
-          onClick={onClose}
-          className="text-primary font-medium text-sm active:opacity-70"
-        >
-          Close
-        </button>
-        <span className="font-semibold text-sm text-slate-900">Messages</span>
-        <button 
-          onClick={() => {
-            onClose();
-            navigate('/chat');
-          }}
-          className="text-primary font-semibold text-sm active:opacity-70"
-        >
-          View All
-        </button>
-      </div>
-
-      {/* iOS Drag Handle - Mobile only */}
-      {isMobile && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-300 rounded-full z-20" />
-      )}
+    <div className="flex flex-col h-full bg-slate-50">
+      <MobileDialogHeader
+        title="Messages"
+        onClose={onClose}
+        icon={<MessageSquare className="w-5 h-5 text-primary" />}
+        showBorder
+      />
 
       {/* Mark All Read Bar */}
       {unreadCount > 0 && (
-        <div className="px-3 py-2 bg-white border-b border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-500">
+        <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
+          <span className="text-sm font-bold text-slate-500">
             {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
           </span>
           <button 
             onClick={markAllChatNotificationsAsRead}
-            className="flex items-center gap-1 text-xs font-medium text-primary active:opacity-70"
+            className="flex items-center gap-1.5 text-sm font-bold text-primary active:opacity-70"
           >
-            <CheckCheck className="w-3.5 h-3.5" />
+            <CheckCheck className="w-4 h-4" />
             Mark all read
           </button>
         </div>
       )}
 
       {/* Messages List */}
-      <ScrollArea className="flex-1 bg-slate-50">
-        <div className="p-2.5 space-y-1.5">
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-3">
           {loading ? (
-            <div className="py-8 text-center">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-xs text-slate-500">Loading messages...</p>
+            <div className="py-12 text-center">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-slate-500 font-medium">Loading messages...</p>
             </div>
           ) : chats.length === 0 ? (
-            <div className="py-10 text-center">
-              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                <MessageSquare className="w-7 h-7 text-slate-300" />
+            <div className="py-16 text-center">
+              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+                <MessageSquare className="w-10 h-10 text-slate-400" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-0.5">No messages</h3>
-              <p className="text-xs text-slate-500">Start a conversation with your team</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">No messages</h3>
+              <p className="text-sm text-slate-500 font-medium">Start a conversation with your team</p>
             </div>
           ) : (
             chats.map((chat) => {
@@ -302,33 +285,35 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
                 <div
                   key={chat.id}
                   onClick={() => handleChatClick(chat)}
-                  className={`bg-white rounded-xl px-3 py-2.5 shadow-sm active:scale-[0.98] transition-all cursor-pointer ${
-                    chat.unread ? 'ring-1 ring-primary/20' : ''
+                  className={`bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all cursor-pointer border border-border/50 ${
+                    chat.unread ? 'ring-2 ring-primary/10 bg-primary/5' : ''
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Avatar className="w-9 h-9 flex-shrink-0">
-                      <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold text-xs`}>
+                  <div className="flex items-start gap-4">
+                    <Avatar className="w-11 h-11 flex-shrink-0 rounded-2xl">
+                      <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold rounded-2xl border border-border/30`}>
                         {getInitials(chat.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className={`text-sm truncate ${chat.unread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}>
-                            {chat.name}
-                          </h4>
-                          {chat.unread && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                          )}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h4 className={`text-[14px] text-slate-900 truncate ${chat.unread ? 'font-bold' : 'font-semibold'}`}>
+                              {chat.name}
+                            </h4>
+                            {chat.unread && (
+                              <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-600 line-clamp-2 font-medium leading-relaxed">
+                            {chat.message}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
+                            {chat.time}
+                          </p>
                         </div>
-                        <span className="text-[10px] text-slate-400 flex-shrink-0">
-                          {chat.time}
-                        </span>
                       </div>
-                      <p className="text-xs text-slate-500 truncate">
-                        {chat.message}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -337,6 +322,19 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
           )}
         </div>
       </ScrollArea>
+
+      {/* View All Footer */}
+      <div className="px-4 py-3 bg-white border-t border-slate-100">
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/chat');
+          }}
+          className="w-full text-center text-sm font-bold text-primary active:opacity-70"
+        >
+          View All Messages
+        </button>
+      </div>
     </div>
   );
 
@@ -360,7 +358,7 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
         hideCloseButton 
-        className="sm:max-w-[380px] p-0 gap-0 overflow-hidden max-h-[70vh]"
+        className="sm:max-w-[420px] p-0 gap-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh] rounded-3xl"
       >
         {content}
       </DialogContent>
