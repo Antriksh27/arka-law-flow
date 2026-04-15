@@ -184,8 +184,10 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     openDialog(
       <EditAppointmentDialog 
         appointment={appointment} 
-        open={true}
-        onOpenChange={(isOpen) => !isOpen && closeDialog()}
+        onSuccess={() => {
+          closeDialog();
+          fetchAppointments();
+        }}
       />
     );
   };

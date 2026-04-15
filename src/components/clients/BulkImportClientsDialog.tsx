@@ -24,9 +24,14 @@ export const BulkImportClientsDialog = ({
   onSuccess 
 }: BulkImportClientsDialogProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { closeDialog } = useDialog();
   const isInsideDialog = useContext(DialogContentContext);
   const isMobile = useIsMobile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [results, setResults] = useState<{ success: number; errors: string[] } | null>(null);
   const handleClose = isInsideDialog ? closeDialog : () => {
     resetDialog();
     onOpenChange?.(false);

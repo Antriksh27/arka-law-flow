@@ -7,6 +7,7 @@ import { ViewAppointmentDialog } from './ViewAppointmentDialog';
 import { CreateAppointmentDialog } from './CreateAppointmentDialog';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Clock, User, MapPin, Plus, Video, Phone, X } from 'lucide-react';
+import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 
 interface AppointmentData {
   id: string;
