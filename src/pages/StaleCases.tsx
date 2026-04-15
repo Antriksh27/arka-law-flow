@@ -226,7 +226,7 @@ const StaleCases = () => {
       queryClient.invalidateQueries({ queryKey: ['stale-cases'] });
       toast({
         title: "CRM Sync Complete",
-        description: `Case data for CNR ${result.data.data?.case_details?.cnr_number || ''} updated successfully.`,
+        description: `Case data for CNR ${(result.data?.data as any)?.case_details?.cnr_number || ''} updated successfully.`,
       });
     },
     onError: (error: any) => {

@@ -113,7 +113,6 @@ const AddTeamMemberDialog = ({
     addTeamMemberMutation.mutate(data);
   };
 
-  const { role: userRole, firmId } = useAuth();
   const canAddMembers = userRole === 'admin';
   
   if (!canAddMembers) {
