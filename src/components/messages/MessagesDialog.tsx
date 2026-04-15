@@ -239,20 +239,20 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
   const content = (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-slate-100 sticky top-0 z-10">
+      <div className="flex items-center justify-between px-3 h-11 bg-white border-b border-slate-100 sticky top-0 z-10">
         <button 
           onClick={onClose}
-          className="text-primary font-medium text-base active:opacity-70"
+          className="text-primary font-medium text-sm active:opacity-70"
         >
           Close
         </button>
-        <span className="font-semibold text-slate-900">Messages</span>
+        <span className="font-semibold text-sm text-slate-900">Messages</span>
         <button 
           onClick={() => {
             onClose();
             navigate('/chat');
           }}
-          className="text-primary font-semibold text-base active:opacity-70"
+          className="text-primary font-semibold text-sm active:opacity-70"
         >
           View All
         </button>
@@ -265,15 +265,15 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
 
       {/* Mark All Read Bar */}
       {unreadCount > 0 && (
-        <div className="px-4 py-3 bg-white border-b border-slate-100 flex items-center justify-between">
-          <span className="text-sm text-slate-500">
+        <div className="px-3 py-2 bg-white border-b border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-500">
             {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
           </span>
           <button 
             onClick={markAllChatNotificationsAsRead}
-            className="flex items-center gap-1.5 text-sm font-medium text-primary active:opacity-70"
+            className="flex items-center gap-1 text-xs font-medium text-primary active:opacity-70"
           >
-            <CheckCheck className="w-4 h-4" />
+            <CheckCheck className="w-3.5 h-3.5" />
             Mark all read
           </button>
         </div>
@@ -281,19 +281,19 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
 
       {/* Messages List */}
       <ScrollArea className="flex-1 bg-slate-50">
-        <div className="p-4 space-y-3">
+        <div className="p-2.5 space-y-1.5">
           {loading ? (
-            <div className="py-12 text-center">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-slate-500">Loading messages...</p>
+            <div className="py-8 text-center">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <p className="text-xs text-slate-500">Loading messages...</p>
             </div>
           ) : chats.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-10 h-10 text-slate-300" />
+            <div className="py-10 text-center">
+              <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="w-7 h-7 text-slate-300" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">No messages</h3>
-              <p className="text-sm text-slate-500">Start a conversation with your team</p>
+              <h3 className="text-sm font-semibold text-slate-900 mb-0.5">No messages</h3>
+              <p className="text-xs text-slate-500">Start a conversation with your team</p>
             </div>
           ) : (
             chats.map((chat) => {
@@ -302,31 +302,31 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
                 <div
                   key={chat.id}
                   onClick={() => handleChatClick(chat)}
-                  className={`bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all cursor-pointer ${
-                    chat.unread ? 'ring-2 ring-primary/20' : ''
+                  className={`bg-white rounded-xl px-3 py-2.5 shadow-sm active:scale-[0.98] transition-all cursor-pointer ${
+                    chat.unread ? 'ring-1 ring-primary/20' : ''
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12 flex-shrink-0">
-                      <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold`}>
+                  <div className="flex items-center gap-2.5">
+                    <Avatar className="w-9 h-9 flex-shrink-0">
+                      <AvatarFallback className={`${avatarColor.bg} ${avatarColor.text} font-semibold text-xs`}>
                         {getInitials(chat.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className={`text-base truncate ${chat.unread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}>
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className={`text-sm truncate ${chat.unread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}>
                             {chat.name}
                           </h4>
                           {chat.unread && (
-                            <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                           )}
                         </div>
-                        <span className="text-xs text-slate-400 flex-shrink-0">
+                        <span className="text-[10px] text-slate-400 flex-shrink-0">
                           {chat.time}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 truncate mt-0.5">
+                      <p className="text-xs text-slate-500 truncate">
                         {chat.message}
                       </p>
                     </div>
@@ -360,7 +360,7 @@ export const MessagesDialog: React.FC<MessagesDialogProps> = ({ isOpen, onClose 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
         hideCloseButton 
-        className="sm:max-w-[420px] p-0 gap-0 overflow-hidden max-h-[80vh]"
+        className="sm:max-w-[380px] p-0 gap-0 overflow-hidden max-h-[70vh]"
       >
         {content}
       </DialogContent>
