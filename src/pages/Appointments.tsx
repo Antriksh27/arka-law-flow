@@ -22,7 +22,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { MobileAppointmentCard } from '../components/appointments/MobileAppointmentCard';
-import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import TimeUtils from '@/lib/timeUtils';
