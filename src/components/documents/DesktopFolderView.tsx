@@ -146,8 +146,17 @@ export const DesktopFolderView: React.FC<{ searchQuery?: string }> = ({ searchQu
 
   const { folders, documents } = getCurrentItems();
 
+  // Recursively check if a folder or any of its descendants match the search
+  const folderMatchesSearch = (node: FolderNode, query: string): boolean => {
+    const q = query.toLowerCase();
+    if (node.name.toLowerCase().includes(q)) return true;
+    if (node.children?.some(c => folderMatchesSearch(c, query))) return true;
+    if (node.documents?.some((d: any) => d.file_name.toLowerCase().includes(q))) return true;
+    return false;
+  };
+
   const filteredFolders = searchQuery
-    ? folders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? folders.filter(f => folderMatchesSearch(f, searchQuery))
     : folders;
   const filteredDocs = searchQuery
     ? documents.filter((d: any) => d.file_name.toLowerCase().includes(searchQuery.toLowerCase()))
