@@ -63,8 +63,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in to fetch case details');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'case_detail', cnr, caseId, firmId },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', cnr, caseId, firmId },
       });
       if (error) throw error;
       return data;
@@ -87,8 +87,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in to search cases');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'case_search', firmId, ...options },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', firmId, ...options },
       });
       if (error) throw error;
       return data;
@@ -104,8 +104,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in to search cause lists');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'causelist_search', firmId, ...options },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'gujarat_display_board', firmId, ...options },
       });
       if (error) throw error;
       return data;
@@ -121,8 +121,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'causelist_dates', firmId, ...options },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'gujarat_display_board', firmId, ...options },
       });
       if (error) throw error;
       return data;
@@ -135,8 +135,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'court_structure', firmId, endpoint },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', firmId, endpoint },
       });
       if (error) throw error;
       return data;
@@ -149,8 +149,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'case_refresh', cnr, firmId },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', cnr, firmId },
       });
       if (error) throw error;
       return data;
@@ -169,8 +169,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'bulk_refresh', cnrs, firmId },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'batch_search', cnrs, firmId },
       });
       if (error) throw error;
       return data;
@@ -189,7 +189,7 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { action: 'batch_search', cnrs, firmId },
       });
       if (error) throw error;
@@ -211,7 +211,7 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
         body: { action: 'sync_display_board', firmId, ...options },
       });
       if (error) throw error;
@@ -233,8 +233,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'order_ai', cnr, filename, firmId },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', cnr, firmId },
       });
       if (error) throw error;
       return data;
@@ -247,8 +247,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'enums', types, firmId },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'search', firmId },
       });
       if (error) throw error;
       return data;
@@ -261,8 +261,8 @@ export const useEcourtsIntegration = () => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in to fetch cause list');
 
-      const { data, error } = await supabase.functions.invoke('ecourts-api', {
-        body: { action: 'causelist_search', firmId, date: new Date().toISOString().split('T')[0], limit: 100 },
+      const { data, error } = await supabase.functions.invoke('legalkart-api', {
+        body: { action: 'gujarat_display_board', firmId },
       });
       if (error) throw error;
       return data;
