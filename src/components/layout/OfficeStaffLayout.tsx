@@ -55,7 +55,6 @@ const OfficeStaffLayout = ({ children }: OfficeStaffLayoutProps) => {
 
         {/* Mobile only elements */}
         {isMobile && <MobileBottomNav />}
-        {isMobile && <DashboardMobileFAB />}
       </div>
     </div>
   );
