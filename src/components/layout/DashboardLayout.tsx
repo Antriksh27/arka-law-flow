@@ -34,7 +34,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   return (
     <SidebarProvider openSidebar={() => setSidebarOpen(true)}>
-      <div className="flex h-screen w-screen flex-row bg-background overflow-x-hidden">
+      <div className="flex h-screen w-screen flex-row bg-background overflow-hidden">
         {/* Mobile only: Collapsible sidebar */}
         <MobileSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
