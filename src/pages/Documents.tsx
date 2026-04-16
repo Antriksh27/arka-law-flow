@@ -129,10 +129,19 @@ const Documents = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header with Title */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
           <p className="text-muted-foreground mt-1">Manage and organize your legal documents</p>
+        </div>
+        <div className="relative w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search documents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-10 bg-background border-border"
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button
