@@ -74,7 +74,7 @@ const invokeEcourtsDirect = async (body: Record<string, unknown>): Promise<Ecour
   }
 
   const functionBaseUrl = (supabase as any).functionsUrl || `${(supabase as any).supabaseUrl}/functions/v1`;
-  const response = await fetch(`${functionBaseUrl}/ecourts-api`, {
+  const response = await fetch(`${functionBaseUrl}/legalkart-api`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

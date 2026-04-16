@@ -25,7 +25,7 @@ const invokeEcourtsDirect = async <T = unknown>(body: Record<string, unknown>) =
   const functionBaseUrl = supabaseClient.functionsUrl || `${supabaseClient.supabaseUrl}/functions/v1`;
 
   try {
-    const response = await fetch(`${functionBaseUrl}/ecourts-api`, {
+    const response = await fetch(`${functionBaseUrl}/legalkart-api`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,8 +50,8 @@ const invokeEcourtsDirect = async <T = unknown>(body: Record<string, unknown>) =
       const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('id-preview--');
       throw new Error(
         isPreview
-          ? 'eCourts fetch is blocked in preview. Please use the published URL to see the real API error.'
-          : 'Could not reach the eCourts service. Please try again.'
+          ? 'LegalKart fetch is blocked in preview. Please use the published URL to see the real API error.'
+          : 'Could not reach the LegalKart service. Please try again.'
       );
     }
 
@@ -181,7 +181,7 @@ export const useEcourtsCaseDetails = (caseId: string) => {
 
       // Step 1: Trigger Scraper (POST)
       const refreshResult = await invokeEcourtsDirect({
-        action: 'case_refresh',
+        action: 'search',
         cnr: caseData.cnr_number,
         firmId: caseData.firm_id,
       });
@@ -203,7 +203,7 @@ export const useEcourtsCaseDetails = (caseId: string) => {
       // Step 3: Fetch & Save to CRM (GET)
       console.log('🔄 Performing scheduled CRM sync...');
       const detailResult = await invokeEcourtsDirect({
-        action: 'case_detail',
+        action: 'search',
         cnr: caseData.cnr_number,
         caseId,
         firmId: caseData.firm_id,
@@ -214,7 +214,7 @@ export const useEcourtsCaseDetails = (caseId: string) => {
         queryClient.invalidateQueries({ queryKey: ['legalkart-case', caseId] });
         queryClient.invalidateQueries({ queryKey: ['case-hearings', caseId] });
         queryClient.invalidateQueries({ queryKey: ['case-orders', caseId] });
-        toast({ title: "CRM Sync Complete", description: "The case details have been updated with the latest eCourts data." });
+        toast({ title: "CRM Sync Complete", description: "The case details have been updated with the latest LegalKart data." });
       }
 
       return detailResult;
