@@ -67,9 +67,9 @@ async function refreshCaseViaLegalkart(
   });
   
   // Race between the actual request and timeout
-  const fetchPromise = supabase.functions.invoke('ecourts-api', {
+  const fetchPromise = supabase.functions.invoke('legalkart-api', {
     body: {
-      action: 'case_detail',
+      action: 'search',
       cnr: caseData.cnr_number,
       searchType,
       caseId: caseData.case_id,
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
     // STEP 0: Discover today's hearings via Gujarat Display Board API
     console.log('🔍 Step 0: Discovering hearings via Display Board API...');
     try {
-      const { data: syncResult, error: syncError } = await supabase.functions.invoke('ecourts-api', {
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('legalkart-api', {
         body: { 
           action: 'sync_display_board', 
           targetDate,
