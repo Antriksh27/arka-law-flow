@@ -61,7 +61,6 @@ export const DesktopFolderView: React.FC<{ searchQuery?: string }> = ({ searchQu
           folder_name,
           client_id,
           case_id,
-          document_type,
           clients!left(id, full_name),
           cases!left(id, case_title, case_number)
         `)
