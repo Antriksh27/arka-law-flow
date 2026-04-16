@@ -14,6 +14,7 @@ import { LawyerSelection } from './pages/LawyerSelection';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from './components/ui/sonner';
 import { BookRedirect } from './pages/BookRedirect';
+import DashboardLayout from './components/layout/DashboardLayout';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
