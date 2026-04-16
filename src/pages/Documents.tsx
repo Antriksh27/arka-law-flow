@@ -26,8 +26,7 @@ const Documents = () => {
     clientId: 'all'
   });
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [showFolderSheet, setShowFolderSheet] = useState(false);
-  const [showFiltersSheet, setShowFiltersSheet] = useState(false);
+  const [mobileViewMode, setMobileViewMode] = useState<'folders' | 'list'>('folders');
   const [mobileViewMode, setMobileViewMode] = useState<'folders' | 'list'>('folders');
   const [isBackfilling, setIsBackfilling] = useState(false);
 
