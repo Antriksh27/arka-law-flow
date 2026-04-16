@@ -378,7 +378,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       onClick={() => setValue('priority', option.value as any)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         watchedPriority === option.value
-                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          ? `${option.activeBg} ${option.activeText} ring-2 ring-offset-1 ring-current`
                           : `${option.bg} ${option.text} hover:opacity-80`
                       }`}
                     >
@@ -399,7 +399,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       onClick={() => setValue('status', option.value as any)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         watchedStatus === option.value
-                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          ? `${option.activeBg} ${option.activeText} ring-2 ring-offset-1 ring-current`
                           : `${option.bg} ${option.text} hover:opacity-80`
                       }`}
                     >
