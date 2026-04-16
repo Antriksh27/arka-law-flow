@@ -15,9 +15,8 @@ import { toast } from '@/hooks/use-toast';
 const Documents = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const [selectedFolder, setSelectedFolder] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFolder, setSelectedFolder] = useState<string>('all');
   const [selectedFilters, setSelectedFilters] = useState({
     fileType: 'all',
     uploadedBy: 'all',
