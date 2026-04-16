@@ -318,7 +318,7 @@ const ModernMessenger: React.FC<ModernMessengerProps> = ({
   // Mobile view
   if (isMobile) {
     if (showMobileChat && selectedUser) {
-      return <div className="fixed inset-0 flex flex-col bg-background overflow-hidden z-50">
+      return <div className="fixed inset-0 flex flex-col bg-background overflow-hidden z-[110]">
           {/* Header - Fixed top */}
           <div className="flex-shrink-0 bg-white border-b border-slate-200 safe-area-top">
             <div className="flex items-center gap-3 h-14 px-4">
