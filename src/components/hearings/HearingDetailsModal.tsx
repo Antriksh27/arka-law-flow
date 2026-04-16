@@ -47,6 +47,25 @@ export const HearingDetailsModal: React.FC<HearingDetailsModalProps> = ({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        {/* Case Name Card */}
+        {(hearing.cases?.title || hearing.cases?.case_title) && (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Case Name</p>
+                  <p className="text-base font-semibold text-foreground leading-snug">
+                    {hearing.cases?.title || hearing.cases?.case_title}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Date & Time Card */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-4">
