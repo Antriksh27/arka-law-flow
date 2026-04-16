@@ -378,7 +378,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       onClick={() => setValue('priority', option.value as any)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         watchedPriority === option.value
-                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          ? `${option.activeBg} ${option.activeText} ring-2 ring-offset-1 ring-current`
                           : `${option.bg} ${option.text} hover:opacity-80`
                       }`}
                     >
@@ -399,7 +399,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       onClick={() => setValue('status', option.value as any)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         watchedStatus === option.value
-                          ? `${option.activeBg} ${option.text} ring-2 ring-offset-1 ring-current`
+                          ? `${option.activeBg} ${option.activeText} ring-2 ring-offset-1 ring-current`
                           : `${option.bg} ${option.text} hover:opacity-80`
                       }`}
                     >
@@ -575,14 +575,14 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 };
 
 const priorityOptions = [
-  { value: 'low', label: 'Low', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600' },
-  { value: 'medium', label: 'Medium', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600' },
-  { value: 'high', label: 'High', bg: 'bg-amber-100', activeBg: 'bg-amber-600', text: 'text-amber-600' },
-  { value: 'critical', label: 'Critical', bg: 'bg-rose-100', activeBg: 'bg-rose-600', text: 'text-rose-600' }
+  { value: 'low', label: 'Low', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600', activeText: 'text-white' },
+  { value: 'medium', label: 'Medium', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600', activeText: 'text-white' },
+  { value: 'high', label: 'High', bg: 'bg-amber-100', activeBg: 'bg-amber-600', text: 'text-amber-600', activeText: 'text-white' },
+  { value: 'critical', label: 'Critical', bg: 'bg-rose-100', activeBg: 'bg-rose-600', text: 'text-rose-600', activeText: 'text-white' }
 ];
 
 const statusOptions = [
-  { value: 'todo', label: 'To Do', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600' },
-  { value: 'in_progress', label: 'In Progress', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600' },
-  { value: 'completed', label: 'Completed', bg: 'bg-emerald-100', activeBg: 'bg-emerald-600', text: 'text-emerald-600' }
+  { value: 'todo', label: 'To Do', bg: 'bg-slate-100', activeBg: 'bg-slate-600', text: 'text-slate-600', activeText: 'text-white' },
+  { value: 'in_progress', label: 'In Progress', bg: 'bg-sky-100', activeBg: 'bg-sky-600', text: 'text-sky-600', activeText: 'text-white' },
+  { value: 'completed', label: 'Completed', bg: 'bg-emerald-100', activeBg: 'bg-emerald-600', text: 'text-emerald-600', activeText: 'text-white' }
 ];
