@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { DocumentsSidebar } from '../components/documents/DocumentsSidebar';
-import { DocumentsMainView } from '../components/documents/DocumentsMainView';
-import { DocumentsFilterBar } from '../components/documents/DocumentsFilterBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { Upload, FolderOpen, RefreshCw, List, FolderTree } from 'lucide-react';
+import { Upload, RefreshCw, List, FolderTree } from 'lucide-react';
 import { MobileFolderView } from '@/components/documents/MobileFolderView';
+import { DesktopFolderView } from '@/components/documents/DesktopFolderView';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
+import { DocumentsMainView } from '../components/documents/DocumentsMainView';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
