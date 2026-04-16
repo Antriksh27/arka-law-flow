@@ -5,7 +5,7 @@ import { Bell, Settings, History, Mail } from 'lucide-react';
 import { NotificationSettingsPanel } from './NotificationSettingsPanel';
 import { NotificationInbox } from './NotificationInbox';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileHeader } from '@/components/mobile/MobileHeader';
+
 
 
 export const NotificationDashboard = () => {
@@ -15,7 +15,9 @@ export const NotificationDashboard = () => {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <MobileHeader title="Notifications" />
+        <div className="px-4 pt-4">
+          <h1 className="text-xl font-semibold text-foreground mb-4">Notifications</h1>
+        </div>
 
         <div className="p-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
