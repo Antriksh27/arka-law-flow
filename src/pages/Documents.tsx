@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 import { MobileFAB } from '@/components/mobile/MobileFAB';
-import { Upload, RefreshCw, List, FolderTree } from 'lucide-react';
+import { Upload, RefreshCw, List, FolderTree, Search } from 'lucide-react';
 import { MobileFolderView } from '@/components/documents/MobileFolderView';
 import { DesktopFolderView } from '@/components/documents/DesktopFolderView';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
