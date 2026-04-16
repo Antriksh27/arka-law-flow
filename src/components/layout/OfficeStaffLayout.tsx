@@ -6,7 +6,7 @@ import { MobileSidebar } from '@/components/ui/sidebar';
 import { OfficeStaffTopNavBar } from './OfficeStaffTopNavBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
-import { DashboardMobileFAB } from '@/components/dashboard/DashboardMobileFAB';
+
 import { cn } from '@/lib/utils';
 
 interface OfficeStaffLayoutProps {
