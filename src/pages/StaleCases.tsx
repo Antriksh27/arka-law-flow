@@ -74,7 +74,7 @@ const invokeEcourtsDirect = async (body: Record<string, unknown>): Promise<Ecour
   }
 
   const functionBaseUrl = (supabase as any).functionsUrl || `${(supabase as any).supabaseUrl}/functions/v1`;
-  const response = await fetch(`${functionBaseUrl}/ecourts-api`, {
+  const response = await fetch(`${functionBaseUrl}/legalkart-api`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ const StaleCases = () => {
 
       // Step 1: Trigger Scraper (POST)
       const refreshResult = await invokeEcourtsDirect({
-        action: 'case_refresh',
+        action: 'search',
         cnr: caseData.cnr_number,
         firmId,
       });
@@ -209,7 +209,7 @@ const StaleCases = () => {
 
       console.log(`🔄 [${caseData.cnr_number}] Performing CRM sync...`);
       const detailResult = await invokeEcourtsDirect({
-        action: 'case_detail',
+        action: 'search',
         cnr: caseData.cnr_number,
         searchType,
         caseId: caseData.id,

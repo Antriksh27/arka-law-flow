@@ -183,10 +183,10 @@ serve(async (req) => {
         // Call legalkart API with authorization
         const searchType = mapCourtTypeToSearchType(item.court_type, item.cnr_number);
         
-        const { data: apiResponse, error: apiError } = await supabase.functions.invoke('ecourts-api', {
+        const { data: apiResponse, error: apiError } = await supabase.functions.invoke('legalkart-api', {
           headers: authHeader ? { authorization: authHeader } : {},
           body: {
-            action: 'case_detail',
+            action: 'search',
             cnr: item.cnr_number,
             searchType,
             caseId: item.case_id,
