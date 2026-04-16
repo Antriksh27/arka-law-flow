@@ -8,7 +8,6 @@ import { MobileFAB } from '@/components/mobile/MobileFAB';
 import { Upload, FolderOpen, RefreshCw, List, FolderTree } from 'lucide-react';
 import { MobileFolderView } from '@/components/documents/MobileFolderView';
 import { UploadDocumentDialog } from '@/components/documents/UploadDocumentDialog';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
