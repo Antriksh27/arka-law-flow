@@ -134,47 +134,30 @@ const Documents = () => {
           <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
           <p className="text-muted-foreground mt-1">Manage and organize your legal documents</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleBackfill}
-          disabled={isBackfilling}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
-          {isBackfilling ? 'Backfilling...' : 'Backfill Types'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowUploadDialog(true)}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleBackfill}
+            disabled={isBackfilling}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isBackfilling ? 'animate-spin' : ''}`} />
+            {isBackfilling ? 'Backfilling...' : 'Backfill Types'}
+          </Button>
+        </div>
       </div>
 
-      {/* Filter Bar */}
-      <DocumentsFilterBar
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedFilters={selectedFilters}
-        onFiltersChange={setSelectedFilters}
-        onUploadClick={() => setShowUploadDialog(true)}
-      />
-      
-      {/* Main Content with Sidebar */}
-      <div className="flex gap-6 h-[calc(100vh-280px)]">
-        {/* Sidebar Card */}
-        <div className="w-72 bg-card rounded-2xl shadow-sm border border-border overflow-hidden flex flex-col">
-          <DocumentsSidebar
-            selectedFolder={selectedFolder}
-            onFolderSelect={setSelectedFolder}
-          />
-        </div>
-        
-        {/* Documents Grid/List Card */}
-        <div className="flex-1 bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-          <DocumentsMainView
-            selectedFolder={selectedFolder}
-            viewMode={viewMode}
-            searchQuery={searchQuery}
-            selectedFilters={selectedFilters}
-          />
-        </div>
+      {/* Folder Structure */}
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden h-[calc(100vh-220px)]">
+        <DesktopFolderView searchQuery={searchQuery} />
       </div>
 
       <UploadDocumentDialog 
