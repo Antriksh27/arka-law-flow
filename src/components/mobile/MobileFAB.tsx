@@ -20,7 +20,7 @@ export const MobileFAB: React.FC<MobileFABProps> = ({
     <Button
       onClick={onClick}
       className={cn(
-        "fixed bottom-6 right-4 z-40 h-14 rounded-full shadow-lg",
+        "fixed bottom-20 right-4 z-[101] h-14 rounded-full shadow-lg",
         "bg-primary hover:bg-primary/90 text-primary-foreground",
         "active:scale-95 transition-all duration-200",
         "sm:hidden",
