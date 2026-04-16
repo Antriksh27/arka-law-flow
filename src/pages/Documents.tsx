@@ -10,6 +10,7 @@ import { DocumentsMainView } from '../components/documents/DocumentsMainView';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 
 const Documents = () => {
