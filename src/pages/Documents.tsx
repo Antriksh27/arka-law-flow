@@ -27,7 +27,6 @@ const Documents = () => {
   });
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [mobileViewMode, setMobileViewMode] = useState<'folders' | 'list'>('folders');
-  const [mobileViewMode, setMobileViewMode] = useState<'folders' | 'list'>('folders');
   const [isBackfilling, setIsBackfilling] = useState(false);
 
   const handleUploadSuccess = () => {
