@@ -56,7 +56,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           
           {/* Mobile only: Bottom navigation and FAB */}
           {isMobile && <MobileBottomNav />}
-          {isMobile && <DashboardMobileFAB />}
+          {isMobile && location.pathname === '/' && <DashboardMobileFAB />}
         </div>
       </div>
     </SidebarProvider>
