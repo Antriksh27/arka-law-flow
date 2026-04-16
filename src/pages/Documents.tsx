@@ -85,42 +85,35 @@ const Documents = () => {
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
           searchPlaceholder="Search documents..."
-          onFilterClick={() => setShowFiltersSheet(true)}
-          activeFiltersCount={activeFiltersCount}
           headerActions={
-            <button 
-              onClick={() => setShowFolderSheet(true)}
-              className="p-2 rounded-lg active:scale-95 transition-transform"
-            >
-              <FolderOpen className="w-5 h-5 text-foreground" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setMobileViewMode(mobileViewMode === 'folders' ? 'list' : 'folders')}
+                className="p-2 rounded-lg active:scale-95 transition-transform"
+                aria-label="Toggle view"
+              >
+                {mobileViewMode === 'folders' ? (
+                  <List className="w-5 h-5 text-foreground" />
+                ) : (
+                  <FolderTree className="w-5 h-5 text-foreground" />
+                )}
+              </button>
+            </div>
           }
         />
         
         <div className="flex-1 min-h-0 overflow-y-auto pb-24">
-          <DocumentsMainView
-            selectedFolder={selectedFolder}
-            viewMode={viewMode}
-            searchQuery={searchQuery}
-            selectedFilters={selectedFilters}
-          />
-        </div>
-
-        {/* Mobile Folder Sheet */}
-        <Sheet open={showFolderSheet} onOpenChange={setShowFolderSheet}>
-          <SheetContent side="left" className="w-[280px] p-0">
-            <SheetHeader className="p-4 border-b">
-              <SheetTitle>Folders</SheetTitle>
-            </SheetHeader>
-            <DocumentsSidebar
+          {mobileViewMode === 'folders' ? (
+            <MobileFolderView searchQuery={searchQuery} />
+          ) : (
+            <DocumentsMainView
               selectedFolder={selectedFolder}
-              onFolderSelect={(folder) => {
-                setSelectedFolder(folder);
-                setShowFolderSheet(false);
-              }}
+              viewMode="list"
+              searchQuery={searchQuery}
+              selectedFilters={selectedFilters}
             />
-          </SheetContent>
-        </Sheet>
+          )}
+        </div>
 
         <MobileFAB 
           onClick={() => setShowUploadDialog(true)}
