@@ -340,7 +340,7 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
       console.log('📦 API Response JSON:', JSON.stringify(rawData, null, 2));
       
       // Parse and store all case data using edge function
-      const { data: upsertResult, error: upsertError } = await supabase.functions.invoke('ecourts-api', {
+      const { data: upsertResult, error: upsertError } = await supabase.functions.invoke('legalkart-api', {
         body: {
           action: 'upsert_from_json',
           caseId: caseId,
