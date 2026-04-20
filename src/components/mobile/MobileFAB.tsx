@@ -30,7 +30,7 @@ export const MobileFAB: React.FC<MobileFABProps> = ({
       aria-label={label || "Action button"}
     >
       <Icon className="w-6 h-6" />
-      {label && <span className="ml-2 font-medium">{label}</span>}
+      {label && <span className="ml-2 font-medium text-slate-50">{label}</span>}
     </Button>
   );
 };
