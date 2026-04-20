@@ -203,6 +203,7 @@ const Cases = () => {
   }
 
   return (
+    <>
         <div className="max-w-7xl mx-auto p-6 space-y-6 pb-6">
           <CasesHeader onAddCase={() => setShowAddDialog(true)} />
 
