@@ -566,7 +566,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[90vh] max-w-full sm:rounded-2xl rounded-none flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
