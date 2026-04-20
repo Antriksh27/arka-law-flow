@@ -24,7 +24,6 @@ import { MobileHeader } from '@/components/mobile/MobileHeader';
 
 import { HeroCard } from '@/components/mobile/HeroCard';
 import { BottomSheet } from '@/components/mobile/BottomSheet';
-import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MessageSquare } from 'lucide-react';
 import {
@@ -480,7 +479,6 @@ export default function CaseDetailEnhanced() {
 
         {/* Desktop Layout */}
         {!isMobile && (
-        <PullToRefresh onRefresh={handleFetchDetails}>
           <div className="bg-gray-50 min-h-screen pb-8">
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm m-8">
             {/* Tabs with integrated header */}
@@ -556,7 +554,7 @@ export default function CaseDetailEnhanced() {
 
               {/* Horizontal Scroll Tabs */}
               <TabsList className="w-full bg-background border-b border-border h-auto p-0">
-                <div className="flex overflow-x-auto scrollbar-hide">
+                <div className="flex overflow-x-auto scrollbar-hide px-4">
                   {tabs.map(tab => {
                     const IconComponent = tab.icon;
                     return (
@@ -605,7 +603,6 @@ export default function CaseDetailEnhanced() {
             </Tabs>
           </div>
           </div>
-        </PullToRefresh>
         )}
         </div>
       </div>

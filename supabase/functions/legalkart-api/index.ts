@@ -409,7 +409,91 @@ async function upsertCaseRelationalData(
   };
 
   // Parse with AI parser (handles petitioner/respondent strings)
-  const parsedData = parseECourtsData(rd);
+  const isGHC = rd['Case Header'] !== undefined;
+  let petitioners: any[] = [];
+  let respondents: any[] = [];
+  let hearings: any[] = [];
+  let orders: any[] = [];
+  let iaDetails: any[] = [];
+
+  if (isGHC) {
+    console.log('🏛️ Detected Gujarat High Court structure in relational data');
+    const parties = rd['Parties'] || {};
+    const ghcPetitioners = Array.isArray(parties.Petitioners) ? parties.Petitioners : [];
+    const ghcRespondents = Array.isArray(parties.Respondents) ? parties.Respondents : [];
+    
+    petitioners = ghcPetitioners.map((p: any) => ({ 
+      name: p.Name || p['Full Name'], 
+      advocate: p['Advocate On Record'] || p['Advocate'] 
+    }));
+    respondents = ghcRespondents.map((r: any) => ({ 
+      name: r.Name || r['Full Name'], 
+      advocate: r['Advocate On Record'] || r['Advocate'] 
+    }));
+    
+    const ghcHearings = Array.isArray(rd['Court Proceedings']) ? rd['Court Proceedings'] : [];
+    hearings = ghcHearings.map((h: any) => ({
+      date: h['Notified Date'] || h['Hearing Date'],
+      judge: h['Coram'] || h['Judge'],
+      purpose: h['Purpose'],
+      stage: h['Stage']
+    }));
+
+    const ghcOrders = Array.isArray(rd['Available Orders']) ? rd['Available Orders'] : [];
+    orders = ghcOrders.map((o: any) => ({
+      date: o['Order Date'],
+      judge: o['Judge Name'] || o['Judge'],
+      pdf_url: o['PDF Link'],
+      details: o['Order Type'] || 'Order'
+    }));
+  } else {
+    const parsedData = parseECourtsData(rd);
+    petitioners = parsedData.petitioners.map(p => ({ name: p.name, advocate: p.advocate }));
+    respondents = parsedData.respondents.map(r => ({ name: r.name, advocate: r.advocate }));
+    iaDetails = parsedData.iaDetails;
+    
+    const rawHearings = Array.isArray(rd?.case_history) 
+      ? rd.case_history 
+      : Array.isArray(rd?.data?.case_history)
+      ? rd.data.case_history
+      : Array.isArray(rd?.history_of_case_hearing) 
+      ? rd.history_of_case_hearing 
+      : Array.isArray(rd?.data?.history_of_case_hearing)
+      ? rd.data.history_of_case_hearing
+      : Array.isArray(rd?.hearings)
+      ? rd.hearings
+      : Array.isArray(rd?.data?.hearings)
+      ? rd.data.hearings
+      : [];
+    hearings = rawHearings.map((h: any) => ({
+      date: h.hearing_date || h.date,
+      judge: h.judge || h.judge_name || null,
+      purpose: h.purpose_of_hearing || h.purpose || null,
+      business_on_date: h.business_on_date || h.purpose_of_hearing || h.purpose || null
+    }));
+
+    orders = Array.isArray(rd?.order_details) 
+      ? rd.order_details 
+      : Array.isArray(rd?.data?.order_details)
+      ? rd.data.order_details
+      : Array.isArray(rd?.orders)
+      ? rd.orders
+      : Array.isArray(rd?.data?.orders)
+      ? rd.data.orders
+      : Array.isArray(rd?.orderList)
+      ? rd.orderList
+      : Array.isArray(rd?.data?.orderList)
+      ? rd.data.orderList
+      : Array.isArray(rd?.final_orders)
+      ? rd.final_orders
+      : Array.isArray(rd?.data?.final_orders)
+      ? rd.data.final_orders
+      : Array.isArray(rd?.interim_orders)
+      ? rd.interim_orders
+      : Array.isArray(rd?.data?.interim_orders)
+      ? rd.data.interim_orders
+      : [];
+  }
   
   // Delete existing data
   await Promise.all([
@@ -423,9 +507,9 @@ async function upsertCaseRelationalData(
   ]);
 
   // Insert petitioners
-  if (parsedData.petitioners.length > 0) {
+  if (petitioners.length > 0) {
     const { error } = await supabase.from('petitioners').insert(
-      parsedData.petitioners.map(p => ({
+      petitioners.map(p => ({
         case_id: caseId,
         petitioner_name: p.name,
         advocate_name: p.advocate,
@@ -435,9 +519,9 @@ async function upsertCaseRelationalData(
   }
 
   // Insert respondents
-  if (parsedData.respondents.length > 0) {
+  if (respondents.length > 0) {
     const { error } = await supabase.from('respondents').insert(
-      parsedData.respondents.map(r => ({
+      respondents.map(r => ({
         case_id: caseId,
         respondent_name: r.name,
         advocate_name: r.advocate,
@@ -447,9 +531,9 @@ async function upsertCaseRelationalData(
   }
 
   // Insert IA details
-  if (parsedData.iaDetails.length > 0) {
+  if (iaDetails.length > 0) {
     const { error } = await supabase.from('ia_details').insert(
-      parsedData.iaDetails.map(ia => ({
+      iaDetails.map(ia => ({
         case_id: caseId,
         ia_number: ia.iaNumber,
         party: ia.party,
@@ -481,40 +565,14 @@ async function upsertCaseRelationalData(
     if (error) console.error('Error inserting documents:', error);
   }
 
-  // Insert orders - Check multiple possible paths including LegalKart formats
-  const orders = Array.isArray(rd?.order_details) 
-    ? rd.order_details 
-    : Array.isArray(rd?.data?.order_details)
-    ? rd.data.order_details
-    : Array.isArray(rd?.orders)
-    ? rd.orders
-    : Array.isArray(rd?.data?.orders)
-    ? rd.data.orders
-    : Array.isArray(rd?.orderList)
-    ? rd.orderList
-    : Array.isArray(rd?.data?.orderList)
-    ? rd.data.orderList
-    : Array.isArray(rd?.final_orders)
-    ? rd.final_orders
-    : Array.isArray(rd?.data?.final_orders)
-    ? rd.data.final_orders
-    : Array.isArray(rd?.interim_orders)
-    ? rd.interim_orders
-    : Array.isArray(rd?.data?.interim_orders)
-    ? rd.data.interim_orders
-    : [];
-  
-  console.log(`📋 Found ${orders.length} orders to insert from raw data`);
-  if (orders.length > 0) {
-    console.log('First order structure:', JSON.stringify(orders[0], null, 2));
-  }
-  
+  // Insert orders
+  console.log(`📋 Found ${orders.length} orders to insert`);
   if (orders.length > 0) {
     const { error } = await supabase.from('case_orders').insert(
       orders.map((o: any) => ({
         case_id: caseId,
         judge: o.judge || o.judge_name || null,
-        hearing_date: normalizeDate(o.hearing_date),
+        hearing_date: normalizeDate(o.hearing_date || o.date),
         order_date: normalizeDate(o.order_date || o.date),
         order_number: o.order_number || o.order_no || null,
         bench: o.bench ?? null,
@@ -526,9 +584,8 @@ async function upsertCaseRelationalData(
     );
     if (error) console.error('❌ Error inserting orders:', error);
     else console.log(`✅ Successfully inserted ${orders.length} orders`);
-  } else {
-    console.log('⚠️ No orders found. Checked paths: rd.order_details, rd.data.order_details, rd.orders, rd.data.orders, rd.orderList, rd.data.orderList, rd.final_orders, rd.interim_orders');
-    // Fallback: derive pseudo-orders from hearings/document signals
+  } else if (!isGHC) {
+    // Fallback logic for non-GHC cases moved here
     const hearingCandidates = Array.isArray(rd?.history_of_case_hearing) 
       ? rd.history_of_case_hearing 
       : Array.isArray(rd?.data?.history_of_case_hearing)
@@ -551,7 +608,6 @@ async function upsertCaseRelationalData(
         pdf_base64: null,
       }));
 
-    // Also derive from documents that look like orders/judgments
     const docs = Array.isArray(rd?.documents) ? rd.documents : Array.isArray(rd?.data?.documents) ? rd.data.documents : [];
     const derivedFromDocuments = docs
       .filter((d: any) => /order|judgment/i.test(String(d.document_filed || d.document_type || '')))
@@ -573,37 +629,20 @@ async function upsertCaseRelationalData(
       const { error } = await supabase.from('case_orders').insert(derivedOrders);
       if (error) console.error('❌ Error inserting derived orders:', error);
       else console.log(`✅ Inserted ${derivedOrders.length} derived orders`);
-    } else {
-      console.log('ℹ️ No derived orders could be created');
     }
   }
 
-  // Insert hearings - Check multiple possible paths including district court case_history
-  const hearings = Array.isArray(rd?.case_history) 
-    ? rd.case_history 
-    : Array.isArray(rd?.data?.case_history)
-    ? rd.data.case_history
-    : Array.isArray(rd?.history_of_case_hearing) 
-    ? rd.history_of_case_hearing 
-    : Array.isArray(rd?.data?.history_of_case_hearing)
-    ? rd.data.history_of_case_hearing
-    : Array.isArray(rd?.hearings)
-    ? rd.hearings
-    : Array.isArray(rd?.data?.hearings)
-    ? rd.data.hearings
-    : [];
-  
+  // Insert hearings
   console.log(`📅 Found ${hearings.length} hearings to insert`);
-  
   if (hearings.length > 0) {
     const { error } = await supabase.from('case_hearings').insert(
       hearings.map((h: any) => ({
         case_id: caseId,
-        hearing_date: normalizeDate(h.hearing_date || h.date),
-        judge: h.judge || h.judge_name || null,
+        hearing_date: normalizeDate(h.date),
+        judge: h.judge || null,
         cause_list_type: h.cause_list_type ?? null,
-        business_on_date: h.business_on_date || h.purpose_of_hearing || h.purpose || null,
-        purpose_of_hearing: h.purpose_of_hearing || h.purpose || null,
+        business_on_date: h.business_on_date || h.purpose || null,
+        purpose_of_hearing: h.purpose || null,
       }))
     );
     if (error) console.error('❌ Error inserting hearings:', error);
@@ -1957,6 +1996,83 @@ function mapLegalkartDataToCRM(data: any, searchType: string = 'unknown'): any {
   const objections = rd.objections || [];
   const iaDetails = rd.ia_details || [];
   const actsAndSections = rd.acts_and_sections_details || [];
+
+  // ---------------------------------------------------------------------------
+  // GUJARAT HIGH COURT SPECIALIZED MAPPING
+  // ---------------------------------------------------------------------------
+  const ghcHeader = data['Case Header'] || data.case_header;
+  if (ghcHeader) {
+      console.log('🏛️ Detected Gujarat High Court data structure');
+      
+      const ghcMeta = data['Case Meta'] || data.case_meta || {};
+      const ghcDisposal = data['Disposal Details'] || data.disposal_details || {};
+      const ghcParties = data['Parties'] || data.parties || {};
+
+      mappedData.case_title = cleanText(ghcHeader['Case Title'] || ghcHeader.case_title);
+      mappedData.cnr_number = cleanText(ghcHeader['Cnr No'] || ghcHeader.cnr_no);
+      mappedData.status = (ghcHeader['Status'] || ghcHeader.status || '').toString().toLowerCase().includes('pending') ? 'pending' : 'disposed';
+
+      // Parse Case Number from Title: "CIVIL REVISION APPLICATION - No. 132 of 2020"
+      if (mappedData.case_title) {
+          const titleParts = mappedData.case_title.split(' - ');
+          if (titleParts.length > 1) {
+              mappedData.case_number = titleParts[1].trim(); // No. 132 of 2020
+              mappedData.case_type = titleParts[0].trim();   // CIVIL REVISION APPLICATION
+          }
+      }
+
+      // Dates
+      mappedData.filing_date = parseDate(ghcMeta['Presented On'] || ghcMeta.presented_on);
+      mappedData.registration_date = parseDate(ghcMeta['Registered On'] || ghcMeta.registered_on);
+      mappedData.disposal_date = parseDate(ghcDisposal['Disposal Date'] || ghcDisposal.disposal_date);
+
+      // Court Info
+      mappedData.court = 'Gujarat High Court';
+      mappedData.court_name = 'Gujarat High Court';
+      mappedData.court_type = 'high_court';
+      mappedData.state = 'Gujarat';
+      mappedData.district = cleanText(ghcMeta['District'] || ghcMeta.district);
+      mappedData.bench_type = cleanText(ghcMeta['Bench Category'] || ghcMeta.bench_category);
+      mappedData.coram = cleanText(ghcDisposal['Decided By'] || ghcDisposal.decided_by);
+
+      // Additional Fields
+      mappedData.stage = cleanText(ghcMeta['Purpose Of Listing'] || ghcMeta.purpose_of_listing);
+      mappedData.under_act = cleanText(ghcMeta['Act'] || ghcMeta.act);
+
+      // Parties
+      const ghcPetitioners = ghcParties['Petitioners'] || ghcParties.petitioners || [];
+      const ghcRespondents = ghcParties['Respondents'] || ghcParties.respondents || [];
+
+      if (Array.isArray(ghcPetitioners) && ghcPetitioners.length > 0) {
+          mappedData.petitioner = ghcPetitioners.map((p: any) => p['Name'] || p.name).join(', ');
+          mappedData.petitioner_advocate = ghcPetitioners.map((p: any) => p['Advocate On Record'] || p.advocate_on_record).filter(Boolean).join('; ');
+          mappedData.advocate_name = ghcPetitioners[0]['Advocate On Record'] || ghcPetitioners[0].advocate_on_record || null;
+      }
+
+      if (Array.isArray(ghcRespondents) && ghcRespondents.length > 0) {
+          mappedData.respondent = ghcRespondents.map((r: any) => r['Name'] || r.name).join(', ');
+          mappedData.respondent_advocate = ghcRespondents.map((r: any) => r['Advocate On Record'] || r.advocate_on_record).filter(Boolean).join('; ');
+      }
+
+      if (mappedData.petitioner && mappedData.respondent) {
+          mappedData.vs = `${mappedData.petitioner} vs ${mappedData.respondent}`;
+      }
+
+      // History / Orders if available
+      const ghcProceedings = data['Court Proceedings'] || data.court_proceedings || [];
+      if (Array.isArray(ghcProceedings) && ghcProceedings.length > 0) {
+          const lastProceeding = ghcProceedings[ghcProceedings.length - 1];
+          if (lastProceeding) {
+              mappedData.next_hearing_date = parseDate(lastProceeding['Notified Date'] || lastProceeding.notified_date);
+              mappedData.stage = cleanText(lastProceeding['Stage'] || lastProceeding.stage) || mappedData.stage;
+              if (!mappedData.coram) {
+                  mappedData.coram = cleanText(lastProceeding['Coram'] || lastProceeding.coram);
+              }
+          }
+      }
+
+      return mappedData;
+  }
 
   // BASIC CASE INFORMATION (15 fields)
   // District courts use data.case_details for basic info

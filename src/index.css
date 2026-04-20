@@ -231,19 +231,20 @@
 /* Mobile iOS optimizations */
 html, body, #root {
   height: 100%;
-  overflow: hidden;
-  overscroll-behavior-y: none;
-  overscroll-behavior: none;
+  overflow: hidden !important;
+  overscroll-behavior-y: none !important;
+  overscroll-behavior: none !important;
   -webkit-tap-highlight-color: transparent;
 }
 body {
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
 }
 
 .overflow-auto,
 .overflow-y-auto,
 main {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none !important;
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 

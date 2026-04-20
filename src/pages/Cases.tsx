@@ -17,7 +17,6 @@ import { MobileFiltersSheet } from '@/components/cases/MobileFiltersSheet';
 import { MobileStickyHeader } from '@/components/mobile/MobileStickyHeader';
 
 import { BottomSheet } from '@/components/mobile/BottomSheet';
-import { PullToRefresh } from '@/components/mobile/PullToRefresh';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, Upload, Link as LinkIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -102,18 +101,16 @@ const Cases = () => {
         />
 
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <PullToRefresh onRefresh={handleRefresh}>
-            <div className="px-4 pt-4 pb-24 space-y-4">
-              <CasesGrid 
-                searchQuery={searchQuery}
-                statusFilter={statusFilter}
-                typeFilter={typeFilter}
-                assignedFilter={assignedFilter}
-                showOnlyMyCases={casesTab === 'my'}
-                onAdd={() => setShowAddDialog(true)}
-              />
-            </div>
-          </PullToRefresh>
+          <div className="px-4 pt-4 pb-24 space-y-4">
+            <CasesGrid 
+              searchQuery={searchQuery}
+              statusFilter={statusFilter}
+              typeFilter={typeFilter}
+              assignedFilter={assignedFilter}
+              showOnlyMyCases={casesTab === 'my'}
+              onAdd={() => setShowAddDialog(true)}
+            />
+          </div>
         </div>
 
         <CaseMobileFAB onClick={() => setShowMobileActions(true)} />
@@ -206,8 +203,6 @@ const Cases = () => {
   }
 
   return (
-    <>
-      <PullToRefresh onRefresh={handleRefresh}>
         <div className="max-w-7xl mx-auto p-6 space-y-6 pb-6">
           <CasesHeader onAddCase={() => setShowAddDialog(true)} />
 
@@ -264,7 +259,6 @@ const Cases = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </PullToRefresh>
 
       <AddCaseDialog 
         open={showAddDialog}
