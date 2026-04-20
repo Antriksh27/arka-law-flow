@@ -229,10 +229,13 @@
 }
 
 /* Mobile iOS optimizations */
-body {
+html, body {
+  overscroll-behavior-y: contain;
   overscroll-behavior: none;
-  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+}
+body {
+  touch-action: pan-y;
 }
 
 /* Prevent iOS auto-zoom on input focus */
