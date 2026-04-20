@@ -283,7 +283,7 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
+    <div className="h-dvh overflow-hidden bg-background" data-build={BUILD_INFO}>
       <Router>
         <QueryClientProvider client={queryClient}>
           <AppRoutes />
