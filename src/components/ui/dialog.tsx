@@ -40,7 +40,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 gap-4 bg-background shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+        "fixed z-[130] gap-4 bg-background shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
         // Mobile: Bottom sheet style with rounded top, smooth slide animation
         "inset-x-0 bottom-0 top-auto w-full h-[95vh] max-h-[95vh] rounded-t-3xl",
         "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
