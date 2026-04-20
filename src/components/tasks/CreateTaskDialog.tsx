@@ -280,7 +280,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   };
 
   const formView = (
-    <div className={`flex flex-col h-full ${bg.page}`}>
+    <div className={`flex min-h-0 h-full flex-col ${bg.page}`}>
       <MobileDialogHeader
         title="Create New Task"
         subtitle="Add a new task to your workflow"
@@ -288,7 +288,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       />
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 pb-24">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
           {/* Title Card */}
@@ -545,13 +545,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className="px-6 py-4 border-t border-slate-100 bg-white">
+      <div className="sticky bottom-0 shrink-0 border-t border-slate-100 bg-white px-6 py-4 pb-safe">
         <div className="flex gap-3">
           <Button 
             type="submit"
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full h-12 shadow-lg font-bold"
+            className="h-12 flex-1 rounded-full bg-primary font-bold text-primary-foreground shadow-lg hover:bg-primary/90"
           >
             {isSubmitting ? 'Creating...' : 'Create Task'}
           </Button>
