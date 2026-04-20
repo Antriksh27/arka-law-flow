@@ -229,6 +229,59 @@ function AppRoutes() {
 }
 
 function AppContent() {
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('ontouchstart' in window)) {
+      return;
+    }
+
+    let touchStartY = 0;
+
+    const getScrollableAncestor = (element: EventTarget | null) => {
+      let current = element instanceof HTMLElement ? element : null;
+
+      while (current && current !== document.body) {
+        const { overflowY } = window.getComputedStyle(current);
+        const canScroll = /(auto|scroll|overlay)/.test(overflowY) && current.scrollHeight > current.clientHeight;
+
+        if (canScroll) {
+          return current;
+        }
+
+        current = current.parentElement;
+      }
+
+      return null;
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY ?? 0;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const currentY = event.touches[0]?.clientY ?? 0;
+      const isPullingDown = currentY > touchStartY;
+
+      if (!isPullingDown) {
+        return;
+      }
+
+      const scrollableAncestor = getScrollableAncestor(event.target);
+      const isAtTop = scrollableAncestor ? scrollableAncestor.scrollTop <= 0 : window.scrollY <= 0;
+
+      if (isAtTop) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50" data-build={BUILD_INFO}>
       <Router>
