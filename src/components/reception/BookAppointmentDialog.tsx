@@ -346,7 +346,7 @@ const BookAppointmentDialog = ({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border shadow-lg z-50" align="start">
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-background border border-border shadow-lg" align="start">
                       <Command>
                         <CommandInput placeholder="Search clients and contacts..." />
                         <CommandList>
