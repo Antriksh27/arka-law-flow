@@ -230,7 +230,7 @@ function AppRoutes() {
 
 function AppContent() {
   return (
-    <div className="h-dvh overflow-hidden bg-background" data-build={BUILD_INFO}>
+    <div className="min-h-dvh bg-background" data-build={BUILD_INFO}>
       <Router>
         <QueryClientProvider client={queryClient}>
           <AppRoutes />
