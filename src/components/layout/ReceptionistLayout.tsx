@@ -38,7 +38,7 @@ const ReceptionistLayout = ({ children }: ReceptionistLayoutProps) => {
   }
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#F9FAFB] flex flex-col">
+    <div className="min-h-dvh overflow-x-hidden bg-[#F9FAFB] flex flex-col">
       {/* Mobile Sidebar */}
       <ReceptionistMobileSidebar 
         isOpen={sidebarOpen} 
@@ -55,7 +55,7 @@ const ReceptionistLayout = ({ children }: ReceptionistLayoutProps) => {
       <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar - hidden on mobile */}
         {!isMobile && <ReceptionistSidebar />}
-        <main className={cn("flex-1 min-h-0 overflow-y-auto overscroll-none", isMobile && "pb-20")}>
+        <main className={cn("flex-1 min-h-0 overflow-y-auto", isMobile && "pb-20")}>
           {children}
         </main>
 
