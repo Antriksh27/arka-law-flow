@@ -228,21 +228,21 @@
   }
 }
 
-/* Mobile iOS optimizations - prevent body scroll, allow internal scroll */
+/* Mobile touch behavior - preserve native scrolling and Radix interactions */
 html, body, #root {
-  height: 100%;
-  overscroll-behavior: none;
+  min-height: 100%;
   -webkit-tap-highlight-color: transparent;
 }
-html, body {
-  overflow: hidden;
+
+body {
+  overflow-x: hidden;
 }
 
 main,
 .overflow-auto,
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 /* Prevent iOS auto-zoom on input focus */
