@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -781,6 +781,10 @@ export const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[95vh] p-0 gap-0 flex flex-col overflow-hidden" hideCloseButton>
+        <DialogTitle className="sr-only">Upload Documents</DialogTitle>
+        <DialogDescription className="sr-only">
+          Add files to the document library and categorize them before uploading.
+        </DialogDescription>
         {formView}
       </DialogContent>
     </Dialog>

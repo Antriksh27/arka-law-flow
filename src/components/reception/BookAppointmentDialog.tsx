@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -639,7 +639,15 @@ const BookAppointmentDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent hideCloseButton className="h-[95vh] sm:h-[90vh] sm:max-w-2xl overflow-hidden p-0 flex flex-col">
+        <DialogTitle className="sr-only">
+          {bookingType === 'event' ? 'Schedule Internal Event' : 'Book New Appointment'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          {bookingType === 'event'
+            ? 'Add a blocked time or internal meeting.'
+            : 'Schedule a new appointment for a client.'}
+        </DialogDescription>
         {fullFormView}
       </DialogContent>
     </Dialog>
