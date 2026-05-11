@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface EcourtsSearchOptions {
   cnr: string;
   caseId?: string;
+  searchType?: string;
 }
 
 interface CaseSearchOptions {
