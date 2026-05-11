@@ -219,10 +219,8 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in_court">In Court</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="disposed">Disposed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
