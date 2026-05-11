@@ -184,9 +184,12 @@ const StaleCases = () => {
       }
 
       // Step 1: Trigger Scraper (POST)
+      const step1DetectedType = detectCourtType(caseData.cnr_number);
+      const step1SearchType = step1DetectedType === 'high_court' ? 'gujarat_high_court' : step1DetectedType;
       const refreshResult = await invokeEcourtsDirect({
         action: 'search',
         cnr: caseData.cnr_number,
+        searchType: step1SearchType,
         firmId,
       });
 
