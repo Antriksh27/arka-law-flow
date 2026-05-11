@@ -229,9 +229,12 @@ const Cases = () => {
                 assignedFilter={assignedFilter}
                 onAssignedChange={setAssignedFilter}
                 statusOptions={statusOptions}
+                searchFields={searchFields}
+                onSearchFieldsChange={setSearchFields}
               />
               <CasesTable 
                 searchQuery={searchQuery}
+                searchFields={searchFields}
                 statusFilter={statusFilter}
                 typeFilter={typeFilter}
                 assignedFilter={assignedFilter}
@@ -250,9 +253,12 @@ const Cases = () => {
                 assignedFilter={assignedFilter}
                 onAssignedChange={setAssignedFilter}
                 statusOptions={statusOptions}
+                searchFields={searchFields}
+                onSearchFieldsChange={setSearchFields}
               />
               <CasesTable 
                 searchQuery={searchQuery}
+                searchFields={searchFields}
                 statusFilter={statusFilter}
                 typeFilter={typeFilter}
                 assignedFilter={assignedFilter}
