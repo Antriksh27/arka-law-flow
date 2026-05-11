@@ -31,13 +31,15 @@ interface CasesTableProps {
   typeFilter: string;
   assignedFilter: string;
   showOnlyMyCases?: boolean;
+  searchFields?: string[];
 }
 export const CasesTable: React.FC<CasesTableProps> = ({
   searchQuery,
   statusFilter,
   typeFilter,
   assignedFilter,
-  showOnlyMyCases = false
+  showOnlyMyCases = false,
+  searchFields = []
 }) => {
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -56,7 +58,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     isError,
     error
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder],
+    queryKey: ['cases-table', searchQuery, searchFields, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -124,10 +126,13 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         query = query.eq('assigned_to', assignedFilter);
       }
 
-      // Apply search filter - comprehensive search across all case identifiers
+      // Apply search filter - across selected fields (or all if none chosen)
       if (searchQuery) {
         const searchTerm = searchQuery.trim();
-        query = query.or(`case_title.ilike.%${searchTerm}%,petitioner.ilike.%${searchTerm}%,respondent.ilike.%${searchTerm}%,case_number.ilike.%${searchTerm}%,cnr_number.ilike.%${searchTerm}%,filing_number.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%,registration_number.ilike.%${searchTerm}%`);
+        const allFields = ['case_title','petitioner','respondent','case_number','cnr_number','filing_number','reference_number','registration_number'];
+        const fields = searchFields && searchFields.length > 0 ? searchFields : allFields;
+        const orClause = fields.map((f) => `${f}.ilike.%${searchTerm}%`).join(',');
+        query = query.or(orClause);
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
