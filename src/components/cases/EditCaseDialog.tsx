@@ -38,7 +38,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
     client_id: caseData?.client_id || '',
     reference_number: caseData?.reference_number || '',
     registration_number: caseData?.registration_number || '',
-    status: caseData?.status || 'open',
+    status: (caseData?.status === 'disposed' ? 'disposed' : 'pending'),
     by_against: caseData?.by_against || '',
     stage: caseData?.stage || '',
     court_name: caseData?.court_name || '',
@@ -219,10 +219,8 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in_court">In Court</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="disposed">Disposed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -735,7 +733,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl max-h-[95vh] p-0 bg-slate-50 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-4xl h-[95vh] p-0 bg-slate-50 overflow-hidden flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
