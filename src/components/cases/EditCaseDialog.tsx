@@ -38,7 +38,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
     client_id: caseData?.client_id || '',
     reference_number: caseData?.reference_number || '',
     registration_number: caseData?.registration_number || '',
-    status: caseData?.status || 'open',
+    status: (caseData?.status === 'disposed' ? 'disposed' : 'pending'),
     by_against: caseData?.by_against || '',
     stage: caseData?.stage || '',
     court_name: caseData?.court_name || '',
