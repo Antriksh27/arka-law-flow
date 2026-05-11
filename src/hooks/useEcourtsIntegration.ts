@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface EcourtsSearchOptions {
   cnr: string;
   caseId?: string;
+  searchType?: string;
 }
 
 interface CaseSearchOptions {
@@ -59,12 +60,14 @@ export const useEcourtsIntegration = () => {
 
   // Single case fetch by CNR
   const searchCase = useMutation({
-    mutationFn: async ({ cnr, caseId }: EcourtsSearchOptions) => {
+    mutationFn: async ({ cnr, caseId, searchType }: EcourtsSearchOptions) => {
       const firmId = await getFirmId();
       if (!firmId) throw new Error('Please sign in to fetch case details');
 
+      const resolvedSearchType = searchType || (await import('@/lib/ecourtsSearchType')).resolveEcourtsSearchType({ cnr });
+
       const { data, error } = await supabase.functions.invoke('legalkart-api', {
-        body: { action: 'search', cnr, caseId, firmId },
+        body: { action: 'search', cnr, caseId, firmId, searchType: resolvedSearchType },
       });
       if (error) throw error;
       return data;
