@@ -80,8 +80,11 @@ export const FetchCaseDialog: React.FC<FetchCaseDialogProps> = ({
 
   const handleFetch = async (data: FetchFormData) => {
     try {
+      const { resolveEcourtsSearchType } = await import('@/lib/ecourtsSearchType');
+      const resolvedSearchType = resolveEcourtsSearchType({ cnr: data.cnr_number, courtType: searchType });
       const result = await searchCase.mutateAsync({
         cnr: data.cnr_number,
+        searchType: resolvedSearchType,
       });
 
       if (result?.success && result?.data) {
