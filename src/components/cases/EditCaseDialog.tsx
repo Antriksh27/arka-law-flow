@@ -735,7 +735,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl max-h-[95vh] p-0 bg-slate-50 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-4xl h-[95vh] p-0 bg-slate-50 overflow-hidden flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
