@@ -30,6 +30,7 @@ const Cases = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [assignedFilter, setAssignedFilter] = useState('all');
+  const [searchFields, setSearchFields] = useState<string[]>([]);
   const [casesTab, setCasesTab] = useState<'all' | 'my'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImportDialog, setShowBulkImportDialog] = useState(false);
@@ -228,9 +229,12 @@ const Cases = () => {
                 assignedFilter={assignedFilter}
                 onAssignedChange={setAssignedFilter}
                 statusOptions={statusOptions}
+                searchFields={searchFields}
+                onSearchFieldsChange={setSearchFields}
               />
               <CasesTable 
                 searchQuery={searchQuery}
+                searchFields={searchFields}
                 statusFilter={statusFilter}
                 typeFilter={typeFilter}
                 assignedFilter={assignedFilter}
@@ -249,9 +253,12 @@ const Cases = () => {
                 assignedFilter={assignedFilter}
                 onAssignedChange={setAssignedFilter}
                 statusOptions={statusOptions}
+                searchFields={searchFields}
+                onSearchFieldsChange={setSearchFields}
               />
               <CasesTable 
                 searchQuery={searchQuery}
+                searchFields={searchFields}
                 statusFilter={statusFilter}
                 typeFilter={typeFilter}
                 assignedFilter={assignedFilter}
