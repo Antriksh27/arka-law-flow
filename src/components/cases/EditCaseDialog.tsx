@@ -167,14 +167,14 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
   };
 
   const formView = (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full min-h-0 bg-slate-50">
       <MobileDialogHeader
         title="Edit Case"
         subtitle="Update case information"
         onClose={handleClose}
       />
       
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="px-4 sm:px-6 py-6 space-y-4">
           {/* Basic Case Info Card */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -733,7 +733,7 @@ export const EditCaseDialog: React.FC<EditCaseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl h-[95vh] p-0 bg-slate-50 overflow-hidden flex flex-col">
+      <DialogContent hideCloseButton className="sm:max-w-4xl h-[95vh] sm:h-[90vh] sm:max-h-[90vh] p-0 bg-slate-50 overflow-hidden flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
