@@ -99,7 +99,7 @@ export const CasesFilters: React.FC<CasesFiltersProps> = ({
                 <SlidersHorizontal className="w-4 h-4" />
                 <span className="hidden md:inline text-sm">{fieldLabel}</span>
                 {!allSelected && (
-                  <Badge variant="secondary" className="md:hidden">
+                  <Badge variant="default" className="md:hidden">
                     {searchFields.length}
                   </Badge>
                 )}
