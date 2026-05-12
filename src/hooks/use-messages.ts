@@ -79,7 +79,9 @@ export const useMessages = (threadId: string | null) => {
           .eq('thread_id', threadId)
       ]);
       
-      const { data: messagesData, error: messagesError } = messagesRes;
+      const { data: messagesDataDesc, error: messagesError } = messagesRes;
+      // Restore ascending order for rendering (we fetched DESC + LIMIT to get last 200)
+      const messagesData = messagesDataDesc ? [...messagesDataDesc].reverse() : [];
       const { data: participantsData, error: participantsError } = participantsRes;
 
       if (messagesError) throw messagesError;
