@@ -83,7 +83,7 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
       // Get pending queue items count
       const { count: pendingCount, error: queueError } = await supabase
         .from('google_calendar_sync_queue')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', user.user.id)
         .eq('processed', false);
 
@@ -91,7 +91,7 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const { count: errorCount, error: errorCountError } = await supabase
         .from('google_calendar_sync_queue')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', user.user.id)
         .eq('processed', true)
         .not('error_message', 'is', null)
