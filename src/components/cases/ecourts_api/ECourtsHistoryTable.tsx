@@ -25,7 +25,7 @@ const fetchHistory = async (caseId: string): Promise<HistoryData[]> => {
 
     const { data, error } = await (supabase as any)
       .from('legalkart_case_history')
-      .select('*')
+      .select('id, judge, hearing_date, cause_list_type, business_on_date, purpose_of_hearing')
       .eq('legalkart_case_id', lkCaseId);
 
     if (error) throw error;

@@ -30,7 +30,7 @@ const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
 
     const { data, error } = await (supabase as any)
       .from('legalkart_case_orders')
-      .select('*')
+      .select('id, judge, hearing_date, order_number, bench, order_details, order_link')
       .eq('legalkart_case_id', lkCaseId);
 
     if (error) throw error;
@@ -103,9 +103,23 @@ export const ECourtsOrdersTable: React.FC<ECourtsOrdersTableProps> = ({ caseId }
       return false;
     }
   };
-  const handleView = (order: OrderData) => {
-    if (order.pdf_base64) {
-      const blobUrl = convertBase64ToBlobUrl(order.pdf_base64);
+  const fetchPdfBase64 = async (id: string): Promise<string | null> => {
+    const { data, error } = await (supabase as any)
+      .from('legalkart_case_orders')
+      .select('pdf_base64')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) {
+      console.error('Error fetching pdf:', error);
+      return null;
+    }
+    return (data as any)?.pdf_base64 || null;
+  };
+
+  const handleView = async (order: OrderData) => {
+    const pdf = await fetchPdfBase64(order.id);
+    if (pdf) {
+      const blobUrl = convertBase64ToBlobUrl(pdf);
       setViewerUrl(blobUrl);
       setViewerTitle(order.order_number || 'Order');
       setViewerOpen(true);
@@ -120,9 +134,10 @@ export const ECourtsOrdersTable: React.FC<ECourtsOrdersTableProps> = ({ caseId }
     }
   };
 
-  const handleDownload = (order: OrderData) => {
-    if (order.pdf_base64) {
-      const blobUrl = convertBase64ToBlobUrl(order.pdf_base64);
+  const handleDownload = async (order: OrderData) => {
+    const pdf = await fetchPdfBase64(order.id);
+    if (pdf) {
+      const blobUrl = convertBase64ToBlobUrl(pdf);
       window.open(blobUrl, '_blank');
     } else if (order.order_link) {
       window.open(order.order_link, '_blank');
