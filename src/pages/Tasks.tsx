@@ -83,7 +83,7 @@ const Tasks = () => {
     }
   });
 
-  const { data: teamMembers = [] } = useQuery({
+  const { data: teamMembers = [] } = useQuery<{ id: string; full_name: string | null }[]>({
     queryKey: ['team-members-filter'],
     queryFn: async () => {
       const { data, error } = await supabase
