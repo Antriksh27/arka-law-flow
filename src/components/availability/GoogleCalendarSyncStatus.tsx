@@ -28,27 +28,43 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    loadSyncStatus();
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let cleanup: (() => void) | null = null;
 
-    // Phase 2 perf: realtime subscription is sufficient. Removed 30s setInterval.
-    const subscription = supabase
-      .channel('sync-status')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'google_calendar_sync_queue' },
-        () => {
-          loadSyncStatus();
-        }
-      )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'google_calendar_settings' },
-        () => {
-          loadSyncStatus();
-        }
-      )
-      .subscribe();
+    const debouncedReload = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!cancelled) loadSyncStatus();
+      }, 1500);
+    };
+
+    (async () => {
+      await loadSyncStatus();
+      const { data } = await supabase.auth.getUser();
+      const uid = data.user?.id;
+      if (cancelled || !uid) return;
+
+      // Phase 5 perf: per-user filtered channel + debounced reloads.
+      const subscription = supabase
+        .channel(`sync-status:${uid}`)
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'google_calendar_sync_queue', filter: `user_id=eq.${uid}` },
+          debouncedReload
+        )
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'google_calendar_settings', filter: `user_id=eq.${uid}` },
+          debouncedReload
+        )
+        .subscribe();
+
+      cleanup = () => subscription.unsubscribe();
+    })();
 
     return () => {
-      subscription.unsubscribe();
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      if (cleanup) cleanup();
     };
   }, []);
 
