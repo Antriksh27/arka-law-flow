@@ -94,30 +94,8 @@ const ReceptionHome = () => {
     enabled: !!firmId
   });
 
-  // Get lawyers with appointment counts
-  const {
-    data: lawyers
-  } = useQuery({
-    queryKey: ['reception-lawyers', firmId],
-    queryFn: async () => {
-      const {
-        data
-      } = await supabase.from('team_members').select('id, user_id, full_name, role').eq('firm_id', firmId).in('role', ['admin', 'lawyer', 'junior']);
-      
-      // Sort to always show "chitrajeet upadhyaya" first
-      return data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-    },
-    enabled: !!firmId,
-    staleTime: 15 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  // Phase 9 perf: shared firm-lawyers cache
+  const { data: lawyers } = useFirmLawyers(firmId);
 
   // Get recent contacts
   const {
