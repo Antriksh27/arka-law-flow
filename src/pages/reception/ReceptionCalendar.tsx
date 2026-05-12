@@ -1,3 +1,4 @@
+import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';

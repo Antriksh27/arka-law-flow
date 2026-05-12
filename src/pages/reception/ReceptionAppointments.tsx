@@ -1,3 +1,4 @@
+import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';

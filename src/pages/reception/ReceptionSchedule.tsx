@@ -1,3 +1,4 @@
+import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
