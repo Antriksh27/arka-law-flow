@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { staticDataQueryConfig } from '@/lib/queryConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import TimeUtils from '@/lib/timeUtils';
 import { useToast } from '@/hooks/use-toast';
