@@ -58,7 +58,8 @@ export const MobileFolderView: React.FC<{ searchQuery?: string }> = ({ searchQue
           clients!left(id, full_name),
           cases!left(id, case_title, case_number)
         `)
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false })
+        .limit(1000);
 
       if (error) throw error;
 

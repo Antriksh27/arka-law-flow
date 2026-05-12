@@ -64,7 +64,8 @@ export const DesktopFolderView: React.FC<{ searchQuery?: string }> = ({ searchQu
           clients!left(id, full_name),
           cases!left(id, case_title, case_number)
         `)
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false })
+        .limit(1000);
 
       if (error) throw error;
 

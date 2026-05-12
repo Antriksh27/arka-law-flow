@@ -71,7 +71,8 @@ export const useMessages = (threadId: string | null) => {
           .from('messages')
           .select('id, created_at, message_text, sender_id, thread_id, attachments')
           .eq('thread_id', threadId)
-          .order('created_at', { ascending: true }),
+          .order('created_at', { ascending: false })
+          .limit(200),
         supabase
           .from('thread_participants')
           .select('user_id')

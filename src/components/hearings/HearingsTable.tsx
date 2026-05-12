@@ -62,7 +62,7 @@ export const HearingsTable: React.FC<HearingsTableProps> = ({ filters }) => {
         );
       }
 
-      const { data, error } = await query.order('hearing_date', { ascending: true });
+      const { data, error } = await query.order('hearing_date', { ascending: true }).limit(1000);
       if (error) throw error;
       return data || [];
     },

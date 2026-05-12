@@ -35,7 +35,8 @@ export const DocumentsMainView: React.FC<DocumentsMainViewProps> = ({
           cases!left(case_title),
           clients!left(full_name)
         `)
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false })
+        .limit(1000);
 
       // Parse the selectedFolder path to determine filter type
       // Format: "all", "recent", "starred", "client:uuid", "case:uuid", "primary:caseId:folderName", "sub:caseId:folderName:subType"
