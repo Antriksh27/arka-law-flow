@@ -72,12 +72,13 @@ export const useFetchQueue = () => {
     total: queueItems.length,
   };
 
-  // Real-time subscription
+  // Real-time subscription (per-firm channel, debounced)
   useEffect(() => {
     if (!firmId) return;
 
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
-      .channel('queue-changes')
+      .channel(`queue-changes-${firmId}`)
       .on(
         'postgres_changes',
         {
@@ -87,12 +88,16 @@ export const useFetchQueue = () => {
           filter: `firm_id=eq.${firmId}`
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['fetch-queue'] });
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['fetch-queue'] });
+          }, 1000);
         }
       )
       .subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       channel.unsubscribe();
     };
   }, [firmId, queryClient]);
