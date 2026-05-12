@@ -74,7 +74,7 @@ const Appointments = () => {
     queryFn: async () => {
       let query = supabase
         .from('appointment_details')
-        .select('*')
+        .select(APPOINTMENT_DETAILS_COLUMNS)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: true });
       
