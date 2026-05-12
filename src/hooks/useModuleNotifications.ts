@@ -82,13 +82,17 @@ export const useModuleNotifications = () => {
           filter: `recipient_id=eq.${user.id}`,
         },
         () => {
-          // Invalidate query to refetch counts
-          queryClient.invalidateQueries({ queryKey: ['module-notifications', user.id] });
+          // Debounce to coalesce bursts
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['module-notifications', user.id] });
+          }, 800);
         }
       )
       .subscribe();
 
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [user?.id, queryClient]);
