@@ -643,7 +643,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent hideCloseButton className="sm:max-w-2xl h-[95vh] sm:h-[85vh] sm:max-h-[85vh] overflow-hidden p-0 flex flex-col">
         {fullFormView}
       </DialogContent>
     </Dialog>

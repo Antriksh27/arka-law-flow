@@ -558,7 +558,7 @@ export const AddContactDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-white max-h-[95vh] sm:max-h-[90vh]">
+      <DialogContent hideCloseButton className="sm:max-w-[700px] p-0 gap-0 overflow-hidden bg-white h-[95vh] sm:h-[85vh] sm:max-h-[85vh] flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
