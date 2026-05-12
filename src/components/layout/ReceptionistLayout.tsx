@@ -38,7 +38,7 @@ const ReceptionistLayout = ({ children }: ReceptionistLayoutProps) => {
   }
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#F9FAFB] flex flex-col">
+    <div className="h-dvh overflow-hidden bg-[#F9FAFB] flex flex-col">
       {/* Mobile Sidebar */}
       <ReceptionistMobileSidebar 
         isOpen={sidebarOpen} 
