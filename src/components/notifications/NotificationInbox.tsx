@@ -38,7 +38,7 @@ export const NotificationInbox = () => {
       
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, title, message, read, created_at, category, priority, action_url, reference_id, notification_type')
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100);
