@@ -37,12 +37,10 @@ import { useRealtimeNotifications } from './hooks/useRealtimeNotifications';
 import { useCometChatPushNotifications } from './hooks/useCometChatPushNotifications';
 import NotificationSounds from './lib/notificationSounds';
 
+// Phase 1 perf: removed global 30s refetchInterval. Pollers must opt in per-query.
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      ...defaultQueryConfig,
-      refetchInterval: 30000, // Auto-refresh every 30 seconds
-    },
+    queries: defaultQueryConfig,
   },
 });
 

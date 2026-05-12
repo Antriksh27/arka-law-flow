@@ -22,43 +22,43 @@ const ReceptionDisplayBoard = () => {
     queryKey: ['display-board-appointments', firmId],
     queryFn: async () => {
       const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
+      // Phase 1 perf: explicit columns + single batch client lookup (no N+1)
+      const { data, error } = await (supabase
+        .from('appointments') as any)
+        .select('id, client_id, title, status, appointment_date, appointment_time, daily_serial_number')
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
         .in('status', ['upcoming', 'arrived', 'in-progress', 'late', 'rescheduled'])
         .order('daily_serial_number', { ascending: true });
-      
+
       if (error) throw error;
 
-      // Get client names
-      const enrichedAppointments = await Promise.all(
-        (data || []).map(async (appointment) => {
-          let clientName = null;
+      const clientIds = Array.from(
+        new Set((data || []).map((a: any) => a.client_id).filter(Boolean))
+      ) as string[];
 
-          if (appointment.client_id) {
-            const { data: client } = await supabase
-              .from('clients')
-              .select('full_name')
-              .eq('id', appointment.client_id)
-              .single();
-            clientName = client?.full_name;
-          } else if (appointment.title?.startsWith('Appointment with ')) {
-            clientName = appointment.title.replace('Appointment with ', '');
-          }
+      let clientMap = new Map<string, string>();
+      if (clientIds.length > 0) {
+        const { data: clients } = await supabase
+          .from('clients')
+          .select('id, full_name')
+          .in('id', clientIds);
+        (clients || []).forEach((c: any) => clientMap.set(c.id, c.full_name));
+      }
 
-          return {
-            ...appointment,
-            client_name: clientName || 'Guest'
-          };
-        })
-      );
-
-      return enrichedAppointments;
+      return (data || []).map((appointment: any) => {
+        let clientName: string | null = null;
+        if (appointment.client_id) {
+          clientName = clientMap.get(appointment.client_id) || null;
+        } else if (appointment.title?.startsWith('Appointment with ')) {
+          clientName = appointment.title.replace('Appointment with ', '');
+        }
+        return { ...appointment, client_name: clientName || 'Guest' };
+      });
     },
     enabled: !!firmId,
-    refetchInterval: 5000 // Refresh every 5 seconds for real-time display
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000, // Phase 1 perf: 5s -> 60s (was ~17k req/day per kiosk)
   });
 
   const getStatusConfig = (status: string) => {

@@ -23,12 +23,13 @@ export const staticDataQueryConfig = {
   gcTime: 30 * 60 * 1000, // 30 minutes cache
 };
 
+// Phase 1 perf: realtime data should come from Supabase realtime channels,
+// not aggressive polling. Window-focus refetch acts as a fallback only.
 export const realtimeQueryConfig = {
-  staleTime: 30 * 1000, // 30 seconds for real-time data (messages, notifications)
-  gcTime: 2 * 60 * 1000, // 2 minutes cache
-  refetchOnWindowFocus: true, // Refetch on focus for real-time data
+  staleTime: 60 * 1000, // 1 minute
+  gcTime: 5 * 60 * 1000, // 5 minutes cache
+  refetchOnWindowFocus: true, // fallback when realtime drops
   retry: 2,
-  refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
 };
 
 export const filterQueryConfig = {
