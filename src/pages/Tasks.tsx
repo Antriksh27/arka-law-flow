@@ -14,7 +14,6 @@ import { EditTaskDialog } from '../components/tasks/EditTaskDialog';
 import { TaskDetailDialog } from '../components/tasks/TaskDetailDialog';
 import { DeleteTaskDialog } from '../components/tasks/DeleteTaskDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { staticDataQueryConfig } from '@/lib/queryConfig';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileTaskCard } from '@/components/tasks/MobileTaskCard';
