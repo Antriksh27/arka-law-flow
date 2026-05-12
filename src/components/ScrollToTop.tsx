@@ -1,22 +1,52 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigationType } from "react-router-dom";
 
 /**
- * Resets scroll position on route change.
- * App layouts use a scrollable <main> element (not the window),
- * so we scroll that element as well as the window for safety.
+ * Scroll restoration:
+ *  - PUSH/REPLACE → scroll the route's main container to top
+ *  - POP (back/forward) → restore the previous scroll position for that history entry
+ *
+ * Saves position keyed by location.key so each history entry has its own snapshot.
  */
+const positions = new Map<string, number>();
+
+const getMain = (): HTMLElement | null =>
+  document.querySelector("main") as HTMLElement | null;
+
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const navType = useNavigationType(); // "PUSH" | "REPLACE" | "POP"
+  const prevKey = useRef<string>(location.key);
+
+  // Save scroll position of the OUTGOING entry before the route changes
+  useEffect(() => {
+    const main = getMain();
+    if (!main) return;
+    const onScroll = () => {
+      positions.set(prevKey.current, main.scrollTop);
+    };
+    main.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      // capture final position on unmount/route change
+      positions.set(prevKey.current, main.scrollTop);
+      main.removeEventListener("scroll", onScroll);
+    };
+  }, [location.key]);
 
   useEffect(() => {
-    // Window (used by public/auth routes)
-    window.scrollTo({ top: 0, left: 0 });
-    // Authenticated layouts: scroll the <main> container
-    document.querySelectorAll("main").forEach((el) => {
-      el.scrollTo({ top: 0, left: 0 });
+    const main = getMain();
+    const target =
+      navType === "POP" ? positions.get(location.key) ?? 0 : 0;
+
+    // Restore on next frame so layout/data has settled
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo({ top: target, left: 0 });
+      if (main) main.scrollTop = target;
     });
-  }, [pathname]);
+
+    prevKey.current = location.key;
+    return () => cancelAnimationFrame(raf);
+  }, [location.key, navType]);
 
   return null;
 };
