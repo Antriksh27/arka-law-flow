@@ -34,8 +34,8 @@ const ReceptionDisplayBoard = () => {
       if (error) throw error;
 
       const clientIds = Array.from(
-        new Set((data || []).map((a) => a.client_id).filter(Boolean))
-      );
+        new Set((data || []).map((a: any) => a.client_id).filter(Boolean))
+      ) as string[];
 
       let clientMap = new Map<string, string>();
       if (clientIds.length > 0) {
