@@ -60,7 +60,7 @@ const Hearings = () => {
         query = query.or(`judge.ilike.%${filters.searchQuery}%,purpose_of_hearing.ilike.%${filters.searchQuery}%`);
       }
 
-      const { data, error } = await query.order('hearing_date', { ascending: true });
+      const { data, error } = await query.order('hearing_date', { ascending: true }).limit(500);
       if (error) throw error;
       return data || [];
     },
