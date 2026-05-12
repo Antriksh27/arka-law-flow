@@ -41,9 +41,8 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed z-[130] gap-4 bg-background shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
-        "flex flex-col overflow-hidden",
         // Mobile: Bottom sheet style with rounded top, smooth slide animation
-        "inset-x-0 bottom-0 top-auto w-full h-[95vh] max-h-[95vh] rounded-t-3xl",
+        "inset-x-0 bottom-0 top-auto w-full h-[95vh] max-h-[95vh] rounded-t-3xl overflow-y-auto overscroll-contain",
         "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         // Desktop: Centered modal with smooth timing
         "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:max-w-lg sm:w-full sm:h-auto sm:max-h-[90vh] sm:rounded-lg sm:border sm:bottom-auto sm:top-[50%]",
