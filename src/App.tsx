@@ -2,7 +2,9 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect, lazy, Suspense } from 'react';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -40,8 +42,17 @@ import NotificationSounds from './lib/notificationSounds';
 // Phase 1 perf: removed global 30s refetchInterval. Pollers must opt in per-query.
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: defaultQueryConfig,
+    queries: {
+      ...defaultQueryConfig,
+      gcTime: 1000 * 60 * 60 * 24, // 24h required for persister
+    },
   },
+});
+
+const persister = createSyncStoragePersister({
+  storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  key: 'hru-rq-cache-v1',
+  throttleTime: 1000,
 });
 
 // Prefetch common queries for better performance
@@ -230,9 +241,19 @@ function AppContent() {
   return (
     <div className="min-h-dvh bg-background" data-build={BUILD_INFO}>
       <Router>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister,
+            maxAge: 1000 * 60 * 60 * 24, // 24h
+            buster: BUILD_INFO,
+            dehydrateOptions: {
+              shouldDehydrateQuery: (q) => q.state.status === 'success',
+            },
+          }}
+        >
           <AppRoutes />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </Router>
     </div>
   );
