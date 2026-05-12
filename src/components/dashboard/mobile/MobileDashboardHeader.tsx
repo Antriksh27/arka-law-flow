@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, MessageCircle, Bell, User, Settings, LogOut } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebarContext } from '@/contexts/SidebarContext';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,63 +24,8 @@ export const MobileDashboardHeader: React.FC<MobileDashboardHeaderProps> = ({ us
   const { openSidebar } = useSidebarContext();
   const firstName = userName.split(' ')[0];
   const { unreadCount: notificationCount } = useNotifications();
-  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-
-  useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      try {
-        // First check if user is logged in to CometChat
-        const loggedInUser = await CometChat.getLoggedinUser();
-        if (!loggedInUser) {
-          console.log('CometChat user not logged in, skipping unread count fetch');
-          return;
-        }
-
-        const count = await CometChat.getUnreadMessageCount() as { users?: Record<string, number>; groups?: Record<string, number> };
-        const userCount = count.users ? Object.values(count.users).reduce((sum, c) => sum + c, 0) : 0;
-        const groupCount = count.groups ? Object.values(count.groups).reduce((sum, c) => sum + c, 0) : 0;
-        const totalCount = userCount + groupCount;
-        console.log('📧 Unread message count:', { userCount, groupCount, totalCount });
-        setUnreadMessageCount(totalCount);
-      } catch (error) {
-        console.error('Could not fetch unread message count:', error);
-      }
-    };
-
-    // Small delay to ensure CometChat is initialized
-    const timeout = setTimeout(fetchUnreadMessages, 1000);
-    const interval = setInterval(fetchUnreadMessages, 30000);
-    
-    // Also listen for new messages to update count
-    const listenerID = 'mobile_header_message_listener';
-    
-    try {
-      const messageListener = new CometChat.MessageListener({
-        onTextMessageReceived: () => {
-          console.log('📧 New message received, refreshing count');
-          fetchUnreadMessages();
-        },
-        onMediaMessageReceived: () => {
-          console.log('📧 New media message received, refreshing count');
-          fetchUnreadMessages();
-        },
-      });
-      
-      CometChat.addMessageListener(listenerID, messageListener);
-    } catch (error) {
-      console.warn('Could not initialize CometChat message listener:', error);
-    }
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      try {
-        CometChat.removeMessageListener(listenerID);
-      } catch (e) {
-        // Ignore errors on cleanup
-      }
-    };
-  }, []);
+  // Phase 2 perf: shared hook replaces local setInterval(30s) + listener
+  const unreadMessageCount = useUnreadMessages();
 
   const formatCount = (count: number) => count > 99 ? '99+' : count.toString();
 

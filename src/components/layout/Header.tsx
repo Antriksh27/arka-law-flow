@@ -1,16 +1,15 @@
 import { User, LogOut, Menu, Settings, Bell, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { NotificationDialog } from '@/components/notifications/NotificationDialog';
 import { MessagesDialog } from '@/components/messages/MessagesDialog';
-import { useCometChat } from '@/hooks/useCometChat';
-import { CometChat } from '@cometchat/chat-sdk-javascript';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -19,49 +18,12 @@ interface HeaderProps {
 const Header = ({ onMenuClick }: HeaderProps) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
-  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { unreadCount } = useNotifications();
-  const { isCometChatReady } = useCometChat();
-
-  // Fetch unread message count
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!isCometChatReady) return;
-      
-      try {
-        const loggedInUser = await CometChat.getLoggedinUser();
-        if (!loggedInUser) return;
-
-        const count = await CometChat.getUnreadMessageCount() as { users?: Record<string, number>; groups?: Record<string, number> };
-        const userCount = count.users ? Object.values(count.users).reduce((sum, c) => sum + c, 0) : 0;
-        const groupCount = count.groups ? Object.values(count.groups).reduce((sum, c) => sum + c, 0) : 0;
-        setMessageUnreadCount(userCount + groupCount);
-      } catch (error) {
-        console.error('Error fetching unread count:', error);
-      }
-    };
-
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    
-    // Message listener for real-time updates
-    const listenerID = 'header_message_listener';
-    if (isCometChatReady) {
-      const messageListener = new CometChat.MessageListener({
-        onTextMessageReceived: () => fetchUnreadCount(),
-        onMediaMessageReceived: () => fetchUnreadCount(),
-      });
-      CometChat.addMessageListener(listenerID, messageListener);
-    }
-
-    return () => {
-      clearInterval(interval);
-      CometChat.removeMessageListener(listenerID);
-    };
-  }, [isCometChatReady]);
+  // Phase 2 perf: shared hook replaces local setInterval(30s) + listener
+  const messageUnreadCount = useUnreadMessages();
   
   return <div className="flex items-center justify-between gap-3 w-full">
           {/* Mobile: Hamburger Menu */}

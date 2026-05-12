@@ -16,15 +16,17 @@ interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
 
-  // Get unread count
+  // Phase 2 perf: removed `refetchInterval: 30000`.
+  // Live updates come from useRealtimeNotifications (postgres_changes channel),
+  // which invalidates ['notifications-count']. Window-focus refetch acts as fallback.
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['notifications-count', user?.id],
     queryFn: async () => {
       if (!user?.id) return 0;
-      
+
       const { count, error } = await supabase
         .from('notifications')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
         .eq('read', false);
 
@@ -32,7 +34,8 @@ export const useNotifications = () => {
       return count || 0;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   return {

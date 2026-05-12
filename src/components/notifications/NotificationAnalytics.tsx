@@ -79,7 +79,7 @@ export const NotificationAnalytics: React.FC = () => {
       return data as unknown as NotificationStats;
     },
     enabled: !!firmId,
-    refetchInterval: 60000, // Refresh every minute
+    staleTime: 5 * 60 * 1000, // Phase 2 perf: 1min poll -> 5min stale, manual refresh
   });
 
   // Get top recipients
@@ -114,7 +114,7 @@ export const NotificationAnalytics: React.FC = () => {
       return data as RecentActivity[];
     },
     enabled: !!firmId,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 5 * 60 * 1000, // Phase 2 perf: 30s poll -> 5min stale
   });
 
   if (statsLoading) {
