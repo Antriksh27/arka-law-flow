@@ -139,7 +139,8 @@ const StaleCases = () => {
         .lt('next_hearing_date', today)
         .gte('next_hearing_date', oneYearAgoStr) // Exclude cases older than 1 year
         .not('next_hearing_date', 'is', null)
-        .order('next_hearing_date', { ascending: true });
+        .order('next_hearing_date', { ascending: true })
+        .limit(500);
       
       if (error) throw error;
       return data as StaleCase[];
