@@ -107,9 +107,23 @@ export const ECourtsDocumentsTable: React.FC<ECourtsDocumentsTableProps> = ({ ca
     }
   };
 
-  const handleView = (doc: DocumentData) => {
-    if (doc.pdf_base64) {
-      const blobUrl = convertBase64ToBlobUrl(doc.pdf_base64);
+  const fetchPdfBase64 = async (id: string): Promise<string | null> => {
+    const { data, error } = await (supabase as any)
+      .from('legalkart_case_documents')
+      .select('pdf_base64')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) {
+      console.error('Error fetching pdf:', error);
+      return null;
+    }
+    return (data as any)?.pdf_base64 || null;
+  };
+
+  const handleView = async (doc: DocumentData) => {
+    const pdf = await fetchPdfBase64(doc.id);
+    if (pdf) {
+      const blobUrl = convertBase64ToBlobUrl(pdf);
       setViewerUrl(blobUrl);
       setViewerTitle(doc.document_filed || 'Document');
       setViewerOpen(true);
@@ -124,9 +138,10 @@ export const ECourtsDocumentsTable: React.FC<ECourtsDocumentsTableProps> = ({ ca
     }
   };
 
-  const handleDownload = (doc: DocumentData) => {
-    if (doc.pdf_base64) {
-      const blobUrl = convertBase64ToBlobUrl(doc.pdf_base64);
+  const handleDownload = async (doc: DocumentData) => {
+    const pdf = await fetchPdfBase64(doc.id);
+    if (pdf) {
+      const blobUrl = convertBase64ToBlobUrl(pdf);
       window.open(blobUrl, '_blank');
     } else if (doc.document_link) {
       window.open(doc.document_link, '_blank');
