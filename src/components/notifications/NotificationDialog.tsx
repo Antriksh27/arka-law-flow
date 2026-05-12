@@ -46,7 +46,7 @@ export const NotificationDialog: React.FC<NotificationDialogProps> = ({
       
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, notification_type, title, message, reference_id, read, created_at')
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
