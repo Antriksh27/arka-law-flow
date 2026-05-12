@@ -370,7 +370,7 @@ export const ConvertToClientDialog: React.FC<ConvertToClientDialogProps> = ({
 
   return (
     <Dialog open={true} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[95vh] sm:h-auto">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[95vh] sm:h-[85vh] sm:max-h-[85vh] flex flex-col">
         {formContent}
       </DialogContent>
     </Dialog>

@@ -192,7 +192,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden h-[95vh] sm:h-[85vh] sm:max-h-[85vh] flex flex-col">
         <div className="flex flex-col h-full bg-slate-50">
           {/* Header */}
           <div className="px-6 py-5 bg-white border-b border-slate-100">

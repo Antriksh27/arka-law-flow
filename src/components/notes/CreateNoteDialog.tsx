@@ -382,7 +382,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[95vh] sm:h-[85vh] sm:max-h-[85vh] flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
