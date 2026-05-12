@@ -12,7 +12,7 @@ import NotFound from '@/pages/NotFound';
 // Lazy load heavy pages
 const Contacts = lazy(() => import('@/pages/Contacts'));
 const ContactInfo = lazy(() => import('@/pages/ContactInfo'));
-import Cases from '@/pages/Cases';
+const Cases = lazy(() => import('@/pages/Cases'));
 const CaseDetailEnhanced = lazy(() => import('@/pages/CaseDetailEnhanced'));
 const Clients = lazy(() => import('@/pages/Clients'));
 const ClientInfo = lazy(() => import('@/pages/ClientInfo'));
@@ -30,17 +30,15 @@ const ECourts = lazy(() => import('@/pages/ECourts'));
 const ModernMessenger = lazy(() => import('@/components/messages/ModernMessenger'));
 const Search = lazy(() => import('@/pages/Search'));
 
-// Reception pages
-import ReceptionHome from '@/pages/reception/ReceptionHome';
-import ReceptionContacts from '@/pages/reception/ReceptionContacts';
-import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
-import ReceptionSchedule from '@/pages/reception/ReceptionSchedule';
-import ReceptionCalendar from '@/pages/reception/ReceptionCalendar';
-import ReceptionDisplayBoard from '@/pages/reception/ReceptionDisplayBoard';
+// Reception pages (lazy)
+const ReceptionHome = lazy(() => import('@/pages/reception/ReceptionHome'));
+const ReceptionContacts = lazy(() => import('@/pages/reception/ReceptionContacts'));
+const ReceptionAppointments = lazy(() => import('@/pages/reception/ReceptionAppointments'));
+const ReceptionDisplayBoard = lazy(() => import('@/pages/reception/ReceptionDisplayBoard'));
 
 // Office Staff pages
 import OfficeStaffLayout from '@/components/layout/OfficeStaffLayout';
-import StaffDashboard from '@/pages/staff/StaffDashboard';
+const StaffDashboard = lazy(() => import('@/pages/staff/StaffDashboard'));
 
 const RoleBasedRouter = () => {
   const { role, loading } = useAuth();
