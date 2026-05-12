@@ -45,7 +45,7 @@ const ReceptionContacts = () => {
     queryFn: async () => {
       let query = supabase
         .from('contacts')
-        .select('id, name, email, phone, organization, type, visit_purpose, notes, created_at')
+        .select('id, name, email, phone, organization, type, visit_purpose, notes, created_at, last_visited_at')
         .eq('firm_id', firmId)
         .order('created_at', { ascending: false })
         .limit(500);
