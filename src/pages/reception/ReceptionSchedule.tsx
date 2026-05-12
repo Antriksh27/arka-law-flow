@@ -1,3 +1,4 @@
+import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +19,7 @@ const ReceptionSchedule = () => {
       const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select(APPOINTMENTS_LIST_COLUMNS)
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
         .order('daily_serial_number', { ascending: true });

@@ -17,7 +17,7 @@ export const AppointmentsSidebar: React.FC = () => {
       
       let query = supabase
         .from('appointment_details')
-        .select('*')
+        .select('id, duration_minutes, status, lawyer_id, appointment_date')
         .eq('appointment_date', today);
       
       if (user?.id) {

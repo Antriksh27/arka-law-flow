@@ -14,6 +14,7 @@ import { format, isBefore, startOfDay } from 'date-fns';
 import TimeUtils from '@/lib/timeUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { APPOINTMENT_DETAILS_COLUMNS } from '@/lib/queryColumns';
 interface Appointment {
   id: string;
   title: string;
@@ -45,7 +46,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      let query = supabase.from('appointment_details').select('*').order('appointment_date', {
+      let query = supabase.from('appointment_details').select(APPOINTMENT_DETAILS_COLUMNS).order('appointment_date', {
         ascending: true
       }).order('appointment_time', {
         ascending: true

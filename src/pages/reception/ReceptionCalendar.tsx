@@ -1,3 +1,4 @@
+import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -596,7 +597,7 @@ const ReceptionCalendar = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select(APPOINTMENTS_LIST_COLUMNS)
         .eq('firm_id', firmId)
         .eq('appointment_date', selectedDateStr)
         .order('appointment_time', { ascending: true });

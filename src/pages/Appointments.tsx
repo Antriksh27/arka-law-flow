@@ -13,6 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group';
 import { Filter, Plus, Search, LayoutList, Calendar, Clock, Copy, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { useDialog } from '@/hooks/use-dialog';
 import { CreateAppointmentDialog } from '../components/appointments/CreateAppointmentDialog';
+import { APPOINTMENT_DETAILS_COLUMNS } from '@/lib/queryColumns';
 import { MobileCreateAppointmentSheet } from '../components/appointments/MobileCreateAppointmentSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
@@ -74,7 +75,7 @@ const Appointments = () => {
     queryFn: async () => {
       let query = supabase
         .from('appointment_details')
-        .select('*')
+        .select(APPOINTMENT_DETAILS_COLUMNS)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: true });
       
