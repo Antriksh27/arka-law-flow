@@ -25,7 +25,7 @@ const fetchObjections = async (caseId: string): Promise<ObjectionData[]> => {
 
     const { data, error } = await (supabase as any)
       .from('legalkart_case_objections')
-      .select('*')
+      .select('id, sr_no, objection, receipt_date, scrutiny_date, objection_compliance_date')
       .eq('legalkart_case_id', lkCaseId);
 
     if (error) throw error;

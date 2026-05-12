@@ -32,7 +32,7 @@ const fetchDocuments = async (caseId: string): Promise<DocumentData[]> => {
 
     const { data, error } = await (supabase as any)
       .from('legalkart_case_documents')
-      .select('*')
+      .select('id, sr_no, advocate, filed_by, document_no, document_filed, date_of_receiving, document_link')
       .eq('legalkart_case_id', lkCaseId);
 
     if (error) throw error;

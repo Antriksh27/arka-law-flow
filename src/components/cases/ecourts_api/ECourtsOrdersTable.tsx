@@ -30,7 +30,7 @@ const fetchOrders = async (caseId: string): Promise<OrderData[]> => {
 
     const { data, error } = await (supabase as any)
       .from('legalkart_case_orders')
-      .select('*')
+      .select('id, judge, hearing_date, order_number, bench, order_details, order_link')
       .eq('legalkart_case_id', lkCaseId);
 
     if (error) throw error;
