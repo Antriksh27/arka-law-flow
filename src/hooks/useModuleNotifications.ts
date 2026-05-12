@@ -70,8 +70,9 @@ export const useModuleNotifications = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
-      .channel('module-notifications-realtime')
+      .channel(`module-notifications-realtime:${user.id}`)
       .on(
         'postgres_changes',
         {
