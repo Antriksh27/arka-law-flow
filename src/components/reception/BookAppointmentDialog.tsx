@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useFirmLawyers } from '@/hooks/useFirmLawyers';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -111,27 +112,8 @@ const BookAppointmentDialog = ({
 
   const allowOverride = currentUserRole === 'receptionist' || currentUserRole === 'office_staff';
 
-  const { data: lawyers } = useQuery({
-    queryKey: ['reception-lawyers-dialog', firmId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('id, user_id, full_name, role')
-        .eq('firm_id', firmId)
-        .in('role', ['admin', 'lawyer', 'junior']);
-      if (error) throw error;
-      return data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-    },
-    enabled: !!firmId && open,
-    staleTime: 15 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  // Phase 9 perf: shared firm-lawyers cache (only fetch when dialog open)
+  const { data: lawyers } = useFirmLawyers(firmId, open);
 
   const { data: clientsAndContacts } = useQuery({
     queryKey: ['clients-contacts', firmId],
