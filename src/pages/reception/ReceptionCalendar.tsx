@@ -592,7 +592,7 @@ const ReceptionCalendar = () => {
 
   const isLoading = isLoadingLawyers || isLoadingAppointments;
 
-  const lawyerIdByUserId = new Map(lawyers.map(l => [l.userId, l.id]));
+  const lawyerIdByUserId = new Map<string, string>(lawyers.map(l => [l.userId as string, l.id as string]));
   const calendarAppointments: Appointment[] = rawAppointments
     .map((apt: any) => ({
       id: apt.id,
