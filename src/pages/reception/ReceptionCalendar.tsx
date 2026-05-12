@@ -596,7 +596,7 @@ const ReceptionCalendar = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select(APPOINTMENTS_LIST_COLUMNS)
         .eq('firm_id', firmId)
         .eq('appointment_date', selectedDateStr)
         .order('appointment_time', { ascending: true });

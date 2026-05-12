@@ -69,7 +69,7 @@ const ReceptionAppointments = () => {
     queryFn: async () => {
       let query = supabase
         .from('appointments')
-        .select('*')
+        .select(APPOINTMENTS_LIST_COLUMNS)
         .eq('firm_id', firmId)
         .eq('appointment_date', selectedDate)
         .order('daily_serial_number', { ascending: true });
