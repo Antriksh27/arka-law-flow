@@ -17,6 +17,7 @@ import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from './components/ui/sonner';
 import { BookRedirect } from './pages/BookRedirect';
 import DashboardLayout from './components/layout/DashboardLayout';
+import ScrollToTop from './components/ScrollToTop';
 
 // Lazy load heavy components for better performance
 const CaseDetailEnhanced = lazy(() => import('./pages/CaseDetailEnhanced'));
@@ -170,6 +171,7 @@ function AppRoutes() {
 
   return (
     <DialogProvider>
+      <ScrollToTop />
       <Routes>
         {/* Public booking routes - completely public, no authentication */}
         <Route path="/b/:code" element={<BookRedirect />} />
