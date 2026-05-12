@@ -135,7 +135,7 @@ const CaseDetail = () => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('case_orders')
-        .select('id, case_id, order_number, hearing_date, order_url, judge_name, created_at')
+        .select('id, case_id, order_number, order_date, hearing_date, order_link, order_details, judge, bench, summary, created_at, updated_at')
         .eq('case_id', id)
         .order('hearing_date', { ascending: false })
         .limit(500);
