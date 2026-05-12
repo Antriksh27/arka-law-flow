@@ -1,6 +1,7 @@
 import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFirmLawyers } from '@/hooks/useFirmLawyers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronLeft, ChevronRight, Clock, User, Plus, Edit, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
