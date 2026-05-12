@@ -128,7 +128,9 @@ const BookAppointmentDialog = ({
         return nameA.localeCompare(nameB);
       }) || [];
     },
-    enabled: !!firmId && open
+    enabled: !!firmId && open,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const { data: clientsAndContacts } = useQuery({
