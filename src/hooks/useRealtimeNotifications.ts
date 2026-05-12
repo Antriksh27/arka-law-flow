@@ -22,20 +22,35 @@ export const useRealtimeNotifications = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const channelRef = useRef<any>(null);
+  const subscribedUserRef = useRef<string | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryAttemptRef = useRef(0);
 
   useEffect(() => {
     if (!user?.id) return;
+
+    // Phase 1 perf: guard against StrictMode double-subscribe and remount churn.
+    if (subscribedUserRef.current === user.id && channelRef.current) {
+      return;
+    }
 
     console.log('🔔 Setting up real-time notifications for user:', user.id);
 
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    subscribedUserRef.current = user.id;
 
     // Create new channel for real-time notifications
     channelRef.current = supabase
-      .channel(`notifications-${user.id}`)
+      .channel(`notifications:${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -156,21 +171,50 @@ export const useRealtimeNotifications = () => {
       .subscribe((status) => {
         console.log('🔔 Real-time subscription status:', status);
         if (status === 'SUBSCRIBED') {
+          retryAttemptRef.current = 0;
           console.log('✅ Successfully subscribed to real-time notifications');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Error subscribing to real-time notifications');
+        } else if (
+          status === 'CHANNEL_ERROR' ||
+          status === 'TIMED_OUT' ||
+          status === 'CLOSED'
+        ) {
+          // Phase 1 perf: exponential backoff to stop the reconnect storm.
+          const attempt = retryAttemptRef.current + 1;
+          retryAttemptRef.current = attempt;
+          const delay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5));
+          console.warn(`🔔 Realtime ${status} — retry #${attempt} in ${delay}ms`);
+
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = setTimeout(() => {
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
+            // Force resubscribe by clearing the guard so the effect re-runs on next user change.
+            subscribedUserRef.current = null;
+            // Trigger a soft refetch so missed notifications appear.
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['notifications-count'] });
+          }, delay);
         }
       });
 
     // Cleanup function
     return () => {
       console.log('🔔 Cleaning up real-time notifications');
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+      subscribedUserRef.current = null;
     };
-  }, [user?.id, toast, queryClient]);
+    // Phase 1 perf: only re-run when the user changes. toast/queryClient are stable refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   return { 
     // Return any utility functions if needed
