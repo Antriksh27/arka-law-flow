@@ -91,7 +91,9 @@ const Tasks = () => {
         .order('full_name');
       if (error) throw error;
       return (data || []).map(tm => ({ id: tm.user_id, full_name: tm.full_name }));
-    }
+    },
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
   
   const memberMap = React.useMemo(() => {

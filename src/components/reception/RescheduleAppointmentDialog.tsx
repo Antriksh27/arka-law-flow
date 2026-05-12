@@ -69,7 +69,9 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
       
       return data?.role;
     },
-    enabled: !!user?.id && !!firmId
+    enabled: !!user?.id && !!firmId,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Allow override for receptionists and office staff

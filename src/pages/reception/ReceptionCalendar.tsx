@@ -586,7 +586,9 @@ const ReceptionCalendar = () => {
         color: colors[index % colors.length]
       }));
     },
-    enabled: !!firmId
+    enabled: !!firmId,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
