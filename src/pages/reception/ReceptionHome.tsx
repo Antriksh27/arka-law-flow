@@ -125,7 +125,7 @@ const ReceptionHome = () => {
     queryFn: async () => {
       const {
         data
-      } = await supabase.from('contacts').select('*').eq('firm_id', firmId).order('created_at', {
+      } = await supabase.from('contacts').select('id, name, email, phone, organization, type, visit_purpose, created_at').eq('firm_id', firmId).order('created_at', {
         ascending: false
       }).limit(5);
       return data || [];

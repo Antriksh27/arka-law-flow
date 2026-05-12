@@ -80,7 +80,7 @@ export const ClientList = () => {
         // Fetch ALL clients to handle filtering properly
         let clientsQuery = supabase
           .from('clients')
-          .select('*', { count: 'exact' });
+          .select('id, full_name, email, phone, organization, is_vip, created_at', { count: 'exact' });
         
         // Apply VIP filter if on VIP tab
         if (activeTab === 'vip') {
