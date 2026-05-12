@@ -74,7 +74,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
     supabase.from('team_members').select('full_name').eq('user_id', userId).single(),
     supabase.from('legal_news').select('title, url, source, published_at').order('published_at', { ascending: false }).limit(5),
     supabase.from('cases').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'pending'),
-    supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
+    supabase.from('case_hearings').select('id, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
     supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
     supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
     // @ts-ignore - Type depth warning (safe to ignore)
