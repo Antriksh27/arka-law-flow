@@ -83,7 +83,7 @@ const Tasks = () => {
     }
   });
 
-  const { data: teamMembers = [] } = useQuery<{ id: string; full_name: string | null }[]>({
+  const { data: teamMembers = [] } = useQuery({
     queryKey: ['team-members-filter'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -93,7 +93,8 @@ const Tasks = () => {
       if (error) throw error;
       return (data || []).map(tm => ({ id: tm.user_id, full_name: tm.full_name }));
     },
-    ...staticDataQueryConfig,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
   
   const memberMap = React.useMemo(() => {
