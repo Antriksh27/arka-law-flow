@@ -549,47 +549,27 @@ const ReceptionCalendar = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
   const [initialBooking, setInitialBooking] = useState<{ lawyerUserId?: string; date?: string; time?: string }>({});
 
-  // Get lawyers with colors
-  const { data: lawyers = [], isLoading: isLoadingLawyers } = useQuery({
-    queryKey: ['reception-lawyers', firmId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('team_members')
-        .select('id, user_id, full_name, role')
-        .eq('firm_id', firmId)
-        .in('role', ['admin', 'lawyer', 'junior']);
-      
-      const sortedData = data?.sort((a, b) => {
-        const nameA = a.full_name?.toLowerCase() || '';
-        const nameB = b.full_name?.toLowerCase() || '';
-        if (nameA.includes('chitrajeet upadhyaya')) return -1;
-        if (nameB.includes('chitrajeet upadhyaya')) return 1;
-        return nameA.localeCompare(nameB);
-      }) || [];
-      
-      const colors = [
-        'bg-blue-500',
-        'bg-green-500', 
-        'bg-purple-500',
-        'bg-orange-500',
-        'bg-red-500',
-        'bg-indigo-500',
-        'bg-pink-500',
-        'bg-teal-500'
-      ];
-      
-      return sortedData.map((lawyer, index) => ({
-        id: lawyer.id,
-        userId: lawyer.user_id,
-        name: lawyer.full_name || 'Unnamed Lawyer',
-        initials: lawyer.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'UL',
-        color: colors[index % colors.length]
-      }));
-    },
-    enabled: !!firmId,
-    staleTime: 15 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  // Phase 9 perf: shared firm-lawyers cache
+  const { data: rawLawyers = [], isLoading: isLoadingLawyers } = useFirmLawyers(firmId);
+  const lawyers = React.useMemo(() => {
+    const colors = [
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-purple-500',
+      'bg-orange-500',
+      'bg-red-500',
+      'bg-indigo-500',
+      'bg-pink-500',
+      'bg-teal-500'
+    ];
+    return rawLawyers.map((lawyer, index) => ({
+      id: lawyer.id,
+      userId: lawyer.user_id,
+      name: lawyer.full_name || 'Unnamed Lawyer',
+      initials: lawyer.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'UL',
+      color: colors[index % colors.length]
+    }));
+  }, [rawLawyers]);
 
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
 
