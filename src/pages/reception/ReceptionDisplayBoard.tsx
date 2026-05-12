@@ -23,8 +23,8 @@ const ReceptionDisplayBoard = () => {
     queryFn: async () => {
       const today = TimeUtils.formatDateInput(TimeUtils.nowDate());
       // Phase 1 perf: explicit columns + single batch client lookup (no N+1)
-      const { data, error } = await supabase
-        .from('appointments')
+      const { data, error } = await (supabase
+        .from('appointments') as any)
         .select('id, client_id, title, status, appointment_date, appointment_time, daily_serial_number')
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
