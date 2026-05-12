@@ -117,7 +117,7 @@ const CaseDetail = () => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('case_documents')
-        .select('id, case_id, document_name, file_url, document_type, document_date, created_at')
+        .select('id, case_id, sr_no, document_no, document_type, document_filed, document_url, advocate, filed_by, date_of_receiving, created_at, updated_at')
         .eq('case_id', id)
         .order('created_at', { ascending: false })
         .limit(500);
