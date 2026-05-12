@@ -29,11 +29,11 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
 
   useEffect(() => {
     loadSyncStatus();
-    
-    // Set up real-time subscription for sync queue changes
+
+    // Phase 2 perf: realtime subscription is sufficient. Removed 30s setInterval.
     const subscription = supabase
       .channel('sync-status')
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'google_calendar_sync_queue' },
         () => {
           loadSyncStatus();
@@ -47,12 +47,8 @@ export const GoogleCalendarSyncStatus: React.FC = () => {
       )
       .subscribe();
 
-    // Refresh status every 30 seconds
-    const interval = setInterval(loadSyncStatus, 30000);
-
     return () => {
       subscription.unsubscribe();
-      clearInterval(interval);
     };
   }, []);
 
