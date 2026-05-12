@@ -61,7 +61,8 @@ const ReceptionAppointments = () => {
         return nameA.localeCompare(nameB);
       }) || [];
     },
-    enabled: !!firmId
+    enabled: !!firmId,
+    ...staticDataQueryConfig,
   });
 
   // Fetch appointments
