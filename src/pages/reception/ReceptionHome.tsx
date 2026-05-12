@@ -2,6 +2,7 @@ import { APPOINTMENTS_LIST_COLUMNS } from '@/lib/queryColumns';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useFirmLawyers } from '@/hooks/useFirmLawyers';
 import { useAuth } from '@/contexts/AuthContext';
 import TimeUtils from '@/lib/timeUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
