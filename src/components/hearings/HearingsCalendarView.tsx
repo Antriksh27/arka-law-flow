@@ -88,23 +88,24 @@ export const HearingsCalendarView: React.FC<HearingsCalendarViewProps> = ({
   });
 
 
-  // Real-time subscription
+  // Real-time subscription (debounced to avoid query storms)
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase.channel('case-hearings-changes').on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'case_hearings'
-    }, payload => {
-      queryClient.invalidateQueries({
-        queryKey: ['hearings-calendar'],
-        exact: false
-      });
-      toast({
-        title: 'Hearing updated',
-        description: 'The hearings list has been updated.'
-      });
+    }, () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: ['hearings-calendar'],
+          exact: false
+        });
+      }, 1500);
     }).subscribe();
     return () => {
+      if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
