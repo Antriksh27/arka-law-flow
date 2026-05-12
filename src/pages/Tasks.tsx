@@ -91,7 +91,8 @@ const Tasks = () => {
         .order('full_name');
       if (error) throw error;
       return (data || []).map(tm => ({ id: tm.user_id, full_name: tm.full_name }));
-    }
+    },
+    ...staticDataQueryConfig,
   });
   
   const memberMap = React.useMemo(() => {
