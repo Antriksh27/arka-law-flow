@@ -42,7 +42,7 @@ const ReceptionAppointments = () => {
   }, [searchParams, setSearchParams]);
 
   // Fetch lawyers for filter
-  const { data: lawyers } = useQuery({
+  const { data: lawyers } = useQuery<Array<{ id: string; user_id: string; full_name: string | null; role: string }>>({
     queryKey: ['reception-lawyers', firmId],
     queryFn: async () => {
       const { data, error } = await supabase
