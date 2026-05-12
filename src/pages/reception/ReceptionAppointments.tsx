@@ -63,7 +63,8 @@ const ReceptionAppointments = () => {
       }) || [];
     },
     enabled: !!firmId,
-    ...staticDataQueryConfig,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Fetch appointments
