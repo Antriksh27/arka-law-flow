@@ -45,9 +45,10 @@ const ReceptionContacts = () => {
     queryFn: async () => {
       let query = supabase
         .from('contacts')
-        .select('*')
+        .select('id, name, email, phone, organization, type, visit_purpose, notes, created_at')
         .eq('firm_id', firmId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(500);
 
       if (searchTerm.trim()) {
         query = query.or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
