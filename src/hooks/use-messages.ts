@@ -71,14 +71,17 @@ export const useMessages = (threadId: string | null) => {
           .from('messages')
           .select('id, created_at, message_text, sender_id, thread_id, attachments')
           .eq('thread_id', threadId)
-          .order('created_at', { ascending: true }),
+          .order('created_at', { ascending: false })
+          .limit(200),
         supabase
           .from('thread_participants')
           .select('user_id')
           .eq('thread_id', threadId)
       ]);
       
-      const { data: messagesData, error: messagesError } = messagesRes;
+      const { data: messagesDataDesc, error: messagesError } = messagesRes;
+      // Restore ascending order for rendering (we fetched DESC + LIMIT to get last 200)
+      const messagesData = messagesDataDesc ? [...messagesDataDesc].reverse() : [];
       const { data: participantsData, error: participantsError } = participantsRes;
 
       if (messagesError) throw messagesError;

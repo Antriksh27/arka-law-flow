@@ -57,7 +57,7 @@ export const PastHearingsList: React.FC<PastHearingsListProps> = ({ filters }) =
         );
       }
 
-      const { data, error } = await query.order('hearing_date', { ascending: false });
+      const { data, error } = await query.order('hearing_date', { ascending: false }).limit(500);
       if (error) throw error;
       return data || [];
     }

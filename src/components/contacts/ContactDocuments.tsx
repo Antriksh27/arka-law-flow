@@ -34,7 +34,8 @@ export const ContactDocuments: React.FC<ContactDocumentsProps> = ({ contactId })
           document_type:document_types(name, category_code)
         `)
         .eq('contact_id', contactId)
-        .order('uploaded_at', { ascending: false });
+        .order('uploaded_at', { ascending: false })
+        .limit(200);
       
       if (error) throw error;
       return (data as any[]) || [];

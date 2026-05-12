@@ -52,7 +52,8 @@ const Tasks = () => {
           case:cases!tasks_case_id_fkey(case_title),
           client:clients!tasks_client_id_fkey(full_name)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (searchTerm) {
         query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);

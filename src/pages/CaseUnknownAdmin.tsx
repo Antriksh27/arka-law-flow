@@ -58,7 +58,8 @@ const CaseUnknownAdmin = () => {
         .select('id, case_title, cnr_number, reference_number, registration_number, filing_number, petitioner, respondent, court_name, court_type, status, fetch_status, fetch_message, last_fetched_at, created_at')
         .eq('firm_id', tm.firm_id)
         .eq('case_title', 'Case Unknown')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
       return (data || []) as UnknownCase[];

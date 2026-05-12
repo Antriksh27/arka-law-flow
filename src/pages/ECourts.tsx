@@ -32,7 +32,8 @@ export const ECourts = () => {
         .from('legalkart_case_searches')
         .select('*')
         .eq('firm_id', firmId as string)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (searchesError) throw searchesError;
       if (!searches || searches.length === 0) return [];
