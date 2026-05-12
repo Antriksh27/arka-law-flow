@@ -9,4 +9,4 @@ export const APPOINTMENT_DETAILS_COLUMNS =
 
 // Plain `appointments` table list columns (when not using the view)
 export const APPOINTMENTS_LIST_COLUMNS =
-  'id, title, appointment_date, appointment_time, duration_minutes, status, type, location, notes, client_id, case_id, lawyer_id, contact_id, firm_id, created_at';
+  'id, title, appointment_date, appointment_time, duration_minutes, status, type, location, notes, client_id, case_id, lawyer_id, contact_id, firm_id, daily_serial_number, created_at';
