@@ -110,39 +110,43 @@ const CaseDetail = () => {
     enabled: !!id
   });
 
-  // Fetch documents from case_documents
+  // Fetch documents from case_documents (lazy)
   const { data: documents = [] } = useQuery({
     queryKey: ['case-documents', id],
     queryFn: async () => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('case_documents')
-        .select('*')
-        .eq('case_id', id);
+        .select('id, case_id, sr_no, document_no, document_type, document_filed, document_url, advocate, filed_by, date_of_receiving, created_at, updated_at')
+        .eq('case_id', id)
+        .order('created_at', { ascending: false })
+        .limit(500);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id
+    enabled: !!id && activeTab === 'documents'
   });
 
-  // Fetch orders from case_orders
+  // Fetch orders from case_orders (lazy)
   const { data: orders = [] } = useQuery({
     queryKey: ['case-orders', id],
     queryFn: async () => {
       if (!id) return [];
       const { data, error } = await supabase
         .from('case_orders')
-        .select('*')
-        .eq('case_id', id);
+        .select('id, case_id, order_number, order_date, hearing_date, order_link, order_details, judge, bench, summary, created_at, updated_at')
+        .eq('case_id', id)
+        .order('hearing_date', { ascending: false })
+        .limit(500);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id
+    enabled: !!id && activeTab === 'orders'
   });
 
-  // Fetch objections from case_objections
+  // Fetch objections from case_objections (lazy)
   const { data: objections = [] } = useQuery({
     queryKey: ['case-objections', id],
     queryFn: async () => {
@@ -150,15 +154,17 @@ const CaseDetail = () => {
       const { data, error } = await supabase
         .from('case_objections')
         .select('*')
-        .eq('case_id', id);
+        .eq('case_id', id)
+        .order('created_at', { ascending: false })
+        .limit(500);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id
+    enabled: !!id && activeTab === 'objections'
   });
 
-  // Fetch hearings from case_hearings
+  // Fetch hearings from case_hearings (lazy)
   const { data: hearings = [] } = useQuery({
     queryKey: ['case-hearings', id],
     queryFn: async () => {
@@ -167,12 +173,13 @@ const CaseDetail = () => {
         .from('case_hearings')
         .select('*')
         .eq('case_id', id)
-        .order('hearing_date', { ascending: false });
+        .order('hearing_date', { ascending: false })
+        .limit(500);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id
+    enabled: !!id && activeTab === 'hearings'
   });
 
   // Auto-upsert relational data on first load if fetched_data exists but child tables are empty
