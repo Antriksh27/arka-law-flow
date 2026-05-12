@@ -47,10 +47,10 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   ] = await Promise.all([
     supabase.from('team_members').select('full_name').eq('user_id', userId).single(),
     supabase.from('legal_news').select('title, url, source, published_at').order('published_at', { ascending: false }).limit(5),
-    supabase.from('cases').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'pending'),
+    supabase.from('cases').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).eq('status', 'pending'),
     supabase.from('case_hearings').select('*, cases!inner(firm_id)', { count: 'exact', head: true }).eq('cases.firm_id', firmId).gte('hearing_date', today.toISOString()),
-    supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
-    supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
+    supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).gte('appointment_date', format(today, 'yyyy-MM-dd')),
+    supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('firm_id', firmId).neq('status', 'completed'),
     supabase.from('case_hearings').select('hearing_date, cases!inner(firm_id)').eq('cases.firm_id', firmId).gte('hearing_date', startOfThisWeek.toISOString()).lte('hearing_date', endOfThisWeek.toISOString()),
     supabase.from('appointments').select('appointment_date').eq('firm_id', firmId).gte('appointment_date', format(startOfThisWeek, 'yyyy-MM-dd')).lte('appointment_date', format(endOfThisWeek, 'yyyy-MM-dd')),
     (supabase as any).from('tasks').select('title, priority, due_date').eq('assigned_to', userId).neq('status', 'completed').order('due_date', { ascending: true }).limit(3),
@@ -109,7 +109,7 @@ const fetchDashboardData = async (firmId: string, userId: string, role: string) 
   // Calculate case counts for clients
   const clientsWithCaseCount = await Promise.all(
     (recentClients || []).map(async (client) => {
-      const { count } = await supabase.from('cases').select('*', { count: 'exact', head: true }).eq('client_id', client.id);
+      const { count } = await supabase.from('cases').select('id', { count: 'exact', head: true }).eq('client_id', client.id);
       return { ...client, case_count: count || 0 };
     })
   );
