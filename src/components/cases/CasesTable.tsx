@@ -59,7 +59,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     isError,
     error
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, searchFields, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder],
+    queryKey: ['cases-table', searchQuery, searchFields, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder, viewAll],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -81,9 +81,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
 
       console.log('Fetching cases for user:', user.id, 'isAdminOrLawyer:', isAdminOrLawyer, 'showOnlyMyCases:', showOnlyMyCases);
       
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize - 1;
-      
       let query = supabase.from('cases').select(`
         id,
         case_title,
@@ -104,8 +101,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         clients!client_id(full_name)
       `, { count: 'exact' })
       .order('status', { ascending: true }) // pending comes before disposed alphabetically
-      .order(sortField, { ascending: sortOrder === 'asc' })
-      .range(startIndex, endIndex);
+      .order(sortField, { ascending: sortOrder === 'asc' });
 
       // Add firm scoping
       if (teamMember?.firm_id) {
