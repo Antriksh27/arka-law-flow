@@ -301,7 +301,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     );
   }
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = viewAll ? 1 : Math.ceil(totalCount / pageSize);
 
   return (
     <>
