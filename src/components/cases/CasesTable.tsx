@@ -58,7 +58,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     isError,
     error
   } = useQuery({
-    queryKey: ['cases-table', searchQuery, searchFields, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder, viewAll],
+    queryKey: ['cases-table', searchQuery, searchFields, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, sortField, sortOrder, pageSize],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -137,8 +137,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         query = query.eq('case_type', typeFilter as any);
       }
 
-      // Apply pagination only when not in view-all mode
-      if (!viewAll) {
+      // Apply pagination only when not showing all
+      if (pageSize !== 'all') {
         const startIndex = (page - 1) * pageSize;
         const endIndex = startIndex + pageSize - 1;
         query = query.range(startIndex, endIndex);
@@ -225,8 +225,8 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     setPage(1);
   };
 
-  const handleViewAllToggle = () => {
-    setViewAll(prev => !prev);
+  const handlePageSizeChange = (newSize: number | 'all') => {
+    setPageSize(newSize);
     setPage(1);
     setSelectedCases(new Set());
   };
@@ -300,7 +300,15 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     );
   }
 
-  const totalPages = viewAll ? 1 : Math.ceil(totalCount / pageSize);
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(totalCount / (pageSize as number));
+
+  const isAll = pageSize === 'all';
+  const sizeOptions: { label: string; value: number | 'all' }[] = [
+    { label: '25', value: 25 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
+    { label: 'All', value: 'all' },
+  ];
 
   return (
     <>
