@@ -351,61 +351,78 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       )}
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {(totalPages > 1 || viewAll) && (
         <div className={`flex items-center justify-between gap-3 px-4 py-4 bg-card rounded-2xl shadow-sm border border-border ${isMobile ? 'flex-col' : ''}`}>
           <div className="text-sm text-muted-foreground">
-            {isMobile ? `Page ${page} of ${totalPages}` : `Page ${page} of ${totalPages} (Total: ${totalCount} cases)`}
+            {viewAll ? (
+              <span>Showing all {totalCount} cases</span>
+            ) : (
+              <span>{isMobile ? `Page ${page} of ${totalPages}` : `Page ${page} of ${totalPages} (Total: ${totalCount} cases)`}</span>
+            )}
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => p - 1)}
-              disabled={page === 1}
-              className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
-            >
-              <ChevronLeft className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
-              <span className="ml-1">Prev</span>
-            </Button>
-            
-            {!isMobile && (
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (page <= 3) {
-                    pageNum = i + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = page - 2 + i;
-                  }
-                  
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setPage(pageNum)}
-                      className="min-w-[36px] h-9 rounded-xl"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {!viewAll && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 1}
+                  className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
+                >
+                  <ChevronLeft className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+                  <span className="ml-1">Prev</span>
+                </Button>
+                
+                {!isMobile && (
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (page <= 3) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = page - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={page === pageNum ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setPage(pageNum)}
+                          className="min-w-[36px] h-9 rounded-xl"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page === totalPages}
+                  className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
+                >
+                  <span className="mr-1">Next</span>
+                  <ChevronRight className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+                </Button>
+              </>
             )}
             
             <Button
-              variant="outline"
+              variant={viewAll ? "default" : "secondary"}
               size="sm"
-              onClick={() => setPage(p => p + 1)}
-              disabled={page === totalPages}
+              onClick={handleViewAllToggle}
               className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
             >
-              <span className="mr-1">Next</span>
-              <ChevronRight className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+              {viewAll ? 'Show Paginated' : 'View All'}
             </Button>
           </div>
         </div>
