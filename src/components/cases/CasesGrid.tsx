@@ -49,11 +49,10 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
-  const [viewAll, setViewAll] = useState(false);
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState<number | 'all'>(25);
   
   const { data: queryResult, isLoading, isError, error } = useQuery({
-    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, viewAll],
+    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, pageSize],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
