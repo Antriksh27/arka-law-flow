@@ -49,11 +49,10 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
-  const [viewAll, setViewAll] = useState(false);
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState<number | 'all'>(25);
   
   const { data: queryResult, isLoading, isError, error } = useQuery({
-    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, viewAll],
+    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, pageSize],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
@@ -116,8 +115,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         query = query.eq('case_type', typeFilter as any);
       }
 
-      // Apply pagination at DB level only when not in view-all mode
-      if (!viewAll) {
+      // Apply pagination at DB level only when not showing all
+      if (pageSize !== 'all') {
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
         query = query.range(from, to);
@@ -168,7 +167,15 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   const cases = queryResult?.cases || [];
   const totalCount = queryResult?.totalCount || 0;
-  const totalPages = viewAll ? 1 : Math.ceil(totalCount / pageSize);
+  const totalPages = pageSize === 'all' ? 1 : Math.ceil(totalCount / (pageSize as number));
+
+  const isAll = pageSize === 'all';
+  const sizeOptions: { label: string; value: number | 'all' }[] = [
+    { label: '25', value: 25 },
+    { label: '50', value: 50 },
+    { label: '100', value: 100 },
+    { label: 'All', value: 'all' },
+  ];
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -178,8 +185,8 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
     }
   };
 
-  const handleViewAllToggle = () => {
-    setViewAll(prev => !prev);
+  const handlePageSizeChange = (newSize: number | 'all') => {
+    setPageSize(newSize);
     setPage(1);
     setSelectedCases(new Set());
   };
@@ -351,17 +358,34 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
       )}
 
       {/* Pagination Controls */}
-      {(totalPages > 1 || viewAll) && (
+      {(totalPages > 1 || isAll) && (
         <div className={`flex items-center justify-between gap-3 px-4 py-4 bg-card rounded-2xl shadow-sm border border-border ${isMobile ? 'flex-col' : ''}`}>
           <div className="text-sm text-muted-foreground">
-            {viewAll ? (
+            {isAll ? (
               <span>Showing all {totalCount} cases</span>
             ) : (
               <span>{isMobile ? `Page ${page} of ${totalPages}` : `Page ${page} of ${totalPages} (Total: ${totalCount} cases)`}</span>
             )}
           </div>
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            {!viewAll && (
+            {/* Page size tabs */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {sizeOptions.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => handlePageSizeChange(opt.value)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    pageSize === opt.value
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {!isAll && (
               <>
                 <Button
                   variant="outline"
@@ -415,15 +439,6 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
                 </Button>
               </>
             )}
-            
-            <Button
-              variant={viewAll ? "default" : "secondary"}
-              size="sm"
-              onClick={handleViewAllToggle}
-              className={`${isMobile ? 'h-11 px-5' : 'h-9 px-4'} rounded-xl`}
-            >
-              {viewAll ? 'Show Paginated' : 'View All'}
-            </Button>
           </div>
         </div>
       )}
