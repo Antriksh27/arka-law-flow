@@ -49,6 +49,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
+  const [viewAll, setViewAll] = useState(false);
   const pageSize = 20;
   
   const { data: queryResult, isLoading, isError, error } = useQuery({
