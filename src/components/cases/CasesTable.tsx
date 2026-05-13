@@ -137,6 +137,14 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       if (typeFilter !== 'all') {
         query = query.eq('case_type', typeFilter as any);
       }
+
+      // Apply pagination only when not in view-all mode
+      if (!viewAll) {
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize - 1;
+        query = query.range(startIndex, endIndex);
+      }
+
       const {
         data,
         error,
