@@ -116,10 +116,12 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
         query = query.eq('case_type', typeFilter as any);
       }
 
-      // Apply pagination at DB level
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
+      // Apply pagination at DB level only when not in view-all mode
+      if (!viewAll) {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
+      }
 
       const { data, error, count } = await query;
       if (error) throw error;
