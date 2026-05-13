@@ -178,6 +178,12 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
     }
   };
 
+  const handleViewAllToggle = () => {
+    setViewAll(prev => !prev);
+    setPage(1);
+    setSelectedCases(new Set());
+  };
+
   const handleSelectCase = (caseId: string, checked: boolean) => {
     const newSelected = new Set(selectedCases);
     if (checked) {
