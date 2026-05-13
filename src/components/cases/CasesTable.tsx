@@ -226,6 +226,12 @@ export const CasesTable: React.FC<CasesTableProps> = ({
     setPage(1);
   };
 
+  const handleViewAllToggle = () => {
+    setViewAll(prev => !prev);
+    setPage(1);
+    setSelectedCases(new Set());
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedCases(new Set(cases?.map(c => c.id) || []));
