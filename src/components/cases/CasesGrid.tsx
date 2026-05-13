@@ -53,7 +53,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
   const pageSize = 20;
   
   const { data: queryResult, isLoading, isError, error } = useQuery({
-    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page],
+    queryKey: ['cases', searchQuery, statusFilter, typeFilter, assignedFilter, showOnlyMyCases, page, viewAll],
     queryFn: async () => {
       // Get current user info
       const { data: { user } } = await supabase.auth.getUser();
