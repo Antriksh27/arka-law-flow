@@ -48,6 +48,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [page, setPage] = useState(1);
+  const [viewAll, setViewAll] = useState(false);
   const [sortField, setSortField] = useState<'created_at' | 'reference_number' | 'case_title'>('reference_number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const pageSize = 20;
