@@ -447,17 +447,34 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         </TableBody>
       </Table>
       
-      {(totalPages > 1 || viewAll) && (
+      {(totalPages > 1 || isAll) && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-200">
           <div className="text-sm text-muted-foreground text-center sm:text-left">
-            {viewAll ? (
+            {isAll ? (
               <span>Showing all {totalCount} cases</span>
             ) : (
               <span>Page {page} of {totalPages} <span className="hidden sm:inline">(Total: {totalCount} cases)</span></span>
             )}
           </div>
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            {!viewAll && (
+            {/* Page size tabs */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {sizeOptions.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => handlePageSizeChange(opt.value)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    pageSize === opt.value
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {!isAll && (
               <>
                 <Button
                   variant="outline"
@@ -509,15 +526,6 @@ export const CasesTable: React.FC<CasesTableProps> = ({
                 </Button>
               </>
             )}
-            
-            <Button
-              variant={viewAll ? "default" : "secondary"}
-              size="sm"
-              onClick={handleViewAllToggle}
-              className="h-11 sm:h-9 px-4"
-            >
-              {viewAll ? 'Show Paginated' : 'View All'}
-            </Button>
           </div>
         </div>
       )}
