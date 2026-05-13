@@ -440,59 +440,76 @@ export const CasesTable: React.FC<CasesTableProps> = ({
         </TableBody>
       </Table>
       
-      {totalPages > 1 && (
+      {(totalPages > 1 || viewAll) && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-200">
           <div className="text-sm text-muted-foreground text-center sm:text-left">
-            Page {page} of {totalPages} <span className="hidden sm:inline">(Total: {totalCount} cases)</span>
+            {viewAll ? (
+              <span>Showing all {totalCount} cases</span>
+            ) : (
+              <span>Page {page} of {totalPages} <span className="hidden sm:inline">(Total: {totalCount} cases)</span></span>
+            )}
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => p - 1)}
-              disabled={page === 1}
-              className="h-11 sm:h-9 px-4"
-            >
-              <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
-              <span className="ml-1">Prev</span>
-            </Button>
-            
-            <div className="hidden sm:flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (page <= 3) {
-                  pageNum = i + 1;
-                } else if (page >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = page - 2 + i;
-                }
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {!viewAll && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 1}
+                  className="h-11 sm:h-9 px-4"
+                >
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <span className="ml-1">Prev</span>
+                </Button>
                 
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={page === pageNum ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPage(pageNum)}
-                    className="min-w-[36px] h-9"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-            </div>
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={page === pageNum ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setPage(pageNum)}
+                        className="min-w-[36px] h-9"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page === totalPages}
+                  className="h-11 sm:h-9 px-4"
+                >
+                  <span className="mr-1">Next</span>
+                  <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                </Button>
+              </>
+            )}
             
             <Button
-              variant="outline"
+              variant={viewAll ? "default" : "secondary"}
               size="sm"
-              onClick={() => setPage(p => p + 1)}
-              disabled={page === totalPages}
+              onClick={handleViewAllToggle}
               className="h-11 sm:h-9 px-4"
             >
-              <span className="mr-1">Next</span>
-              <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+              {viewAll ? 'Show Paginated' : 'View All'}
             </Button>
           </div>
         </div>
