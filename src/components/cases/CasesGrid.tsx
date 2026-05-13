@@ -168,7 +168,7 @@ export const CasesGrid: React.FC<CasesGridProps> = ({
 
   const cases = queryResult?.cases || [];
   const totalCount = queryResult?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = viewAll ? 1 : Math.ceil(totalCount / pageSize);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
