@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { fetchLegalkartCaseId } from '@/components/cases/ecourts_api/utils';
+import { resolveEcourtsSearchType } from '@/lib/ecourtsSearchType';
 
 type EcourtsFunctionResponse<T = unknown> = {
   success?: boolean;
@@ -170,7 +171,7 @@ export const useEcourtsCaseDetails = (caseId: string) => {
     mutationFn: async () => {
       const { data: caseData, error: caseError } = await supabase
         .from('cases')
-        .select('cnr_number, firm_id')
+        .select('cnr_number, firm_id, court_type')
         .eq('id', caseId)
         .single();
       
@@ -179,11 +180,17 @@ export const useEcourtsCaseDetails = (caseId: string) => {
         throw new Error('CNR number is required to refresh case.');
       }
 
+      const searchType = resolveEcourtsSearchType({ 
+        cnr: caseData.cnr_number, 
+        courtType: caseData.court_type 
+      });
+
       // Step 1: Trigger Scraper (POST)
       const refreshResult = await invokeEcourtsDirect({
         action: 'search',
         cnr: caseData.cnr_number,
         firmId: caseData.firm_id,
+        searchType,
       });
 
       if (!refreshResult.success) {
@@ -207,6 +214,7 @@ export const useEcourtsCaseDetails = (caseId: string) => {
         cnr: caseData.cnr_number,
         caseId,
         firmId: caseData.firm_id,
+        searchType,
       });
 
       if (detailResult.success) {

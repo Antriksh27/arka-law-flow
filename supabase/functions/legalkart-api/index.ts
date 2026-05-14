@@ -34,7 +34,7 @@ async function fetchWithTimeout(
 
 const caseSearchSchema = z.object({
   cnr: z.string().trim().max(50).transform(normalizeCnr).optional(),
-  searchType: searchTypeEnum,
+  searchType: searchTypeEnum.optional(),
   caseId: z.string().uuid().optional(),
   // Gujarat HC REGISTRATION mode fields
   caseMode: z.enum(['CNR Number', 'REGISTRATION', 'FILING']).optional(),
@@ -985,9 +985,23 @@ serve(async (req) => {
       
       // Hard guard: all High Court traffic routes through Gujarat HC search type.
       const isCnrMode = !validatedData.caseMode || validatedData.caseMode === 'CNR Number';
-      const normalizedRequestedType = validatedData.searchType === 'high_court'
+      
+      // Auto-detect searchType from CNR if missing
+      let initialSearchType = validatedData.searchType;
+      if (!initialSearchType && normalizedCnr && isCnrMode) {
+        if (normalizedCnr.startsWith('SCIN')) {
+          initialSearchType = 'supreme_court';
+        } else if (isAnyHighCourtCNR(normalizedCnr)) {
+          initialSearchType = 'gujarat_high_court';
+        } else {
+          initialSearchType = 'district_court';
+        }
+      }
+      
+      const normalizedRequestedType = initialSearchType === 'high_court'
         ? 'gujarat_high_court'
-        : validatedData.searchType;
+        : (initialSearchType || 'district_court');
+
       const resolvedSearchType = (isCnrMode && normalizedCnr && isAnyHighCourtCNR(normalizedCnr))
         ? 'gujarat_high_court'
         : normalizedRequestedType;
