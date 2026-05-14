@@ -134,6 +134,24 @@ export const PrintView = React.forwardRef<HTMLDivElement, PrintViewProps>(
                             : '-'}
                         </div>
                       </div>
+
+                      {/* Drive Link row */}
+                      <div className="flex w-full border-l border-r border-b border-gray-400 text-[9px]">
+                        <div className="border-r border-gray-400 px-2 py-1.5 font-medium w-[40px]">Drive</div>
+                        <div className="px-2 py-1.5 flex-1 overflow-hidden truncate">
+                          {hearing.drive_link ? (
+                            <a 
+                              href={hearing.drive_link.startsWith('http') ? hearing.drive_link : `https://${hearing.drive_link}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline"
+                              style={{ color: '#2563eb', textDecoration: 'underline' }}
+                            >
+                              {hearing.drive_link}
+                            </a>
+                          ) : '-'}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

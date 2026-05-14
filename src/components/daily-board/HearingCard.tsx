@@ -113,6 +113,17 @@ export const HearingCard: React.FC<HearingCardProps> = ({ hearing }) => {
               : '-'}
           </span>
         </div>
+
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Drive Link</p>
+          <InlineEditField
+            id={hearing.case_id}
+            table="cases"
+            field="drive_link"
+            currentValue={hearing.drive_link}
+            placeholder="Add folder or file link"
+          />
+        </div>
       </div>
     </div>
   );

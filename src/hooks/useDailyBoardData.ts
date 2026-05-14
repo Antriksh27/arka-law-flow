@@ -71,7 +71,7 @@ export const useDailyBoardData = (
           .in('case_id', caseIds),
         supabase
           .from('cases')
-          .select('id, acts, bench_type')
+          .select('id, acts, bench_type, drive_link')
           .in('id', caseIds)
       ]);
       
@@ -82,9 +82,11 @@ export const useDailyBoardData = (
       // Create lookups by case ID
       const actsByCase: Record<string, string[] | null> = {};
       const benchTypeByCase: Record<string, string | null> = {};
+      const driveLinkByCase: Record<string, string | null> = {};
       (casesData || []).forEach(c => {
         actsByCase[c.id] = c.acts;
         benchTypeByCase[c.id] = c.bench_type;
+        driveLinkByCase[c.id] = c.drive_link;
       });
       
       // Merge formatted data into hearings
@@ -93,6 +95,7 @@ export const useDailyBoardData = (
         formatted_aorp: aorpByCase[h.case_id] || '-',
         formatted_aorr: aorrByCase[h.case_id] || '-',
         acts: actsByCase[h.case_id] || null,
+        drive_link: driveLinkByCase[h.case_id] || null,
         case_bench_type: benchTypeByCase[h.case_id] || null,
       }));
     },

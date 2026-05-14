@@ -324,13 +324,26 @@ export const JudgeSection: React.FC<JudgeSectionProps> = ({
                   </TableCell>
                 </TableRow>
                 
-                {/* Acts row */}
                 <TableRow className="border-b border-gray-400 bg-gray-50">
                   <TableCell className="border-r border-gray-400 font-medium text-sm py-1">Acts</TableCell>
                   <TableCell colSpan={5} className="py-1 text-sm">
                     {hearing.acts && hearing.acts.length > 0 
                       ? hearing.acts.join(', ') 
                       : '-'}
+                  </TableCell>
+                </TableRow>
+                
+                {/* Drive Link row */}
+                <TableRow className="border-b border-gray-400">
+                  <TableCell className="border-r border-gray-400 font-medium text-sm py-1">Drive Link</TableCell>
+                  <TableCell colSpan={5} className="py-1">
+                    <InlineEditField
+                      id={hearing.case_id}
+                      table="cases"
+                      field="drive_link"
+                      currentValue={hearing.drive_link}
+                      placeholder="Add folder or file link"
+                    />
                   </TableCell>
                 </TableRow>
               </React.Fragment>

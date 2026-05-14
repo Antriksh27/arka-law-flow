@@ -27,6 +27,7 @@ export interface DailyHearing {
   case_court_name: string | null;
   advocate_name: string | null;
   acts: string[] | null;
+  drive_link: string | null;
   
   assigned_lawyer_name: string | null;
   assigned_lawyer_user_id: string | null;
