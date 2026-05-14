@@ -79,6 +79,7 @@ export function GenerateEngagementLetterDialog({
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [caseSearch, setCaseSearch] = useState('');
   const [lawyerSearch, setLawyerSearch] = useState('');
+  const [matterAmount, setMatterAmount] = useState('');
 
   // Fetch client details
   const { data: clientData } = useQuery({
@@ -178,6 +179,7 @@ export function GenerateEngagementLetterDialog({
       setPdfBlob(null);
       setCaseSearch('');
       setLawyerSearch('');
+      setMatterAmount('');
     }
   }, [open]);
 
@@ -193,7 +195,8 @@ export function GenerateEngagementLetterDialog({
       lawyerPhone: lawyerData?.phone || '',
       lawyerEmail: selectedLawyer.email,
       firmName: firmData.name,
-      firmAddress: firmData.address || ''
+      firmAddress: firmData.address || '',
+      matterAmount: matterAmount
     });
     
     setGeneratedHTML(letterHTML);
@@ -301,6 +304,7 @@ export function GenerateEngagementLetterDialog({
         lawyerEmail: selectedLawyer.email,
         firmName: firmData.name,
         firmAddress: firmData.address || '',
+        matterAmount,
       });
       toast({ title: 'DOCX Downloaded', description: 'The engagement letter has been saved as a Word document.' });
     } catch (error) {
@@ -487,6 +491,24 @@ export function GenerateEngagementLetterDialog({
           </div>
           <p className="text-xs text-muted-foreground mt-2 px-1">
             This will appear in the engagement letter as the scope of work.
+          </p>
+        </div>
+
+        {/* Matter Amount */}
+        <div className="mb-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-1">
+            Amount (Optional)
+          </p>
+          <div className="bg-card rounded-2xl overflow-hidden shadow-sm p-4">
+            <Input
+              value={matterAmount}
+              onChange={e => setMatterAmount(e.target.value)}
+              placeholder="e.g. ₹50,000"
+              className="h-10 rounded-xl border-0 bg-transparent p-0 focus-visible:ring-0 text-foreground placeholder:text-muted-foreground font-semibold"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 px-1">
+            This will be included in the Fees and Billing section.
           </p>
         </div>
 
@@ -790,6 +812,23 @@ export function GenerateEngagementLetterDialog({
                     />
                     <p className="text-xs text-[#6B7280]">
                       This will appear in the engagement letter as the scope of work.
+                    </p>
+                  </div>
+
+                  {/* Matter Amount Card */}
+                  <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+                    <h3 className="text-sm font-medium text-[#6B7280] uppercase tracking-wide">Amount (Optional)</h3>
+                    <div className="space-y-1.5">
+                      <Input
+                        id="matter-amount"
+                        value={matterAmount}
+                        onChange={e => setMatterAmount(e.target.value)}
+                        placeholder="e.g. ₹50,000"
+                        className="border-[#E5E7EB]"
+                      />
+                    </div>
+                    <p className="text-xs text-[#6B7280]">
+                      This will be included in the Fees and Billing section.
                     </p>
                   </div>
                 </div>

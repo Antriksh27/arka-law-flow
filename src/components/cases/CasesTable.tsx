@@ -20,10 +20,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Trash2, Loader2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TimeUtils } from '@/lib/timeUtils';
 import { bg, border, text, status } from '@/lib/colors';
+import html2pdf from 'html2pdf.js';
+import { CaseReportPrintView } from './CaseReportPrintView';
+import { FileText } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface CasesTableProps {
   searchQuery: string;
@@ -42,7 +53,7 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   searchFields = []
 }) => {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, firmId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCases, setSelectedCases] = useState<Set<string>>(new Set());
@@ -51,6 +62,128 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   const [pageSize, setPageSize] = useState<number | 'all'>(25);
   const [sortField, setSortField] = useState<'created_at' | 'reference_number' | 'case_title'>('reference_number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  const printViewRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [allCasesForReport, setAllCasesForReport] = useState<any[]>([]);
+
+  const handleExportPDF = async () => {
+    setIsGeneratingPDF(true);
+    toast({
+      title: "Generating PDF Report",
+      description: "Preparing all filtered cases. This may take a moment...",
+    });
+
+    try {
+      // Re-fetch all cases matching filters without pagination for the report
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('role, firm_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const isAdminOrLawyer = teamMember?.role === 'admin' || 
+                              teamMember?.role === 'lawyer' || 
+                              teamMember?.role === 'office_staff';
+
+      let query = supabase.from('cases').select(`
+        *,
+        clients!client_id(full_name)
+      `);
+
+      if (firmId) {
+        query = query.eq('firm_id', firmId);
+      }
+
+      if (!isAdminOrLawyer || showOnlyMyCases) {
+        query = query.contains('assigned_users', [user.id]);
+      }
+
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      if (typeFilter !== 'all') {
+        query = query.eq('case_type', typeFilter);
+      }
+
+      if (assignedFilter !== 'all') {
+        if (assignedFilter === 'unassigned') {
+          query = query.is('assigned_users', null);
+        } else if (assignedFilter === 'me') {
+          query = query.contains('assigned_users', [user.id]);
+        } else {
+          query = query.contains('assigned_users', [assignedFilter]);
+        }
+      }
+
+      if (searchQuery) {
+        const searchTerm = searchQuery.trim();
+        const rangeMatch = searchTerm.match(/^(\d+)-(\d+)$/);
+        
+        if (rangeMatch) {
+          const [, start, end] = rangeMatch;
+          query = query.gte('reference_number', start).lte('reference_number', end);
+        } else {
+          const allFields = ['case_title','petitioner','respondent','case_number','cnr_number','filing_number','reference_number','registration_number'];
+          const fields = searchFields && searchFields.length > 0 ? searchFields : allFields;
+          const orClause = fields.map((f) => `${f}.ilike.%${searchTerm}%`).join(',');
+          query = query.or(orClause);
+        }
+      }
+
+      const { data: allFilteredData, error: fetchError } = await query.order(sortField, { ascending: sortOrder === 'asc' });
+
+      if (fetchError) throw fetchError;
+
+      setAllCasesForReport(allFilteredData || []);
+
+      // Wait for state to update and print view to be ready
+      setTimeout(async () => {
+        if (!printViewRef.current) return;
+        
+        printViewRef.current.classList.remove('hidden');
+        printViewRef.current.classList.add('block');
+
+        const options = {
+          margin: [10, 10, 10, 10],
+          filename: `Case_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            letterRendering: true,
+            logging: false
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
+
+        await html2pdf().set(options).from(printViewRef.current).save();
+        
+        printViewRef.current.classList.add('hidden');
+        printViewRef.current.classList.remove('block');
+        
+        toast({
+          title: "Success",
+          description: "PDF report generated successfully",
+        });
+        setIsGeneratingPDF(false);
+      }, 500);
+
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast({
+        title: "Export failed",
+        description: (error as any)?.message || "Could not generate PDF report",
+        variant: "destructive"
+      });
+      setIsGeneratingPDF(false);
+    }
+  };
   
   const {
     data: queryResult,
@@ -125,10 +258,21 @@ export const CasesTable: React.FC<CasesTableProps> = ({
       // Apply search filter - across selected fields (or all if none chosen)
       if (searchQuery) {
         const searchTerm = searchQuery.trim();
-        const allFields = ['case_title','petitioner','respondent','case_number','cnr_number','filing_number','reference_number','registration_number'];
-        const fields = searchFields && searchFields.length > 0 ? searchFields : allFields;
-        const orClause = fields.map((f) => `${f}.ilike.%${searchTerm}%`).join(',');
-        query = query.or(orClause);
+        
+        // Check for range pattern like "62-93"
+        const rangeMatch = searchTerm.match(/^(\d+)-(\d+)$/);
+        
+        if (rangeMatch) {
+          const [, start, end] = rangeMatch;
+          // Apply range filter to reference_number
+          query = query.gte('reference_number', start).lte('reference_number', end);
+        } else {
+          // Regular search
+          const allFields = ['case_title','petitioner','respondent','case_number','cnr_number','filing_number','reference_number','registration_number'];
+          const fields = searchFields && searchFields.length > 0 ? searchFields : allFields;
+          const orClause = fields.map((f) => `${f}.ilike.%${searchTerm}%`).join(',');
+          query = query.or(orClause);
+        }
       }
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as any);
@@ -313,6 +457,70 @@ export const CasesTable: React.FC<CasesTableProps> = ({
   return (
     <>
       <div className={`bg-white rounded-2xl shadow-sm border ${border.default}`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-3 border-b border-gray-100">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={isGeneratingPDF || isLoading}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
+              {isGeneratingPDF ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <FileText className="h-4 w-4 mr-2 text-rose-500" />
+              )}
+              Export PDF
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Page Size:</span>
+              <Select value={pageSize.toString()} onValueChange={(v) => {
+                setPageSize(v === 'all' ? 'all' : parseInt(v));
+                setPage(1);
+              }}>
+                <SelectTrigger className="w-20 h-8 text-xs border-gray-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sizeOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value.toString()}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1 || isAll}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-sm font-medium px-2">
+                {isAll ? '1 / 1' : `${page} / ${totalPages}`}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || isAll}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {selectedCases.size > 0 && (
           <div className={`flex items-center justify-between p-4 border-b ${border.default} ${bg.page}`}>
             <div className="text-sm text-muted-foreground">
@@ -550,6 +758,16 @@ export const CasesTable: React.FC<CasesTableProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <CaseReportPrintView 
+        ref={printViewRef}
+        cases={allCasesForReport}
+        filters={{
+          searchQuery,
+          statusFilter,
+          typeFilter,
+          assignedFilter
+        }}
+      />
     </>
   );
 };

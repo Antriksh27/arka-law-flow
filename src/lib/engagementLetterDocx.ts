@@ -17,6 +17,7 @@ export interface EngagementLetterDocxData {
   clientName: string;
   clientAddress: string;
   matterDescription: string;
+  matterAmount?: string;
   lawyerName: string;
   lawyerPhone: string;
   lawyerEmail: string;
@@ -195,7 +196,7 @@ export async function downloadEngagementLetterDocx(data: EngagementLetterDocxDat
             spacing: { before: 300, after: 150 },
             children: [new TextRun({ text: '2. Fees and Billing', bold: true })],
           }),
-          ...createFeeBullets(),
+          ...createFeeBullets(data.matterAmount),
 
           // Section 3 - Client Responsibilities
           new Paragraph({
@@ -347,8 +348,39 @@ function createScopeBullets(): Paragraph[] {
   return bullets;
 }
 
-function createFeeBullets(): Paragraph[] {
+function createFeeBullets(matterAmount?: string): Paragraph[] {
+  const bullets: Paragraph[] = [];
+
+  if (matterAmount) {
+    bullets.push(
+      new Paragraph({
+        numbering: { reference: 'fee-bullets', level: 0 },
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { after: 150 },
+        children: [
+          new TextRun({ text: 'The professional fees for the said matter shall be ' }),
+          new TextRun({ text: matterAmount, bold: true }),
+          new TextRun({ text: '.' }),
+        ],
+      })
+    );
+  }
+
+  bullets.push(
+    new Paragraph({
+      numbering: { reference: 'fee-bullets', level: 0 },
+      alignment: AlignmentType.JUSTIFIED,
+      spacing: { after: 100 },
+      children: [
+        new TextRun({
+          text: 'The fee structure module that our law firm adopts varied fee structure to suit the need of every client and the same is subjective:',
+        }),
+      ],
+    })
+  );
+
   return [
+    ...bullets,
     new Paragraph({
       numbering: { reference: 'fee-bullets', level: 0 },
       alignment: AlignmentType.JUSTIFIED,

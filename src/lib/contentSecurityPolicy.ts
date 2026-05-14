@@ -6,18 +6,21 @@ export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
-    "'unsafe-inline'", // Required for Vite dev mode
+    "'unsafe-inline'",
+    "'unsafe-eval'", // Required for some development tools and modules
     "https://hpcnipcbymruvsnqrmjx.supabase.co",
-    "https://*.supabase.co"
+    "https://*.supabase.co",
+    "https://cdn.gpteng.co" // GPT Engineer scripts
   ],
   'style-src': [
     "'self'",
-    "'unsafe-inline'", // Required for CSS-in-JS and Tailwind
+    "'unsafe-inline'",
     "https://fonts.googleapis.com"
   ],
   'font-src': [
     "'self'",
-    "https://fonts.gstatic.com"
+    "https://fonts.gstatic.com",
+    "data:"
   ],
   'img-src': [
     "'self'",
@@ -25,7 +28,8 @@ export const CSP_DIRECTIVES = {
     "blob:",
     "https://hpcnipcbymruvsnqrmjx.supabase.co",
     "https://*.supabase.co",
-    "https://*.cometchat.io"
+    "https://*.cometchat.io",
+    "https://storage.googleapis.com" // Google Storage for assets
   ],
   'connect-src': [
     "'self'",
@@ -37,6 +41,8 @@ export const CSP_DIRECTIVES = {
     "https://www.googleapis.com",
     "https://*.cometchat.io",
     "wss://*.cometchat.io",
+    "https://*.cometchat.cloud", // CometChat Cloud
+    "wss://*.cometchat.cloud",
     "https://*.stream-io-api.com",
     "wss://*.stream-io-api.com",
     "https://api.knock.app",

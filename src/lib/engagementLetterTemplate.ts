@@ -5,6 +5,7 @@ export interface EngagementLetterData {
   clientName: string;
   clientAddress: string;
   matterDescription: string;
+  matterAmount?: string;
   lawyerName: string;
   lawyerPhone: string;
   lawyerEmail: string;
@@ -222,6 +223,14 @@ export function generateEngagementLetter(data: EngagementLetterData): string {
 
         <div class="section-title">2. Fees and Billing</div>
         <div class="custom-list">
+          ${data.matterAmount ? `
+          <div class="custom-list-item">
+            <div class="custom-list-marker">•</div>
+            <div class="custom-list-content">
+              The professional fees for the said matter shall be <strong>${data.matterAmount}</strong>.
+            </div>
+          </div>
+          ` : ''}
           <div class="custom-list-item">
             <div class="custom-list-marker">•</div>
             <div class="custom-list-content">

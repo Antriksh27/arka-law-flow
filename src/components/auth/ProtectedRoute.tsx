@@ -11,10 +11,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-legal-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-legal-blue flex flex-col items-center justify-center p-4">
+        <div className="text-center animate-fade-in">
+          <div className="relative mb-6">
+            <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-full bg-primary/10"></div>
+            </div>
+          </div>
+          <h2 className="text-white text-xl font-medium mb-2 tracking-tight">HRU Legal</h2>
+          <p className="text-gray-400 text-sm animate-pulse">Initializing secure workspace...</p>
         </div>
       </div>
     );
