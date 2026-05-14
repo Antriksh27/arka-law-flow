@@ -482,5 +482,19 @@ iframe[src*="gptengineer.js"] {
   pointer-events: none !important;
   z-index: -9999 !important;
   width: 0 !important;
-  height: 0 !important;
+}
+
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0px rgba(255, 255, 255, 0);
+  }
+  50% {
+    transform: scale(1.01);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+}
+
+.animate-breathing {
+  animation: breathing 4s ease-in-out infinite;
 }

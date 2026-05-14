@@ -1,14 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import TimeUtils from '@/lib/timeUtils';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { 
+  Clock, 
+  Users, 
+  CheckCircle2, 
+  AlertCircle, 
+  Loader2, 
+  UserCheck, 
+  CheckCircle,
+  AlertTriangle 
+} from 'lucide-react';
 import { format } from 'date-fns';
 
 const ReceptionDisplayBoard = () => {
   const { firmId } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
@@ -25,10 +38,10 @@ const ReceptionDisplayBoard = () => {
       // Phase 1 perf: explicit columns + single batch client lookup (no N+1)
       const { data, error } = await (supabase
         .from('appointments') as any)
-        .select('id, client_id, title, status, appointment_date, appointment_time, daily_serial_number')
+        .select('id, client_id, title, status, appointment_date, appointment_time, daily_serial_number, lawyer_id, firm_id')
         .eq('firm_id', firmId)
         .eq('appointment_date', today)
-        .in('status', ['upcoming', 'arrived', 'in-progress', 'late', 'rescheduled'])
+        .in('status', ['upcoming', 'arrived', 'in-progress', 'late', 'rescheduled', 'completed'])
         .order('daily_serial_number', { ascending: true });
 
       if (error) throw error;
@@ -58,7 +71,137 @@ const ReceptionDisplayBoard = () => {
     },
     enabled: !!firmId,
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000, // Phase 1 perf: 5s -> 60s (was ~17k req/day per kiosk)
+    refetchInterval: 60 * 1000, 
+  });
+
+  // Mark arrived mutation with notification (shared logic from ReceptionAppointments)
+  const markArrivedMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'arrived' })
+        .eq('id', appointmentId);
+      
+      if (error) throw error;
+
+      // Fetch fresh appointment data for notification
+      const { data: appointment, error: fetchError } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', appointmentId)
+        .single();
+
+      if (fetchError || !appointment) return;
+
+      let clientName = 'A client';
+      if (appointment.client_id) {
+        const { data: client } = await supabase
+          .from('clients')
+          .select('full_name')
+          .eq('id', appointment.client_id)
+          .single();
+        clientName = client?.full_name || 'A client';
+      } else if (appointment.title?.startsWith('Appointment with ')) {
+        clientName = appointment.title.replace('Appointment with ', '');
+      }
+
+      const lawyerIds: string[] = [];
+      if (appointment.lawyer_id) lawyerIds.push(appointment.lawyer_id);
+
+      if (lawyerIds.length > 0) {
+        const timeFormatted = appointment.appointment_time?.slice(0, 5) || 'scheduled time';
+        try {
+          await supabase.functions.invoke('send-smart-notification', {
+            body: {
+              event_type: 'appointment',
+              recipients: 'custom',
+              recipient_ids: lawyerIds,
+              reference_id: appointmentId,
+              firm_id: appointment.firm_id,
+              title: 'Client Has Arrived',
+              message: `${clientName} has arrived for their ${timeFormatted} appointment`,
+              category: 'appointment',
+              priority: 'high',
+              action_url: `/appointments?id=${appointmentId}`,
+              metadata: {
+                module: 'appointments',
+                appointmentId: appointmentId,
+                event: 'client_arrived',
+                client_name: clientName,
+                appointment_time: appointment.appointment_time,
+                token_number: (appointment as any).daily_serial_number
+              }
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send arrival notification:', notifError);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['display-board-appointments'] });
+      toast({
+        title: "Success",
+        description: "Client marked as arrived! Lawyers have been notified.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark client as arrived.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mark late mutation
+  const markLateMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'late' })
+        .eq('id', appointmentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['display-board-appointments'] });
+      toast({
+        title: "Marked as Late",
+        description: "Client has been marked as late.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark client as late.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mark completed mutation
+  const markCompletedMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'completed' })
+        .eq('id', appointmentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['display-board-appointments'] });
+      toast({
+        title: "Completed",
+        description: "Appointment marked as completed.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to mark as completed.",
+        variant: "destructive",
+      });
+    },
   });
 
   const getStatusConfig = (status: string) => {
@@ -97,6 +240,13 @@ const ReceptionDisplayBoard = () => {
           text: 'text-white', 
           label: 'RESCHEDULED',
           icon: Clock
+        };
+      case 'completed':
+        return { 
+          bg: 'bg-gray-600', 
+          text: 'text-gray-300', 
+          label: 'COMPLETED',
+          icon: CheckCircle
         };
       default:
         return { 
@@ -176,9 +326,9 @@ const ReceptionDisplayBoard = () => {
                 key={appointment.id} 
                 className={`rounded-2xl p-6 transition-all duration-300 ${
                   appointment.status === 'arrived' 
-                    ? 'bg-green-600/30 border-2 border-green-400 animate-pulse' 
+                    ? 'bg-green-600/30 border-2 border-green-400 animate-breathing' 
                     : appointment.status === 'in-progress'
-                    ? 'bg-yellow-600/30 border-2 border-yellow-400'
+                    ? 'bg-yellow-600/30 border-2 border-yellow-400 animate-breathing' 
                     : 'bg-white/10 backdrop-blur border border-white/20'
                 }`}
               >
@@ -210,6 +360,48 @@ const ReceptionDisplayBoard = () => {
                   <span className="text-xl font-medium">
                     {appointment.appointment_time?.slice(0, 5) || 'Time not set'}
                   </span>
+                </div>
+
+                {/* Actions */}
+                <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-white/10">
+                  {(appointment.status === 'upcoming' || appointment.status === 'late' || appointment.status === 'rescheduled') && (
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="bg-green-600/20 text-green-400 border-green-600/30 hover:bg-green-600 hover:text-white transition-all flex-1"
+                      onClick={() => markArrivedMutation.mutate(appointment.id)}
+                      disabled={markArrivedMutation.isPending}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Arrived
+                    </Button>
+                  )}
+                  
+                  {(appointment.status === 'upcoming' || appointment.status === 'rescheduled') && (
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="bg-orange-600/20 text-orange-400 border-orange-600/30 hover:bg-orange-600 hover:text-white transition-all flex-1"
+                      onClick={() => markLateMutation.mutate(appointment.id)}
+                      disabled={markLateMutation.isPending}
+                    >
+                      <AlertTriangle className="w-4 h-4 mr-2" />
+                      Late
+                    </Button>
+                  )}
+
+                  {(appointment.status === 'arrived' || appointment.status === 'in-progress') && (
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600 hover:text-white transition-all w-full"
+                      onClick={() => markCompletedMutation.mutate(appointment.id)}
+                      disabled={markCompletedMutation.isPending}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Complete
+                    </Button>
+                  )}
                 </div>
               </div>
             );
