@@ -15,9 +15,10 @@ interface DeleteContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contact: any;
+  onSuccess?: () => void;
 }
 
-export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteContactDialogProps) => {
+export const DeleteContactDialog = ({ open, onOpenChange, contact, onSuccess }: DeleteContactDialogProps) => {
   const { closeDialog } = useDialog();
   const isInsideDialog = useContext(DialogContentContext);
   const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
@@ -67,6 +68,7 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
       });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       handleClose();
+      onSuccess?.();
     },
     onError: (error: any) => {
       console.error('Error deleting contact:', error);

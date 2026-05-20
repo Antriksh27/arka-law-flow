@@ -620,7 +620,11 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
           <Button
             type="button"
             variant="destructive"
-            onClick={() => setIsDeleteDialogOpen(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              toast({ title: "Delete clicked!" });
+              setIsDeleteDialogOpen(true);
+            }}
             className="flex-1 rounded-full h-12 font-semibold"
           >
             Delete
@@ -647,6 +651,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
           open={isDeleteDialogOpen} 
           onOpenChange={setIsDeleteDialogOpen} 
           contact={contact} 
+          onSuccess={handleClose}
         />
       </DialogContentContext.Provider>
     </div>
