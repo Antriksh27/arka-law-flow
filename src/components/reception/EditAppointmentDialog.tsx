@@ -312,7 +312,7 @@ const EditAppointmentDialog = ({ open, onOpenChange, appointment }: EditAppointm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0 overflow-hidden" hideCloseButton>
+      <DialogContent className="h-[95vh] sm:h-[90vh] sm:max-w-[800px] p-0 overflow-hidden flex flex-col" hideCloseButton>
         {fullFormView}
       </DialogContent>
     </Dialog>

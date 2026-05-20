@@ -40,6 +40,22 @@ const ReceptionSchedule = () => {
               .eq('id', appointment.client_id)
               .single();
             clientName = client?.full_name;
+          } else if (appointment.title?.startsWith('Appointment with ')) {
+            // If no client but title exists, try to find contact
+            const extractedName = appointment.title.replace('Appointment with ', '');
+            
+            const { data: contactData } = await supabase
+              .from('contacts')
+              .select('name')
+              .eq('firm_id', firmId)
+              .ilike('name', `%${extractedName.trim()}%`)
+              .limit(1);
+            
+            if (contactData && contactData.length > 0) {
+              clientName = contactData[0].name;
+            } else {
+              clientName = extractedName;
+            }
           }
 
           // Get lawyer name if lawyer_id exists
@@ -168,9 +184,11 @@ const ReceptionSchedule = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-[#6B7280]" />
-                            <span className="text-[#6B7280]">Client:</span>
+                            <span className="text-[#6B7280]">
+                              {appointment.client_id ? 'Client:' : 'Contact:'}
+                            </span>
                             <span className="font-medium text-[#111827]">
-                              {appointment.clients?.[0]?.full_name || 'No client assigned'}
+                              {appointment.clients?.[0]?.full_name || (appointment.client_id ? 'No client assigned' : 'No contact assigned')}
                             </span>
                           </div>
                           

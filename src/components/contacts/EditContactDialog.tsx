@@ -612,28 +612,26 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
         </div>
       </ScrollArea>
 
-      {/* Standardized Footer for Mobile/Side-panel */}
-      {(isMobile || isInsideDialog) && (
-        <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              form="edit-contact-form"
-              disabled={updateContactMutation.isPending}
-              className="flex-1 rounded-full h-12 bg-slate-900 text-white hover:bg-slate-800 shadow-lg font-semibold"
-            >
-              {updateContactMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Update Contact'
-              )}
-            </Button>
-          </div>
+      {/* Standardized Footer */}
+      <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
+        <div className="flex gap-3">
+          <Button
+            type="submit"
+            form="edit-contact-form"
+            disabled={updateContactMutation.isPending}
+            className="flex-1 rounded-full h-12 bg-slate-900 text-white hover:bg-slate-800 shadow-lg font-semibold"
+          >
+            {updateContactMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Contact'
+            )}
+          </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -643,7 +641,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl h-[95vh] sm:h-[85vh] sm:max-h-[85vh] overflow-hidden p-0 flex flex-col">
+      <DialogContent hideCloseButton className="h-[95vh] sm:h-[90vh] sm:max-w-[600px] p-0 gap-0 overflow-hidden rounded-3xl flex flex-col">
         {fullFormView}
       </DialogContent>
     </Dialog>

@@ -404,9 +404,11 @@ const ReceptionAppointments = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-[#6B7280]" />
-                          <span className="text-sm text-[#6B7280]">Client:</span>
+                          <span className="text-sm text-[#6B7280]">
+                            {appointment.client_id ? 'Client:' : 'Contact:'}
+                          </span>
                           <span className="text-sm font-medium text-[#111827]">
-                            {appointment.client_name || 'No client assigned'}
+                            {appointment.client_name || (appointment.client_id ? 'No client assigned' : 'No contact assigned')}
                           </span>
                         </div>
                         

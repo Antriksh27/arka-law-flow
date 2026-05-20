@@ -70,6 +70,22 @@ const ReceptionHome = () => {
               .eq('id', appointment.client_id)
               .single();
             clientName = client?.full_name;
+          } else if (appointment.title?.startsWith('Appointment with ')) {
+            // If no client but title exists, try to find contact
+            const extractedName = appointment.title.replace('Appointment with ', '');
+            
+            const { data: contactData } = await supabase
+              .from('contacts')
+              .select('name')
+              .eq('firm_id', firmId)
+              .ilike('name', `%${extractedName.trim()}%`)
+              .limit(1);
+            
+            if (contactData && contactData.length > 0) {
+              clientName = contactData[0].name;
+            } else {
+              clientName = extractedName;
+            }
           }
 
           // Get lawyer name if lawyer_id exists
@@ -196,7 +212,7 @@ const ReceptionHome = () => {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mb-1">
-                          {appointment.clients?.[0]?.full_name || 'Unknown Client'}
+                          {appointment.clients?.[0]?.full_name || (appointment.client_id ? 'Unknown Client' : 'Unknown Contact')}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {getAppointmentTypeIcon(appointment.type)}
@@ -386,12 +402,12 @@ const ReceptionHome = () => {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3 text-[#6B7280]" />
-                            <span className="text-xs text-[#111827]">
-                              {appointment.clients?.[0]?.full_name || 'Unknown Client'}
-                            </span>
-                          </div>
+                           <div className="flex items-center gap-1">
+                             <User className="w-3 h-3 text-[#6B7280]" />
+                             <span className="text-xs text-[#111827]">
+                               {appointment.clients?.[0]?.full_name || (appointment.client_id ? 'Unknown Client' : 'Unknown Contact')}
+                             </span>
+                           </div>
                           <div className="flex items-center gap-1">
                             {getAppointmentTypeIcon(appointment.type)}
                             <span className="text-xs text-[#111827]">

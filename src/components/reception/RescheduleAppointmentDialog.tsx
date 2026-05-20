@@ -284,7 +284,7 @@ const RescheduleAppointmentDialog = ({ open, onOpenChange, appointment }: Resche
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-[500px] p-0 gap-0 overflow-hidden max-h-[95vh] sm:max-h-[90vh] rounded-3xl">
+      <DialogContent hideCloseButton className="h-[95vh] sm:h-[90vh] sm:max-w-[500px] p-0 gap-0 overflow-hidden rounded-3xl flex flex-col">
         {fullFormView}
       </DialogContent>
     </Dialog>
