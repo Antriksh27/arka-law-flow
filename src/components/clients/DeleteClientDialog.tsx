@@ -176,11 +176,13 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         description: `${clientName} and all related data deleted successfully`
       });
       
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      queryClient.invalidateQueries({ queryKey: ['client-related-data'] });
+      // Remove cached data to force a completely fresh fetch
+      queryClient.removeQueries({ queryKey: ['clients'] });
+      queryClient.removeQueries({ queryKey: ['client-related-data'] });
       
-      handleClose();
+      // Call onSuccess first so the list refetches, then close the dialog
       onSuccess?.();
+      handleClose();
     },
     onError: (error: any) => {
       console.error('Error deleting client:', error);

@@ -72,9 +72,9 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact, onSuccess }: 
         title: "Success",
         description: `${contact.name} has been deleted successfully.`,
       });
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      handleClose();
+      queryClient.removeQueries({ queryKey: ['contacts'] });
       onSuccess?.();
+      handleClose();
     },
     onError: (error: any) => {
       console.error('Error deleting contact:', error);
