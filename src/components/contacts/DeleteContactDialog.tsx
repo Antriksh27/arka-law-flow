@@ -72,6 +72,7 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact, onSuccess }: 
     },
     onError: (error: any) => {
       console.error('Error deleting contact:', error);
+      alert("Delete failed: " + (error.message || error.toString()));
       toast({
         title: "Error",
         description: error.message || "Failed to delete contact. Please try again.",
