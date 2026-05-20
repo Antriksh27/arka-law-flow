@@ -227,19 +227,19 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden max-h-[90vh]">
-        <div className="flex flex-col h-full bg-slate-50">
+      <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
+        <div className="flex flex-col max-h-[90vh] h-full bg-slate-50">
           {/* Header */}
             <MobileDialogHeader
               title="Convert to Client"
               subtitle="Review and complete the information"
               onClose={handleClose}
-              icon={<UserPlus className="w-5 h-5 text-emerald-500" />}
+              icon={<UserPlus className="w-5 h-5 text-slate-700" />}
               showBorder
             />
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             <Form {...form}>
               <form id="convert-contact-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {/* Client Type Card */}
@@ -264,7 +264,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
                                 onClick={() => field.onChange(type)}
                                 className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                                   field.value === type
-                                    ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-200'
+                                    ? 'bg-slate-900 text-slate-50 ring-2 ring-slate-900'
                                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                               >
@@ -643,7 +643,7 @@ export const ConvertToClientDialog = ({ open, onOpenChange, contact }: ConvertTo
                 type="submit"
                 form="convert-contact-form"
                 disabled={convertMutation.isPending}
-                className="flex-1 rounded-full h-11 bg-emerald-600 hover:bg-emerald-700"
+                className="flex-1 rounded-full h-11"
               >
                 {convertMutation.isPending ? (
                   <>
