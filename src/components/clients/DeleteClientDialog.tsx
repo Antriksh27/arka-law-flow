@@ -1,7 +1,9 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, FileText, Calendar, Briefcase, ListTodo, File, Receipt } from 'lucide-react';
@@ -24,6 +26,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
   const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [password, setPassword] = useState('');
 
   // Fetch all related data
   const { data: relatedData, isLoading } = useQuery({
@@ -55,6 +58,28 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!clientId) throw new Error('No client ID');
+      if (relatedData?.cases && relatedData.cases.length > 0) {
+        throw new Error('Cannot delete client because there are linked cases. Please reassign or delete the cases first.');
+      }
+      if (!password) {
+        throw new Error('Password is required');
+      }
+
+      // Get current user email
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user?.email) {
+        throw new Error('Unable to verify user session');
+      }
+
+      // Verify password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password,
+      });
+
+      if (authError) {
+        throw new Error('Incorrect password');
+      }
 
       // Delete in the correct order (child records first)
       if (relatedData?.notes && relatedData.notes.length > 0) {
@@ -179,6 +204,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
   };
 
   const totalItems = (relatedData?.cases?.length || 0) + (relatedData?.appointments?.length || 0) + (relatedData?.notes?.length || 0) + (relatedData?.tasks?.length || 0) + (relatedData?.documents?.length || 0) + (relatedData?.invoices?.length || 0);
+  const hasLinkedCases = (relatedData?.cases?.length || 0) > 0;
 
   const dataCategories = [
     { key: 'cases', icon: Briefcase, label: 'Cases', color: 'blue', data: relatedData?.cases, titleField: 'case_title', subtitleField: 'case_number' },
@@ -209,17 +235,31 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
           ) : (
             <>
               {/* Warning Card */}
-              <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-red-800">This action cannot be undone</p>
-                    <p className="text-xs text-red-700 mt-1">
-                      The following data will be permanently deleted:
-                    </p>
+              {hasLinkedCases ? (
+                <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-red-800">Cannot Delete Client</p>
+                      <p className="text-xs text-red-700 mt-1">
+                        This client has {relatedData?.cases?.length} linked case{relatedData?.cases?.length !== 1 ? 's' : ''}. You must reassign or remove all cases from this client before they can be deleted.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-red-800">This action cannot be undone</p>
+                      <p className="text-xs text-red-700 mt-1">
+                        The following data will be permanently deleted:
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {totalItems === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-border/50">
@@ -280,6 +320,22 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
                   </div>
                 </div>
               )}
+
+              {!hasLinkedCases && (
+                <div className="space-y-3 mt-4">
+                  <Label htmlFor="password" className="text-sm font-bold text-slate-700">
+                    Confirm Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password to confirm"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-red-500"
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
@@ -297,7 +353,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         </Button>
         <Button 
           onClick={handleDelete}
-          disabled={isLoading || !clientId || deleteMutation.isPending}
+          disabled={isLoading || !clientId || deleteMutation.isPending || !password || hasLinkedCases}
           variant="destructive"
           className="flex-1 rounded-full h-12 font-bold shadow-lg"
         >

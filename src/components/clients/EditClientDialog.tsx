@@ -16,6 +16,7 @@ import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DeleteClientDialog } from './DeleteClientDialog';
 
 interface Client {
   id: string;
@@ -74,6 +75,7 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
   const [isVip, setIsVip] = useState<boolean>(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const {
     register,
@@ -518,6 +520,14 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
             <div className="pt-4 sticky bottom-0 bg-white border-t border-slate-100 px-6 pb-6 pt-4 mt-6 z-20 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
               <div className="flex gap-3">
                 <Button 
+                  type="button" 
+                  variant="destructive"
+                  className="flex-1 rounded-full h-12 shadow-lg font-semibold"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  Delete
+                </Button>
+                <Button 
                   type="submit" 
                   disabled={isSubmitting}
                   className="flex-1 rounded-full h-12 shadow-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold"
@@ -529,6 +539,16 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           </form>
         </div>
       </ScrollArea>
+      <DeleteClientDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        clientId={client?.id || null}
+        clientName={client?.full_name || ''}
+        onSuccess={() => {
+          setIsDeleteDialogOpen(false);
+          handleClose();
+        }}
+      />
     </div>
   );
 

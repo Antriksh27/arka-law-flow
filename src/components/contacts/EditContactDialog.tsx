@@ -17,6 +17,7 @@ import { useContext } from 'react';
 import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DeleteContactDialog } from './DeleteContactDialog';
 
 interface EditContactDialogProps {
   open: boolean;
@@ -55,6 +56,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { data: states = [] } = useQuery({
     queryKey: ['states'],
@@ -616,6 +618,14 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
       <div className="px-6 py-4 border-t border-slate-100 bg-white shadow-[0_-1px_3px_rgba(0,0,0,0.05)] sticky bottom-0 z-50">
         <div className="flex gap-3">
           <Button
+            type="button"
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="flex-1 rounded-full h-12 font-semibold"
+          >
+            Delete
+          </Button>
+          <Button
             type="submit"
             form="edit-contact-form"
             disabled={updateContactMutation.isPending}
@@ -632,6 +642,11 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
           </Button>
         </div>
       </div>
+      <DeleteContactDialog 
+        open={isDeleteDialogOpen} 
+        onOpenChange={setIsDeleteDialogOpen} 
+        contact={contact} 
+      />
     </div>
   );
 

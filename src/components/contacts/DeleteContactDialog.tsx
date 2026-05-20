@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Trash2, Building, Mail, Phone, AlertTriangle, Loader2 } from 'lucide-react';
 import { DialogContentContext, useDialog } from '@/hooks/use-dialog';
 import { MobileDialogHeader } from '@/components/ui/mobile-dialog-header';
@@ -21,11 +23,31 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
   const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [password, setPassword] = useState('');
 
   const deleteContactMutation = useMutation({
     mutationFn: async () => {
       if (!contact?.id) {
         throw new Error('Contact ID is required');
+      }
+      if (!password) {
+        throw new Error('Password is required');
+      }
+
+      // Get current user email
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user?.email) {
+        throw new Error('Unable to verify user session');
+      }
+
+      // Verify password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: password,
+      });
+
+      if (authError) {
+        throw new Error('Incorrect password');
       }
 
       const { error } = await supabase
@@ -50,7 +72,7 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
       console.error('Error deleting contact:', error);
       toast({
         title: "Error",
-        description: "Failed to delete contact. Please try again.",
+        description: error.message || "Failed to delete contact. Please try again.",
         variant: "destructive",
       });
     },
@@ -120,6 +142,20 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
               </div>
             </div>
           </div>
+
+          <div className="space-y-3 mt-4">
+            <Label htmlFor="password" className="text-sm font-bold text-slate-700">
+              Confirm Password
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Enter your password to confirm"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-red-500"
+            />
+          </div>
         </div>
       </ScrollArea>
 
@@ -137,7 +173,7 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact }: DeleteConta
           type="button"
           variant="destructive"
           onClick={() => deleteContactMutation.mutate()}
-          disabled={deleteContactMutation.isPending}
+          disabled={deleteContactMutation.isPending || !password}
           className="flex-1 rounded-full h-12 font-bold shadow-lg"
         >
           {deleteContactMutation.isPending ? (
