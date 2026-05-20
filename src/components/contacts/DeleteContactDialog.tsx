@@ -51,14 +51,20 @@ export const DeleteContactDialog = ({ open, onOpenChange, contact, onSuccess }: 
         throw new Error('Incorrect password');
       }
 
-      const { error } = await supabase
+      const { data: deletedContact, error } = await supabase
         .from('contacts')
         .delete()
-        .eq('id', contact.id);
+        .eq('id', contact.id)
+        .select('id')
+        .maybeSingle();
 
       if (error) {
         console.error('Error deleting contact:', error);
         throw error;
+      }
+
+      if (!deletedContact) {
+        throw new Error('Permission denied: Only Firm Admins and Reception Staff can delete contacts. The database has blocked this action.');
       }
     },
     onSuccess: () => {

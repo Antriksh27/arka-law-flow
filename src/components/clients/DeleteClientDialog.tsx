@@ -157,7 +157,7 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
       if (clientError) throw clientError;
       
       if (!deletedClient) {
-        throw new Error('Permission denied: Only Firm Admins can delete clients. If you are not an admin, the database will block this action.');
+        throw new Error('Permission denied: Only Firm Admins and Reception Staff can delete clients. The database has blocked this action.');
       }
 
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
