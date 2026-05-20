@@ -539,16 +539,18 @@ export const EditClientDialog: React.FC<EditClientDialogProps> = ({
           </form>
         </div>
       </ScrollArea>
-      <DeleteClientDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        clientId={client?.id || null}
-        clientName={client?.full_name || ''}
-        onSuccess={() => {
-          setIsDeleteDialogOpen(false);
-          handleClose();
-        }}
-      />
+      <DialogContentContext.Provider value={false}>
+        <DeleteClientDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          clientId={client?.id || null}
+          clientName={client?.full_name || ''}
+          onSuccess={() => {
+            setIsDeleteDialogOpen(false);
+            handleClose();
+          }}
+        />
+      </DialogContentContext.Provider>
     </div>
   );
 

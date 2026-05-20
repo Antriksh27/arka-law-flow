@@ -642,11 +642,13 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({ open, onOp
           </Button>
         </div>
       </div>
-      <DeleteContactDialog 
-        open={isDeleteDialogOpen} 
-        onOpenChange={setIsDeleteDialogOpen} 
-        contact={contact} 
-      />
+      <DialogContentContext.Provider value={false}>
+        <DeleteContactDialog 
+          open={isDeleteDialogOpen} 
+          onOpenChange={setIsDeleteDialogOpen} 
+          contact={contact} 
+        />
+      </DialogContentContext.Provider>
     </div>
   );
 
