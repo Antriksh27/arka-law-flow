@@ -148,11 +148,17 @@ export const DeleteClientDialog = ({ clientId, clientName, open, onOpenChange, o
         if (appointmentsError) throw appointmentsError;
       }
 
-      const { error: clientError } = await supabase
+      const { data: deletedClient, error: clientError } = await supabase
         .from('clients')
         .delete()
-        .eq('id', clientId);
+        .eq('id', clientId)
+        .select('id')
+        .maybeSingle();
       if (clientError) throw clientError;
+      
+      if (!deletedClient) {
+        throw new Error('Permission denied: Only Firm Admins can delete clients. If you are not an admin, the database will block this action.');
+      }
 
       await AuditLogger.logDataAccess('client', 'delete', clientId, {
         client_name: clientName,
