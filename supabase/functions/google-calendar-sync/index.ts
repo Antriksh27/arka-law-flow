@@ -31,6 +31,11 @@ interface GoogleCalendarEvent {
     displayName?: string
   }>
   location?: string
+  extendedProperties?: {
+    private?: {
+      appointmentId: string
+    }
+  }
 }
 
 interface AppointmentData {
@@ -349,11 +354,12 @@ async function createGoogleCalendarEvent(accessToken: string, calendarId: string
 }
 
 async function updateGoogleCalendarEvent(accessToken: string, calendarId: string, appointment: AppointmentData) {
-  // Search for existing event by title and date
   const event = buildGoogleCalendarEvent(appointment);
-  
+  let existingEvent = null;
+
+  // 1. Try to find the event using our unique appointmentId private extended property
   const searchResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?privateExtendedProperty=${encodeURIComponent(`appointmentId=${appointment.id}`)}`,
     {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -363,42 +369,64 @@ async function updateGoogleCalendarEvent(accessToken: string, calendarId: string
 
   if (searchResponse.ok) {
     const searchResults = await searchResponse.json();
-    const existingEvent = searchResults.items?.find((item: any) => 
-      item.summary === appointment.title &&
-      item.start?.dateTime?.includes(appointment.appointment_date)
+    existingEvent = searchResults.items?.find((item: any) => 
+      item.extendedProperties?.private?.appointmentId === appointment.id
+    );
+  }
+
+  // 2. Fallback: if not found (e.g. for events created before this change), try searching by title and date
+  if (!existingEvent) {
+    console.log(`Event not found by appointmentId extended property, trying fallback search by title and date...`);
+    const fallbackSearchResponse = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
     );
 
-    if (existingEvent) {
-      const updateResponse = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(event),
-        }
+    if (fallbackSearchResponse.ok) {
+      const searchResults = await fallbackSearchResponse.json();
+      existingEvent = searchResults.items?.find((item: any) => 
+        item.summary === appointment.title &&
+        item.start?.dateTime?.includes(appointment.appointment_date)
       );
-
-      if (!updateResponse.ok) {
-        const error = await updateResponse.text();
-        console.error('Failed to update Google Calendar event:', error);
-        throw new Error(`Failed to update Google Calendar event: ${error}`);
-      }
-
-      console.log('Updated Google Calendar event:', existingEvent.id);
-    } else {
-      // If not found, create new event
-      await createGoogleCalendarEvent(accessToken, calendarId, appointment);
     }
+  }
+
+  if (existingEvent) {
+    const updateResponse = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(event),
+      }
+    );
+
+    if (!updateResponse.ok) {
+      const error = await updateResponse.text();
+      console.error('Failed to update Google Calendar event:', error);
+      throw new Error(`Failed to update Google Calendar event: ${error}`);
+    }
+
+    console.log('Updated Google Calendar event:', existingEvent.id);
+  } else {
+    // If not found, create new event
+    await createGoogleCalendarEvent(accessToken, calendarId, appointment);
   }
 }
 
 async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string, appointment: AppointmentData) {
-  // Search for existing event by title and date
+  let existingEvent = null;
+
+  // 1. Try to find the event using our unique appointmentId private extended property
   const searchResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+    `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?privateExtendedProperty=${encodeURIComponent(`appointmentId=${appointment.id}`)}`,
     {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -408,30 +436,50 @@ async function deleteGoogleCalendarEvent(accessToken: string, calendarId: string
 
   if (searchResponse.ok) {
     const searchResults = await searchResponse.json();
-    const existingEvent = searchResults.items?.find((item: any) => 
-      item.summary === appointment.title &&
-      item.start?.dateTime?.includes(appointment.appointment_date)
+    existingEvent = searchResults.items?.find((item: any) => 
+      item.extendedProperties?.private?.appointmentId === appointment.id
+    );
+  }
+
+  // 2. Fallback: if not found, try searching by title and date
+  if (!existingEvent) {
+    console.log(`Event not found by appointmentId extended property for deletion, trying fallback search...`);
+    const fallbackSearchResponse = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?q=${encodeURIComponent(appointment.title)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
     );
 
-    if (existingEvent) {
-      const deleteResponse = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
+    if (fallbackSearchResponse.ok) {
+      const searchResults = await fallbackSearchResponse.json();
+      existingEvent = searchResults.items?.find((item: any) => 
+        item.summary === appointment.title &&
+        item.start?.dateTime?.includes(appointment.appointment_date)
       );
-
-      if (!deleteResponse.ok) {
-        const error = await deleteResponse.text();
-        console.error('Failed to delete Google Calendar event:', error);
-        throw new Error(`Failed to delete Google Calendar event: ${error}`);
-      }
-
-      console.log('Deleted Google Calendar event:', existingEvent.id);
     }
+  }
+
+  if (existingEvent) {
+    const deleteResponse = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${existingEvent.id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!deleteResponse.ok) {
+      const error = await deleteResponse.text();
+      console.error('Failed to delete Google Calendar event:', error);
+      throw new Error(`Failed to delete Google Calendar event: ${error}`);
+    }
+
+    console.log('Deleted Google Calendar event:', existingEvent.id);
   }
 }
 
@@ -470,7 +518,12 @@ function buildGoogleCalendarEvent(appointment: AppointmentData): GoogleCalendarE
     location: appointment.location || '',
     attendees: appointment.client_name ? [{
       displayName: appointment.client_name
-    }] : undefined
+    }] : undefined,
+    extendedProperties: {
+      private: {
+        appointmentId: appointment.id
+      }
+    }
   };
 }
 
