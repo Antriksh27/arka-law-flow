@@ -31,7 +31,8 @@ export const MobileNotesView: React.FC<MobileNotesViewProps> = ({
         .select(`
           *,
           profiles!notes_v2_created_by_fkey(full_name),
-          cases(case_title)
+          cases(case_title),
+          clients(full_name)
         `)
         .order('is_pinned', { ascending: false })
         .order('updated_at', { ascending: false });

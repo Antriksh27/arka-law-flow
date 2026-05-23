@@ -348,7 +348,7 @@ export const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = (
   };
 
   const formContent = (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-[95vh] sm:h-[85vh] bg-slate-50">
       <MobileDialogHeader
         title="New Appointment"
         subtitle="Schedule a consultation with a client"

@@ -75,6 +75,12 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
 
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.data.user.id)
+        .single();
+
       const clientIdToUse = data.client_contact_id || null;
 
       const noteData: any = {
@@ -83,6 +89,7 @@ export const CreateNoteDialog: React.FC<CreateNoteDialogProps> = ({
         content: data.content || null,
         case_id: data.case_id === 'none' ? null : data.case_id || null,
         client_id: clientIdToUse,
+        firm_id: teamMember?.firm_id || null,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,

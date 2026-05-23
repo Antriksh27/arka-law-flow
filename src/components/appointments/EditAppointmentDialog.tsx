@@ -271,7 +271,7 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
   ];
 
   const formContent = (
-    <div className={`flex flex-col h-full bg-slate-50`}>
+    <div className="flex flex-col h-[95vh] sm:h-[85vh] bg-slate-50 overflow-hidden">
       <MobileDialogHeader
         title="Edit Appointment"
         subtitle="Update appointment details"
@@ -279,9 +279,9 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
       />
       
       {/* Content */}
-      <ScrollArea className="flex-1">
-        <div className="px-6 py-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+        <ScrollArea className="flex-1">
+          <div className="px-6 py-6 space-y-4">
             {/* Title Card */}
             <div className={`${bg.card} rounded-2xl shadow-sm overflow-hidden`}>
               <div className="p-4">
@@ -537,21 +537,22 @@ export const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="pt-4 sticky bottom-0 bg-slate-50 pb-2">
-              <div className="flex gap-3">
-                <Button 
-                  type="submit" 
-                  className="flex-1 h-12 rounded-full px-6 shadow-sm bg-slate-800 hover:bg-slate-700 text-white"
-                  disabled={loading}
-                >
-                  {loading ? 'Updating...' : 'Update Appointment'}
-                </Button>
-              </div>
-            </div>
-          </form>
+          </div>
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-slate-200 bg-white z-10">
+          <div className="flex gap-3">
+            <Button 
+              type="submit" 
+              className="flex-1 h-12 rounded-full px-6 shadow-sm bg-slate-800 hover:bg-slate-700 text-white"
+              disabled={loading}
+            >
+              {loading ? 'Updating...' : 'Update Appointment'}
+            </Button>
+          </div>
         </div>
-      </ScrollArea>
+      </form>
     </div>
   );
 

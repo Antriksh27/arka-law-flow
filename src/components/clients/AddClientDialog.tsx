@@ -55,9 +55,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { user, firmId } = useAuth();
-  const { closeDialog } = useDialog();
-  const isInsideDialog = useContext(DialogContentContext);
-  const handleClose = isInsideDialog ? closeDialog : () => onOpenChange?.(false);
+  const handleClose = () => onOpenChange?.(false);
   const [selectedStateId, setSelectedStateId] = useState<string>('');
   const [showAddDistrict, setShowAddDistrict] = useState(false);
   const [newDistrictName, setNewDistrictName] = useState('');
@@ -493,10 +491,6 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({
       </div>
     </div>
   );
-
-  if (isInsideDialog) {
-    return fullFormView;
-  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

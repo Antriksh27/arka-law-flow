@@ -26,6 +26,7 @@ interface CreateNoteMultiModalProps {
   caseId?: string;
   clientId?: string;
   contactId?: string;
+  appointmentId?: string;
   isPinned?: boolean;
 }
 
@@ -45,6 +46,7 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
   caseId,
   clientId,
   contactId,
+  appointmentId,
   isPinned = false
 }) => {
   const { toast } = useToast();
@@ -84,6 +86,13 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
     mutationFn: async (data: NoteFormData) => {
       const user = await supabase.auth.getUser();
       if (!user.data.user) throw new Error('Not authenticated');
+      
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('firm_id')
+        .eq('user_id', user.data.user.id)
+        .single();
+
       let finalContent = data.content || '';
 
       if (drawingData && !finalContent.trim()) {
@@ -98,6 +107,8 @@ export const CreateNoteMultiModal: React.FC<CreateNoteMultiModalProps> = ({
         case_id: data.case_id === 'no-case' ? null : data.case_id,
         client_id: clientId || null,
         contact_id: contactId || null,
+        appointment_id: appointmentId || null,
+        firm_id: teamMember?.firm_id || null,
         visibility: data.visibility,
         color: data.color,
         tags: data.tags,

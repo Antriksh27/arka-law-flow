@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Pin, Mic, Pencil } from 'lucide-react';
+import { Pin, Mic, Pencil, User } from 'lucide-react';
 
 interface MobileNoteCardProps {
   note: any;
@@ -96,6 +96,12 @@ export const MobileNoteCard: React.FC<MobileNoteCardProps> = ({ note, onClick })
           <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-200/60">
             <Pencil className="w-3 h-3 text-sky-600" />
           </div>
+        )}
+        {note.clients?.full_name && (
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-amber-100/50 text-amber-700 border-0 rounded flex items-center gap-1">
+            <User className="w-2.5 h-2.5" />
+            {note.clients.full_name}
+          </Badge>
         )}
         {note.cases?.case_title && (
           <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-primary/10 text-primary border-0 rounded">

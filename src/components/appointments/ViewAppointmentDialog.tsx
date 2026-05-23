@@ -603,6 +603,7 @@ export const ViewAppointmentDialog: React.FC<ViewAppointmentDialogProps> = ({
         onClose={() => setShowNoteDialog(false)}
         clientId={appointment.client_id || undefined}
         contactId={contactData?.id || undefined}
+        appointmentId={appointment.id}
       />
 
       {/* Task Dialog - Links to client or contact from appointment */}

@@ -180,23 +180,22 @@ export const ClientSelector: React.FC<ClientSelectorProps> = ({
                   ))}
                 </CommandGroup>
               )}
+              <CommandGroup className="border-t border-slate-100">
+                <CommandItem
+                  onSelect={() => {
+                    setOpen(false);
+                    setShowAddClientDialog(true);
+                  }}
+                  className="flex items-center gap-2 text-blue-600 cursor-pointer font-medium hover:bg-blue-50 hover:text-blue-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add New Client</span>
+                </CommandItem>
+              </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-
-      {showAddButton && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowAddClientDialog(true)}
-          className="mt-2 w-full flex items-center gap-2 text-slate-600 border-dashed border-slate-300 hover:bg-slate-50"
-        >
-          <Plus className="h-4 w-4" />
-          Add New Client
-        </Button>
-      )}
 
       <AddClientDialog
         open={showAddClientDialog}

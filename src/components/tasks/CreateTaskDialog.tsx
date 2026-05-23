@@ -52,13 +52,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { firmId } = useAuth();
-  const { closeDialog } = useDialog();
-  const isInsideDialog = useContext(DialogContentContext);
 
   const handleClose = () => {
-    if (isInsideDialog) {
-      closeDialog();
-    } else if (onClose) {
+    if (onClose) {
       onClose();
     }
   };
@@ -560,17 +556,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     </div>
   );
 
-  if (isInsideDialog) {
-    return formView;
-  }
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent hideCloseButton className="sm:max-w-2xl p-0 gap-0 overflow-hidden h-[100dvh] sm:h-[85vh] sm:max-h-[85vh] max-w-full sm:rounded-2xl rounded-none flex flex-col">
         {formView}
       </DialogContent>
     </Dialog>
-
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pin, Edit, Trash2, Mic, Pencil, MoreVertical } from 'lucide-react';
+import { Pin, Edit, Trash2, Mic, Pencil, MoreVertical, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -152,6 +152,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             <Mic className="w-3 h-3 text-violet-600" />
             <span className="text-[10px] text-violet-700">Audio</span>
           </div>
+        )}
+        {note.clients?.full_name && (
+          <Badge variant="outline" className="text-xs px-2 py-0.5 bg-amber-100/50 text-amber-700 border-0 rounded-full flex items-center gap-1">
+            <User className="w-3 h-3" />
+            {note.clients.full_name}
+          </Badge>
         )}
         {note.cases?.case_title && (
           <Badge variant="outline" className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-0 rounded-full">
