@@ -215,7 +215,7 @@ const BookAppointmentDialog = ({
         created_by: user?.id,
         created_by_user_id: user?.id,
         type: bookingType === 'event' ? 'other' : 'in-person',
-        status: bookingType === 'event' ? 'confirmed' : 'upcoming'
+        status: 'upcoming'
       };
 
       if (bookingType === 'appointment') {
@@ -247,11 +247,11 @@ const BookAppointmentDialog = ({
       form.reset();
       handleClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error booking appointment:', error);
       toast({
         title: "Error",
-        description: "Failed to book appointment. Please try again.",
+        description: error?.message || "Failed to book appointment. Please try again.",
         variant: "destructive"
       });
     }
@@ -312,7 +312,7 @@ const BookAppointmentDialog = ({
             <FormField
               control={form.control}
               name="client_name"
-              rules={{ required: "Client selection is required" }}
+              rules={{ required: bookingType === 'appointment' ? "Client selection is required" : false }}
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-sm text-slate-600">Select Client/Contact *</FormLabel>
@@ -374,7 +374,7 @@ const BookAppointmentDialog = ({
                   <FormField
                     control={form.control}
                     name="client_name"
-                    rules={{ required: "Client name is required" }}
+                    rules={{ required: bookingType === 'appointment' ? "Client name is required" : false }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm text-slate-600">Full Name *</FormLabel>
@@ -388,7 +388,7 @@ const BookAppointmentDialog = ({
                   <FormField
                     control={form.control}
                     name="client_email"
-                    rules={{ required: "Client email is required" }}
+                    rules={{ required: bookingType === 'appointment' ? "Client email is required" : false }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm text-slate-600">Email *</FormLabel>
