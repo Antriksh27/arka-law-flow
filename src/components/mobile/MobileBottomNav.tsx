@@ -63,7 +63,7 @@ export const MobileBottomNav: React.FC = () => {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wider">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-inherit">
                 {item.label}
               </span>
             </NavLink>

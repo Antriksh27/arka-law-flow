@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -9,8 +10,16 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    sourcemap: "hidden", // Recommended for Sentry
+  },
   plugins: [
     react(),
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),

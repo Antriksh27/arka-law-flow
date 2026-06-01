@@ -1,6 +1,8 @@
+import "./instrument";
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import * as Sentry from "@sentry/react";
 import './index.css'
 import { applyCSPMetaTag } from './lib/contentSecurityPolicy'
 import { AuthProvider } from './contexts/AuthContext'
@@ -17,10 +19,12 @@ if (!container) {
 const root = createRoot(container);
 root.render(
   <StrictMode>
-    <AuthProvider>
-      <DialogProvider>
-        <App />
-      </DialogProvider>
-    </AuthProvider>
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong</p>} showDialog>
+      <AuthProvider>
+        <DialogProvider>
+          <App />
+        </DialogProvider>
+      </AuthProvider>
+    </Sentry.ErrorBoundary>
   </StrictMode>
 );

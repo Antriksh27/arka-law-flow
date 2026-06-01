@@ -46,7 +46,8 @@ export const CSP_DIRECTIVES = {
     "https://*.stream-io-api.com",
     "wss://*.stream-io-api.com",
     "https://api.knock.app",
-    "wss://api.knock.app"
+    "wss://api.knock.app",
+    "https://*.sentry.io" // Sentry event ingestion
   ],
   'object-src': ["'none'"],
   'frame-src': ["'self'", 'blob:', 'data:', 'https:'],
