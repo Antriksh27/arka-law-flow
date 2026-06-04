@@ -813,15 +813,20 @@ serve(async (req) => {
 
         console.log(`🔍 Decoded userId from JWT: ${userId}`);
 
-        // Look up team_members to get firm_id
-        const { data: tm, error: tmError } = await supabase
+        // Look up team_members to get firm_id (avoid .single() so multi-row users don't 403)
+        const { data: tmList, error: tmError } = await supabase
           .from('team_members')
           .select('firm_id, role')
           .eq('user_id', userId)
-          .single();
+          .limit(5);
+
+        // Prefer the membership matching firmId in body (multi-firm users)
+        const bodyFirmId = (requestBody as any)?.firmId;
+        const tm = (tmList || []).find((r: any) => !bodyFirmId || r.firm_id === bodyFirmId)
+                 || (tmList && tmList[0]) || null;
 
         if (tmError || !tm) {
-          console.error('❌ User not found in team_members:', tmError);
+          console.error('❌ User not found in team_members:', { userId, tmError, count: tmList?.length });
           return new Response(
             JSON.stringify({ success: false, error: 'User not authorized. Please contact your administrator.' }),
             { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
