@@ -184,34 +184,15 @@ const StaleCases = () => {
         throw new Error('Case does not have a CNR number');
       }
 
-      // Step 1: Trigger Scraper (POST)
-      const step1DetectedType = detectCourtType(caseData.cnr_number);
-      const step1SearchType = step1DetectedType === 'high_court' ? 'gujarat_high_court' : step1DetectedType;
-      const refreshResult = await invokeEcourtsDirect({
-        action: 'search',
-        cnr: caseData.cnr_number,
-        searchType: step1SearchType,
-        firmId,
-      });
-
-      if (!refreshResult?.success) {
-        throw new Error(refreshResult?.error || 'Failed to trigger refresh');
-      }
-
-      toast({
-        title: "Refresh Queued",
-        description: `Scraper triggered for ${caseData.case_number || caseData.cnr_number}. Syncing in 60s...`,
-      });
-
-      // Step 2: Background Wait (60s)
-      console.log(`⏳ [${caseData.cnr_number}] Waiting 60s for scraper...`);
-      await new Promise(resolve => setTimeout(resolve, 60000));
-
-      // Step 3: Fetch & Save to CRM (GET)
       const detectedType = detectCourtType(caseData.cnr_number);
       const searchType = detectedType === 'high_court' ? 'gujarat_high_court' : detectedType;
 
-      console.log(`🔄 [${caseData.cnr_number}] Performing CRM sync...`);
+      toast({
+        title: "Refreshing Case",
+        description: `Fetching details for ${caseData.case_number || caseData.cnr_number}...`,
+      });
+
+      console.log(`🔄 [${caseData.cnr_number}] Performing direct CRM sync...`);
       const detailResult = await invokeEcourtsDirect({
         action: 'search',
         cnr: caseData.cnr_number,
@@ -221,7 +202,7 @@ const StaleCases = () => {
       });
 
       if (!detailResult?.success) {
-        throw new Error(detailResult?.error || 'Failed to fetch case data after refresh');
+        throw new Error(detailResult?.error || 'Failed to fetch case data');
       }
 
       return { caseId: caseData.id, data: detailResult };

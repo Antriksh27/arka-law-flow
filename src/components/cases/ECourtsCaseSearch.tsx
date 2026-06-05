@@ -140,7 +140,7 @@ export const ECourtsCaseSearch: React.FC<ECourtsCaseSearchProps> = ({
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Search timed out. Please retry.')), 60000);
+        setTimeout(() => reject(new Error('Search timed out. Please retry.')), 120000);
       });
 
       const { data, error } = (await Promise.race([

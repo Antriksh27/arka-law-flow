@@ -996,23 +996,22 @@ serve(async (req) => {
       if (!initialSearchType && normalizedCnr && isCnrMode) {
         if (normalizedCnr.startsWith('SCIN')) {
           initialSearchType = 'supreme_court';
-        } else if (isAnyHighCourtCNR(normalizedCnr)) {
+        } else if (isGujaratHighCourtCNR(normalizedCnr)) {
           initialSearchType = 'gujarat_high_court';
+        } else if (isAnyHighCourtCNR(normalizedCnr)) {
+          initialSearchType = 'high_court';
         } else {
           initialSearchType = 'district_court';
         }
       }
       
-      const normalizedRequestedType = initialSearchType === 'high_court'
-        ? 'gujarat_high_court'
-        : (initialSearchType || 'district_court');
+      const normalizedRequestedType = initialSearchType || 'district_court';
 
-      const resolvedSearchType = (isCnrMode && normalizedCnr && isAnyHighCourtCNR(normalizedCnr))
+      const resolvedSearchType = (isCnrMode && normalizedCnr && isGujaratHighCourtCNR(normalizedCnr))
         ? 'gujarat_high_court'
         : normalizedRequestedType;
 
       // Keep DB write compatible with existing search_type CHECK constraints
-      // while preserving routed endpoint transparency in request_data.resolvedSearchType.
       const dbSearchType = resolvedSearchType === 'gujarat_high_court'
         ? 'high_court'
         : resolvedSearchType;
@@ -1701,18 +1700,16 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
     // Initialize body based on mode - for REGISTRATION mode, we'll set the body in the switch case
     let body = options?.caseMode === 'REGISTRATION' ? '' : JSON.stringify({ cnr });
 
-    // high_court endpoint is disabled; normalize to gujarat_high_court for all HC traffic.
-    const effectiveSearchType = (searchType === 'high_court' || (cnr && isAnyHighCourtCNR(cnr)))
+    // Route specifically to gujarat_high_court if it is a Gujarat HC CNR, otherwise keep searchType
+    const effectiveSearchType = (cnr && isGujaratHighCourtCNR(cnr))
       ? 'gujarat_high_court'
       : searchType;
-
-    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isHC=${cnr ? isAnyHighCourtCNR(cnr) : false}`);
-
+ 
+    console.log(`🔍 Search type resolution: input=${searchType}, effective=${effectiveSearchType}, cnr=${cnr}, isGHC=${cnr ? isGujaratHighCourtCNR(cnr) : false}`);
+ 
     switch (effectiveSearchType) {
       case 'high_court':
-        // high_court endpoint is disabled — all HC cases route through Gujarat HC
-        console.log('🏛️ high_court endpoint disabled, routing to Gujarat HC CNR endpoint');
-        endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/cnr/gujarat-high-court';
+        endpoint = 'https://apiservices.legalkart.com/api/v1/application-service/case-search/high-court';
         body = JSON.stringify({ cnr });
         break;
       case 'district_court':
@@ -1769,7 +1766,7 @@ async function performCaseSearch(token: string, cnr: string, searchType: string,
         },
         body,
       },
-      60000
+      120000
     );
 
     if (!response.ok) {

@@ -185,30 +185,12 @@ export const useEcourtsCaseDetails = (caseId: string) => {
         courtType: caseData.court_type 
       });
 
-      // Step 1: Trigger Scraper (POST)
-      const refreshResult = await invokeEcourtsDirect({
-        action: 'search',
-        cnr: caseData.cnr_number,
-        firmId: caseData.firm_id,
-        searchType,
-      });
-
-      if (!refreshResult.success) {
-        throw new Error(refreshResult.error || 'Failed to trigger refresh');
-      }
-
-      // Show immediate success for the trigger
       toast({ 
-        title: "Refresh Queued", 
-        description: "Scraper triggered successfully. CRM will auto-sync in 60 seconds.",
+        title: "Refreshing Case", 
+        description: "Fetching the latest data from eCourts/LegalKart...",
       });
 
-      // Step 2: Delayed Background Sync (Wait 60s)
-      console.log('⏳ Waiting 60s for scraper to complete before CRM sync...');
-      await new Promise(resolve => setTimeout(resolve, 60000));
-
-      // Step 3: Fetch & Save to CRM (GET)
-      console.log('🔄 Performing scheduled CRM sync...');
+      // Fetch & Save to CRM instantly
       const detailResult = await invokeEcourtsDirect({
         action: 'search',
         cnr: caseData.cnr_number,
@@ -217,13 +199,15 @@ export const useEcourtsCaseDetails = (caseId: string) => {
         searchType,
       });
 
-      if (detailResult.success) {
-        queryClient.invalidateQueries({ queryKey: ['case', caseId] });
-        queryClient.invalidateQueries({ queryKey: ['legalkart-case', caseId] });
-        queryClient.invalidateQueries({ queryKey: ['case-hearings', caseId] });
-        queryClient.invalidateQueries({ queryKey: ['case-orders', caseId] });
-        toast({ title: "CRM Sync Complete", description: "The case details have been updated with the latest LegalKart data." });
+      if (!detailResult.success) {
+        throw new Error(detailResult.error || 'Failed to refresh case');
       }
+
+      queryClient.invalidateQueries({ queryKey: ['case', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['legalkart-case', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-hearings', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-orders', caseId] });
+      toast({ title: "CRM Sync Complete", description: "The case details have been updated with the latest LegalKart data." });
 
       return detailResult;
     },
